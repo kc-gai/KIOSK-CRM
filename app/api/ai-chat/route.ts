@@ -216,7 +216,8 @@ async function callOpenAI(
     // 언어에 맞는 시스템 프롬프트 선택
     const systemPrompt = SYSTEM_PROMPTS[locale] || SYSTEM_PROMPTS.ja
 
-    const messages = [
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const messages: { role: string; content: string | any[] }[] = [
         { role: 'system', content: systemPrompt },
         ...history.map((msg: { role: string; content: string }) => ({
             role: msg.role,
@@ -225,6 +226,7 @@ async function callOpenAI(
     ]
 
     // 현재 메시지
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const currentContent: any[] = []
 
     // 이미지 첨부
@@ -245,7 +247,7 @@ async function callOpenAI(
     const fallbackMessage = locale === 'ko' ? '(첨부 파일만 전송됨)' : '(添付ファイルのみ送信)'
     messages.push({
         role: 'user',
-        content: currentContent.length > 0 ? currentContent : message || fallbackMessage
+        content: currentContent.length > 0 ? currentContent : (message || fallbackMessage) as string | { type: string; text?: string; image_url?: { url: string } }[]
     })
 
     const res = await fetch('https://api.openai.com/v1/chat/completions', {
