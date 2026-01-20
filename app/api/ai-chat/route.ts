@@ -245,9 +245,12 @@ async function callOpenAI(
     }
 
     const fallbackMessage = locale === 'ko' ? '(첨부 파일만 전송됨)' : '(添付ファイルのみ送信)'
+    const userContent = currentContent.length > 0
+        ? currentContent
+        : (message || fallbackMessage)
     messages.push({
         role: 'user',
-        content: currentContent.length > 0 ? currentContent : (message || fallbackMessage) as string | { type: string; text?: string; image_url?: { url: string } }[]
+        content: userContent as string
     })
 
     const res = await fetch('https://api.openai.com/v1/chat/completions', {
