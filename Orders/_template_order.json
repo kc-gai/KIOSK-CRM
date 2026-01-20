@@ -1,0 +1,21 @@
+{
+  "order_id": "ORD-YYYYMMDD-NNN",
+  "created_at": "YYYY-MM-DDTHH:mm:ss+09:00",
+  "task_name": "작업명을 여기에 입력",
+  "priority": "high",
+  "instructions": [
+    "구체적인 지시사항 1",
+    "구체적인 지시사항 2",
+    "구체적인 지시사항 3"
+  ],
+  "expected_files": [
+    "app/api/example/route.ts",
+    "app/dashboard/example/page.tsx"
+  ],
+  "dependencies": [],
+  "acceptance_criteria": [
+    "완료 조건 1",
+    "완료 조건 2"
+  ],
+  "notes": "추가 참고사항이나 컨텍스트"
+}
