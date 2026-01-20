@@ -221,7 +221,7 @@ export async function POST(request: Request) {
                     acquisition: acquisitionValue,
                     salePrice: row.salePrice ? parseFloat(row.salePrice) : null,
                     orderRequestDate: parseDate(row.orderRequestDate),
-                    deliveryDueDate: parseDate(row.deliveryDueDate),
+                    deliveryDueDate: row.deliveryDueDate?.trim() || null,  // 텍스트 형식 지원
                     deliveryStatus: 'PENDING',
                     status: 'IN_STOCK'
                 }

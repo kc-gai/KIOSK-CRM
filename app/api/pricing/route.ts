@@ -29,8 +29,9 @@ export async function GET() {
             clientName: p.clientName || null,
             saleType: p.saleType,
             leaseMonthlyFee: p.leaseMonthlyFee,
-            leasePeriodMonths: p.leasePeriodMonths,
-            notes: p.notes,
+            leasePeriod: p.leasePeriod,
+            costNotes: p.costNotes,
+            saleNotes: p.saleNotes,
             createdAt: p.createdAt,
             updatedAt: p.updatedAt
         }))
@@ -57,8 +58,9 @@ export async function POST(request: NextRequest) {
             clientId,
             saleType,
             leaseMonthlyFee,
-            leasePeriodMonths,
-            notes
+            leasePeriod,
+            costNotes,
+            saleNotes
         } = body
 
         // 필수 필드 검증
@@ -103,8 +105,9 @@ export async function POST(request: NextRequest) {
                 clientName,
                 saleType: saleType || null,
                 leaseMonthlyFee: leaseMonthlyFee ? parseInt(leaseMonthlyFee) : null,
-                leasePeriodMonths: leasePeriodMonths ? parseInt(leasePeriodMonths) : null,
-                notes: notes || null
+                leasePeriod: leasePeriod ? parseInt(leasePeriod) : null,
+                costNotes: costNotes || null,
+                saleNotes: saleNotes || null
             }
         })
 

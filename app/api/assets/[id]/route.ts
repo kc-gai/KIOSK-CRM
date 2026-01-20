@@ -265,7 +265,7 @@ export async function PUT(
             if (priceChanged) changes.push(`가격 변경: ${existing.salePrice || 0} → ${json.salePrice || 0}만엔`)
 
             // eventDate는 납품일(deliveryDate)을 사용, 없으면 현재 날짜
-            const eventDate = json.deliveryDate ? parseDate(json.deliveryDate) : new Date()
+            const eventDate = json.deliveryDate ? parseDate(json.deliveryDate) || new Date() : new Date()
 
             const historyRecord = await prisma.locationHistory.create({
                 data: {

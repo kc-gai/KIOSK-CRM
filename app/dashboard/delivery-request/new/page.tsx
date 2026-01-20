@@ -10,6 +10,7 @@ interface ItemForm {
     postalCode: string
     address: string
     contactPhone: string
+    quantity: number
     kioskCount: number
     plateCount: number
     itemNotes: string
@@ -20,6 +21,7 @@ const emptyItem: ItemForm = {
     postalCode: '',
     address: '',
     contactPhone: '',
+    quantity: 1,
     kioskCount: 1,
     plateCount: 1,
     itemNotes: ''
@@ -70,11 +72,12 @@ export default function NewDeliveryRequestPage() {
     const calculateTotals = () => {
         return items.reduce(
             (acc, item) => ({
+                totalQuantity: acc.totalQuantity + item.quantity,
                 totalKioskCount: acc.totalKioskCount + item.kioskCount,
                 totalPlateCount: acc.totalPlateCount + item.plateCount,
                 totalAmount: acc.totalAmount + (item.kioskCount * formData.unitPrice)
             }),
-            { totalKioskCount: 0, totalPlateCount: 0, totalAmount: 0 }
+            { totalQuantity: 0, totalKioskCount: 0, totalPlateCount: 0, totalAmount: 0 }
         )
     }
 

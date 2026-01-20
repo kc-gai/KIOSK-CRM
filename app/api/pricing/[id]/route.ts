@@ -9,21 +9,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         const { id } = await params
 
         const pricing = await prisma.kioskPricing.findUnique({
-            where: { id },
-            include: {
-                supplier: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                },
-                client: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                }
-            }
+            where: { id }
         })
 
         if (!pricing) {
@@ -36,9 +22,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             margin: (pricing.salePrice || 0) - (pricing.costPrice || 0),
             marginRate: pricing.costPrice && pricing.costPrice > 0
                 ? (((pricing.salePrice || 0) - pricing.costPrice) / pricing.costPrice * 100)
-                : 0,
-            supplierName: pricing.supplier?.name || null,
-            clientName: pricing.client?.name || null
+                : 0
         }
 
         return NextResponse.json(result)
@@ -58,13 +42,16 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
             costPrice,
             purchaseDate,
             supplierId,
+            supplierName,
             salePrice,
             saleDate,
             clientId,
+            clientName,
             saleType,
             leaseMonthlyFee,
-            leasePeriodMonths,
-            notes
+            leasePeriod,
+            costNotes,
+            saleNotes
         } = body
 
         const updateData: Record<string, unknown> = {}
@@ -72,31 +59,20 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         if (costPrice !== undefined) updateData.costPrice = costPrice ? parseInt(costPrice) : null
         if (purchaseDate !== undefined) updateData.purchaseDate = purchaseDate ? new Date(purchaseDate) : null
         if (supplierId !== undefined) updateData.supplierId = supplierId || null
+        if (supplierName !== undefined) updateData.supplierName = supplierName || null
         if (salePrice !== undefined) updateData.salePrice = salePrice ? parseInt(salePrice) : null
         if (saleDate !== undefined) updateData.saleDate = saleDate ? new Date(saleDate) : null
         if (clientId !== undefined) updateData.clientId = clientId || null
+        if (clientName !== undefined) updateData.clientName = clientName || null
         if (saleType !== undefined) updateData.saleType = saleType
         if (leaseMonthlyFee !== undefined) updateData.leaseMonthlyFee = leaseMonthlyFee ? parseInt(leaseMonthlyFee) : null
-        if (leasePeriodMonths !== undefined) updateData.leasePeriodMonths = leasePeriodMonths ? parseInt(leasePeriodMonths) : null
-        if (notes !== undefined) updateData.notes = notes
+        if (leasePeriod !== undefined) updateData.leasePeriod = leasePeriod ? parseInt(leasePeriod) : null
+        if (costNotes !== undefined) updateData.costNotes = costNotes || null
+        if (saleNotes !== undefined) updateData.saleNotes = saleNotes || null
 
         const pricing = await prisma.kioskPricing.update({
             where: { id },
-            data: updateData,
-            include: {
-                supplier: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                },
-                client: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                }
-            }
+            data: updateData
         })
 
         return NextResponse.json(pricing)

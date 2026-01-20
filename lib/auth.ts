@@ -1,13 +1,23 @@
 import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
+import GoogleProvider from "next-auth/providers/google"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
+
+// 허용된 Google 이메일 목록
+const ALLOWED_GOOGLE_EMAILS = [
+    "gai@kaflixcloud.co.jp"
+]
 
 export const authOptions: NextAuthOptions = {
     session: {
         strategy: "jwt",
     },
     providers: [
+        GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID!,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+        }),
         CredentialsProvider({
             name: "Credentials",
             credentials: {
@@ -54,11 +64,47 @@ export const authOptions: NextAuthOptions = {
         })
     ],
     callbacks: {
-        session: ({ session, token }) => {
+        async signIn({ user, account }) {
+            // Google 로그인인 경우 허용된 이메일만 접근 허용
+            if (account?.provider === "google") {
+                const email = user.email?.toLowerCase()
+                if (!email || !ALLOWED_GOOGLE_EMAILS.includes(email)) {
+                    return false // 허용되지 않은 이메일은 로그인 거부
+                }
+
+                // Google 로그인 사용자가 DB에 없으면 자동 생성
+                const existingUser = await prisma.user.findUnique({
+                    where: { email: email }
+                })
+
+                if (!existingUser) {
+                    await prisma.user.create({
+                        data: {
+                            email: email,
+                            name: user.name || "Google User",
+                            password: "", // Google 로그인은 비밀번호 불필요
+                            role: "ADMIN",
+                            isActive: true
+                        }
+                    })
+                }
+            }
+            return true
+        },
+        session: async ({ session, token }) => {
             // @ts-ignore
             if (session.user && token) {
-                session.user.id = token.id as string
-                session.user.role = token.role as string
+                // DB에서 사용자 정보 조회
+                const dbUser = await prisma.user.findUnique({
+                    where: { email: session.user.email || "" }
+                })
+                if (dbUser) {
+                    session.user.id = dbUser.id
+                    session.user.role = dbUser.role
+                } else {
+                    session.user.id = token.id as string
+                    session.user.role = token.role as string
+                }
             }
             return session
         },
@@ -70,5 +116,9 @@ export const authOptions: NextAuthOptions = {
             }
             return token
         }
+    },
+    pages: {
+        signIn: "/login",
+        error: "/login"
     }
 }

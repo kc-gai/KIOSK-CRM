@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { CheckCircle2, Circle, Clock, AlertCircle, ChevronDown, ChevronRight, Calendar, MessageSquare, Zap, FileText, Truck, Mail, Bot, Database, FileSpreadsheet, BarChart, GripVertical } from 'lucide-react'
 import { devTasks, recommendedOrder, getTaskStats, type DevTask, type TaskStatus, type TaskPriority, type SubTask } from '@/lib/dev-progress'
@@ -36,9 +36,9 @@ interface SortableTaskItemProps {
     expandedTasks: Set<string>
     toggleExpand: (taskId: string) => void
     toggleSubtask: (taskId: string, subtaskId: string) => void
-    getStatusIcon: (status: TaskStatus) => JSX.Element
-    getPriorityBadge: (priority: TaskPriority) => JSX.Element
-    getCategoryIcon: (categoryKo: string) => JSX.Element
+    getStatusIcon: (status: TaskStatus) => React.ReactElement
+    getPriorityBadge: (priority: TaskPriority) => React.ReactElement
+    getCategoryIcon: (categoryKo: string) => React.ReactElement
     getTaskTitle: (task: DevTask) => string
     getTaskDescription: (task: DevTask) => string | undefined
     getTaskNotes: (task: DevTask) => string | undefined

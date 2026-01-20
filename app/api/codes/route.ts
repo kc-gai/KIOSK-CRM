@@ -114,15 +114,17 @@ export async function GET(req: NextRequest) {
             })
 
             branches.forEach(branch => {
-                codes.push({
-                    code: branch.code,
-                    type: 'BRANCH',
-                    name: branch.name,
-                    nameJa: branch.nameJa,
-                    parentCode: branch.corporation?.code || null,
-                    parentName: branch.corporation?.name || null,
-                    isActive: branch.isActive,
-                })
+                if (branch.code) {
+                    codes.push({
+                        code: branch.code,
+                        type: 'BRANCH',
+                        name: branch.name,
+                        nameJa: branch.nameJa,
+                        parentCode: branch.corporation?.code || null,
+                        parentName: branch.corporation?.name || null,
+                        isActive: branch.isActive,
+                    })
+                }
             })
         }
 

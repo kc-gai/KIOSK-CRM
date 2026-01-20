@@ -39,7 +39,7 @@ type PartnerDataItem = {
 }
 
 type QuickInfoItem = {
-    serialNumber: string
+    serialNumber: string | null
     branchName: string | null
     createdAt: Date
 }

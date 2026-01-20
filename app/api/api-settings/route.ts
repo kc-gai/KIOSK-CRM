@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
             smtpHost,
             smtpPort,
             smtpUser,
-            smtpPass,
+            smtpPassword,
             smtpSecure,
             isActive
         } = body
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
                 smtpHost: smtpHost || null,
                 smtpPort: smtpPort ? parseInt(smtpPort) : null,
                 smtpUser: smtpUser || null,
-                smtpPass: smtpPass || null,
+                smtpPassword: smtpPassword || null,
                 smtpSecure: smtpSecure ?? true,
                 isActive: isActive ?? true
             }

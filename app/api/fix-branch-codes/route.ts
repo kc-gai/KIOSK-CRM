@@ -17,6 +17,7 @@ export async function POST() {
         const changes: { before: string; after: string }[] = []
 
         for (const branch of branches) {
+            if (!branch.code) continue
             // _001, _002 등의 접미사 패턴 확인 (마지막 _숫자3자리)
             const match = branch.code.match(/^(.+)_(\d{3})_(\d{3})$/)
 
@@ -67,6 +68,7 @@ export async function GET() {
     const preview: { before: string; after: string }[] = []
 
     for (const branch of branches) {
+        if (!branch.code) continue
         const match = branch.code.match(/^(.+)_(\d{3})_(\d{3})$/)
         if (match) {
             preview.push({

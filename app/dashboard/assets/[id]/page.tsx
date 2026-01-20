@@ -933,7 +933,7 @@ export default function AssetDetailPage() {
                                         <dd className="col-7">
                                             {(() => {
                                                 // 최신 이력 > branch > kiosk 순으로 우선
-                                                const regionCode = kiosk.latestBranch?.regionCode || kiosk.regionCode || kiosk.branch?.regionCode
+                                                const regionCode = kiosk.latestBranch?.regionCode || kiosk.regionCode || kiosk.branch?.regionCode || null
                                                 const regionName = getRegionName(regionCode)
                                                 if (!regionCode) return '-'
                                                 return (
@@ -948,7 +948,7 @@ export default function AssetDetailPage() {
                                         <dd className="col-7">
                                             {(() => {
                                                 // 최신 이력 > branch > kiosk 순으로 우선
-                                                const areaCode = kiosk.latestBranch?.areaCode || kiosk.areaCode || kiosk.branch?.areaCode
+                                                const areaCode = kiosk.latestBranch?.areaCode || kiosk.areaCode || kiosk.branch?.areaCode || null
                                                 const areaName = getAreaName(areaCode)
                                                 if (!areaCode) return '-'
                                                 return (

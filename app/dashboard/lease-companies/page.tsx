@@ -474,7 +474,7 @@ export default function LeaseCompaniesPage() {
                                 <div className="card-header bg-white border-bottom py-3">
                                     <div className="d-flex justify-content-between align-items-center">
                                         <div className="d-flex align-items-center gap-2">
-                                            <KioskIcon size={20} style={{ color: '#7c3aed' }} />
+                                            <KioskIcon size={20} className="text-purple" />
                                             <span className="fw-semibold">리스 키오스크 현황</span>
                                         </div>
                                         <span

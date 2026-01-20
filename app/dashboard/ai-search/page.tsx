@@ -120,19 +120,19 @@ export default function AISearchPage() {
                     <div className="d-flex justify-content-between align-items-center">
                         <div>
                             <div className="fw-medium">
-                                <code className="text-primary">{item.serialNumber as string}</code>
-                                {item.kioskNumber && <span className="ms-2 text-muted">#{item.kioskNumber as string}</span>}
+                                <code className="text-primary">{String(item.serialNumber || '')}</code>
+                                {item.kioskNumber ? <span className="ms-2 text-muted">#{String(item.kioskNumber)}</span> : null}
                             </div>
                             <small className="text-muted">
-                                {item.branchName && <span className="me-2"><i className="ti ti-map-pin me-1"></i>{item.branchName as string}</span>}
-                                {item.fcName && <span><i className="ti ti-building-store me-1"></i>{item.fcName as string}</span>}
+                                {item.branchName ? <span className="me-2"><i className="ti ti-map-pin me-1"></i>{String(item.branchName)}</span> : null}
+                                {item.fcName ? <span><i className="ti ti-building-store me-1"></i>{String(item.fcName)}</span> : null}
                             </small>
                         </div>
                         <div className="text-end">
                             <span className={`badge ${item.status === 'DEPLOYED' ? 'bg-green' : item.status === 'IN_STOCK' ? 'bg-blue' : 'bg-secondary'} text-white`}>
-                                {item.status as string}
+                                {String(item.status || '')}
                             </span>
-                            {item.regionCode && <div className="small text-muted mt-1">{item.regionCode as string}/{item.areaCode as string}</div>}
+                            {item.regionCode ? <div className="small text-muted mt-1">{String(item.regionCode)}/{String(item.areaCode || '')}</div> : null}
                         </div>
                     </div>
                 )
@@ -141,14 +141,14 @@ export default function AISearchPage() {
                 return (
                     <div className="d-flex justify-content-between align-items-center">
                         <div>
-                            <div className="fw-medium">{item.name as string}</div>
-                            {item.nameJa && <small className="text-muted">{item.nameJa as string}</small>}
+                            <div className="fw-medium">{String(item.name || '')}</div>
+                            {item.nameJa ? <small className="text-muted">{String(item.nameJa)}</small> : null}
                         </div>
                         <div className="text-end">
                             <span className={`badge ${item.type === 'CLIENT' ? 'bg-blue' : item.type === 'SUPPLIER' ? 'bg-green' : 'bg-orange'} text-white`}>
-                                {item.type as string}
+                                {String(item.type || '')}
                             </span>
-                            <div className="small text-muted mt-1">{t('kioskCount')}: {item.kioskCount as number}</div>
+                            <div className="small text-muted mt-1">{t('kioskCount')}: {Number(item.kioskCount || 0)}</div>
                         </div>
                     </div>
                 )
@@ -157,14 +157,14 @@ export default function AISearchPage() {
                 return (
                     <div className="d-flex justify-content-between align-items-center">
                         <div>
-                            <div className="fw-medium">{item.name as string}</div>
-                            {item.nameJa && <small className="text-muted">{item.nameJa as string}</small>}
+                            <div className="fw-medium">{String(item.name || '')}</div>
+                            {item.nameJa ? <small className="text-muted">{String(item.nameJa)}</small> : null}
                         </div>
                         <div className="text-end">
                             <span className={`badge ${item.fcType === 'RENTAL_CAR' ? 'bg-blue' : item.fcType === 'HOTEL' ? 'bg-purple' : 'bg-secondary'} text-white`}>
-                                {item.fcType as string}
+                                {String(item.fcType || '')}
                             </span>
-                            <div className="small text-muted mt-1">{t('corporationCount')}: {item.corporationCount as number}</div>
+                            <div className="small text-muted mt-1">{t('corporationCount')}: {Number(item.corporationCount || 0)}</div>
                         </div>
                     </div>
                 )
@@ -173,11 +173,11 @@ export default function AISearchPage() {
                 return (
                     <div className="d-flex justify-content-between align-items-center">
                         <div>
-                            <div className="fw-medium">{item.name as string}</div>
-                            {item.fcName && <small className="text-muted"><i className="ti ti-building-store me-1"></i>{item.fcName as string}</small>}
+                            <div className="fw-medium">{String(item.name || '')}</div>
+                            {item.fcName ? <small className="text-muted"><i className="ti ti-building-store me-1"></i>{String(item.fcName)}</small> : null}
                         </div>
                         <div className="text-end">
-                            <div className="small text-muted">{t('branchCount')}: {item.branchCount as number}</div>
+                            <div className="small text-muted">{t('branchCount')}: {Number(item.branchCount || 0)}</div>
                         </div>
                     </div>
                 )
@@ -186,15 +186,15 @@ export default function AISearchPage() {
                 return (
                     <div className="d-flex justify-content-between align-items-center">
                         <div>
-                            <div className="fw-medium">{item.name as string}</div>
+                            <div className="fw-medium">{String(item.name || '')}</div>
                             <small className="text-muted">
-                                {item.corporationName && <span className="me-2"><i className="ti ti-briefcase me-1"></i>{item.corporationName as string}</span>}
-                                {item.address && <span><i className="ti ti-map-pin me-1"></i>{item.address as string}</span>}
+                                {item.corporationName ? <span className="me-2"><i className="ti ti-briefcase me-1"></i>{String(item.corporationName)}</span> : null}
+                                {item.address ? <span><i className="ti ti-map-pin me-1"></i>{String(item.address)}</span> : null}
                             </small>
                         </div>
                         <div className="text-end">
-                            {item.regionCode && <code className="small">{item.regionCode as string}/{item.areaCode as string}</code>}
-                            <div className="small text-muted mt-1">{t('kioskCount')}: {item.kioskCount as number}</div>
+                            {item.regionCode ? <code className="small">{String(item.regionCode)}/{String(item.areaCode || '')}</code> : null}
+                            <div className="small text-muted mt-1">{t('kioskCount')}: {Number(item.kioskCount || 0)}</div>
                         </div>
                     </div>
                 )
@@ -204,15 +204,15 @@ export default function AISearchPage() {
                     <div className="d-flex justify-content-between align-items-center">
                         <div>
                             <div className="fw-medium">
-                                <code className="text-primary">{item.serialNumber as string}</code>
+                                <code className="text-primary">{String(item.serialNumber || '')}</code>
                             </div>
                             <small className="text-muted">
-                                {item.destination && <span><i className="ti ti-truck me-1"></i>{item.destination as string}</span>}
+                                {item.destination ? <span><i className="ti ti-truck me-1"></i>{String(item.destination)}</span> : null}
                             </small>
                         </div>
                         <div className="text-end">
                             <span className={`badge ${item.status === 'DELIVERED' ? 'bg-green' : item.status === 'SHIPPED' ? 'bg-blue' : 'bg-secondary'} text-white`}>
-                                {item.status as string}
+                                {String(item.status || '')}
                             </span>
                         </div>
                     </div>
@@ -223,10 +223,10 @@ export default function AISearchPage() {
                     <div className="d-flex justify-content-between align-items-center">
                         <div>
                             <div className="fw-medium">
-                                <code className="text-primary me-2">{item.code as string}</code>
-                                {item.name as string}
+                                <code className="text-primary me-2">{String(item.code || '')}</code>
+                                {String(item.name || '')}
                             </div>
-                            <small className="text-muted">{item.prefectures as string}</small>
+                            <small className="text-muted">{String(item.prefectures || '')}</small>
                         </div>
                     </div>
                 )
