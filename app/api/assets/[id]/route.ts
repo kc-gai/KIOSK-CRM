@@ -255,14 +255,14 @@ export async function PUT(
             if (partnerChanged && !json.currentPartnerId) moveType = 'RETURN'
             if (partnerChanged && json.currentPartnerId && existing.currentPartnerId) moveType = 'TRANSFER'
 
-            // 변경 내용 설명 생성
+            // 변경 내용 설명 생성 (다국어 키 형식으로 저장)
             const changes: string[] = []
-            if (partnerChanged) changes.push('소속 회사 변경')
-            if (branchChanged) changes.push('지점 변경')
-            if (regionChanged || areaChanged) changes.push('관할지역 변경')
-            if (statusChanged) changes.push(`상태 변경: ${existing.status} → ${json.status}`)
-            if (acquisitionChanged) changes.push(`취득형태 변경: ${existing.acquisition} → ${json.acquisition}`)
-            if (priceChanged) changes.push(`가격 변경: ${existing.salePrice || 0} → ${json.salePrice || 0}만엔`)
+            if (partnerChanged) changes.push('CHANGE_PARTNER')
+            if (branchChanged) changes.push('CHANGE_BRANCH')
+            if (regionChanged || areaChanged) changes.push('CHANGE_AREA')
+            if (statusChanged) changes.push(`CHANGE_STATUS:${existing.status}→${json.status}`)
+            if (acquisitionChanged) changes.push(`CHANGE_ACQUISITION:${existing.acquisition}→${json.acquisition}`)
+            if (priceChanged) changes.push(`CHANGE_PRICE:${existing.salePrice || 0}→${json.salePrice || 0}`)
 
             // eventDate는 납품일(deliveryDate)을 사용, 없으면 현재 날짜
             const eventDate = json.deliveryDate ? parseDate(json.deliveryDate) || new Date() : new Date()

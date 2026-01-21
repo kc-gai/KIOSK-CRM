@@ -1,9 +1,17 @@
 {
   "report_id": "RPT-20241218-002",
   "order_id": null,
-  "created_at": "2024-12-18T15:30:00",
+  "created_at": "2024-12-18T15:30:00+09:00",
   "status": "completed",
   "task_summary": "관할지역/사무실 데이터 초기 세팅 및 UI 개선",
+  "work_hours": 1.5,
+  "session_info": {
+    "ai_assistant": "Claude (Anthropic)",
+    "session_start": "2024-12-18T14:40:00+09:00",
+    "session_end": "2024-12-18T15:30:00+09:00",
+    "conversation_turns": 15,
+    "tools_used": ["VS Code", "Prisma", "Node.js"]
+  },
   "completed_tasks": [
     "Prisma 스키마에서 Region/Area 모델의 nameJa 필드 제거",
     "Region/Area API 라우트 업데이트 (nameJa 제거)",

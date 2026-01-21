@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { testCalendarConnection } from '@/lib/google-calendar'
 import { testEmailConnection, sendTestEmail } from '@/lib/email'
+import { prisma } from '@/lib/prisma'
 
 /**
  * POST /api/test-connection
@@ -61,6 +62,22 @@ export async function POST(request: NextRequest) {
                     }
                 } catch (error: any) {
                     return NextResponse.json({ success: false, message: `연결 실패: ${error.message}` })
+                }
+            }
+
+            case 'DATABASE': {
+                try {
+                    // 간단한 쿼리로 DB 연결 테스트
+                    const result = await prisma.$queryRaw`SELECT 1 as test`
+                    return NextResponse.json({
+                        success: true,
+                        message: 'Supabase PostgreSQL 연결 성공!'
+                    })
+                } catch (error: any) {
+                    return NextResponse.json({
+                        success: false,
+                        message: `DB 연결 실패: ${error.message}`
+                    })
                 }
             }
 

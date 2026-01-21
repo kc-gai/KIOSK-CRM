@@ -21,6 +21,11 @@ function LoginForm() {
         ? '허용되지 않은 계정입니다. gai@kaflixcloud.co.jp 계정으로 로그인해주세요.'
         : error
 
+    // 로그인 시 탭 상태 초기화
+    const clearTabsOnLogin = () => {
+        localStorage.removeItem('nav-open-tabs')
+    }
+
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
         setError('')
@@ -33,11 +38,13 @@ function LoginForm() {
         if (res?.error) {
             setError('이메일 또는 비밀번호가 올바르지 않습니다.')
         } else {
+            clearTabsOnLogin()
             router.push('/')
         }
     }
 
     const handleGoogleLogin = () => {
+        clearTabsOnLogin()
         signIn('google', { callbackUrl: '/' })
     }
 

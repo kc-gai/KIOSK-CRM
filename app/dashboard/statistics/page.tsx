@@ -23,6 +23,10 @@ type StatsData = {
     retiredKiosks: number
     purchaseKiosks: number
     leaseKiosks: number
+    leaseFreeKiosks: number
+    freeKiosks: number
+    paidKiosks: number
+    rentalKiosks: number
     totalOrders: number
     totalDeliveries: number
     completedDeliveries: number
@@ -293,21 +297,27 @@ export default function StatisticsPage() {
                         </div>
                         <div className="card-body">
                             <div className="row g-3">
-                                <div className="col-6">
-                                    <div className="card bg-cyan-lt">
-                                        <div className="card-body text-center py-4">
-                                            <div className="h1 mb-1 text-cyan">{stats?.purchaseKiosks || 0}</div>
-                                            <div className="text-muted">{t('purchase')}</div>
-                                            <span className="badge bg-cyan text-white mt-2">구매</span>
+                                <div className="col-4">
+                                    <div className="card bg-green-lt">
+                                        <div className="card-body text-center py-3">
+                                            <div className="h2 mb-1 text-green">{(stats?.freeKiosks || 0) + (stats?.leaseFreeKiosks || 0)}</div>
+                                            <div className="text-muted small">무상</div>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="col-6">
+                                <div className="col-4">
                                     <div className="card bg-purple-lt">
-                                        <div className="card-body text-center py-4">
-                                            <div className="h1 mb-1 text-purple">{stats?.leaseKiosks || 0}</div>
-                                            <div className="text-muted">{t('lease')}</div>
-                                            <span className="badge bg-purple text-white mt-2">리스</span>
+                                        <div className="card-body text-center py-3">
+                                            <div className="h2 mb-1 text-purple">{stats?.leaseKiosks || 0}</div>
+                                            <div className="text-muted small">리스</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="col-4">
+                                    <div className="card bg-orange-lt">
+                                        <div className="card-body text-center py-3">
+                                            <div className="h2 mb-1 text-orange">{(stats?.paidKiosks || 0) + (stats?.purchaseKiosks || 0)}</div>
+                                            <div className="text-muted small">유상</div>
                                         </div>
                                     </div>
                                 </div>
@@ -315,27 +325,53 @@ export default function StatisticsPage() {
                             <div className="mt-3">
                                 <div className="d-flex justify-content-between mb-1">
                                     <span className="d-flex align-items-center gap-1">
-                                        <span className="badge bg-cyan" style={{ width: '10px', height: '10px', padding: 0 }}></span>
-                                        {t('purchase')}
+                                        <span className="badge bg-green" style={{ width: '10px', height: '10px', padding: 0 }}></span>
+                                        무상 (FREE + LEASE_FREE)
                                     </span>
-                                    <span>{Math.round(((stats?.purchaseKiosks || 0) / (stats?.totalKiosks || 1)) * 100)}%</span>
+                                    <span>{Math.round((((stats?.freeKiosks || 0) + (stats?.leaseFreeKiosks || 0)) / (stats?.totalKiosks || 1)) * 100)}%</span>
                                 </div>
                                 <div className="d-flex justify-content-between mb-1">
                                     <span className="d-flex align-items-center gap-1">
                                         <span className="badge bg-purple" style={{ width: '10px', height: '10px', padding: 0 }}></span>
-                                        {t('lease')}
+                                        리스 (LEASE)
                                     </span>
                                     <span>{Math.round(((stats?.leaseKiosks || 0) / (stats?.totalKiosks || 1)) * 100)}%</span>
                                 </div>
+                                <div className="d-flex justify-content-between mb-1">
+                                    <span className="d-flex align-items-center gap-1">
+                                        <span className="badge bg-orange" style={{ width: '10px', height: '10px', padding: 0 }}></span>
+                                        유상 (PAID + PURCHASE)
+                                    </span>
+                                    <span>{Math.round((((stats?.paidKiosks || 0) + (stats?.purchaseKiosks || 0)) / (stats?.totalKiosks || 1)) * 100)}%</span>
+                                </div>
+                                {(stats?.rentalKiosks || 0) > 0 && (
+                                    <div className="d-flex justify-content-between mb-1">
+                                        <span className="d-flex align-items-center gap-1">
+                                            <span className="badge bg-cyan" style={{ width: '10px', height: '10px', padding: 0 }}></span>
+                                            렌탈 (RENTAL)
+                                        </span>
+                                        <span>{Math.round(((stats?.rentalKiosks || 0) / (stats?.totalKiosks || 1)) * 100)}%</span>
+                                    </div>
+                                )}
                                 <div className="progress" style={{ height: '8px' }}>
                                     <div
-                                        className="progress-bar bg-cyan"
-                                        style={{ width: `${((stats?.purchaseKiosks || 0) / (stats?.totalKiosks || 1)) * 100}%` }}
+                                        className="progress-bar bg-green"
+                                        style={{ width: `${(((stats?.freeKiosks || 0) + (stats?.leaseFreeKiosks || 0)) / (stats?.totalKiosks || 1)) * 100}%` }}
                                     />
                                     <div
                                         className="progress-bar bg-purple"
                                         style={{ width: `${((stats?.leaseKiosks || 0) / (stats?.totalKiosks || 1)) * 100}%` }}
                                     />
+                                    <div
+                                        className="progress-bar bg-orange"
+                                        style={{ width: `${(((stats?.paidKiosks || 0) + (stats?.purchaseKiosks || 0)) / (stats?.totalKiosks || 1)) * 100}%` }}
+                                    />
+                                    {(stats?.rentalKiosks || 0) > 0 && (
+                                        <div
+                                            className="progress-bar bg-cyan"
+                                            style={{ width: `${((stats?.rentalKiosks || 0) / (stats?.totalKiosks || 1)) * 100}%` }}
+                                        />
+                                    )}
                                 </div>
                             </div>
                         </div>

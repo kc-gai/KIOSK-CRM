@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Plus, Settings, TestTube, CheckCircle, XCircle, Trash2, Edit, Calendar, Mail, Send, AlertCircle, Save, Eye, EyeOff, Bot, MessageCircle } from 'lucide-react'
+import { Plus, Settings, TestTube, CheckCircle, XCircle, Trash2, Edit, Calendar, Mail, Send, AlertCircle, Save, Eye, EyeOff, Bot, MessageCircle, Globe, Database, Key, Shield, RefreshCw, Github, ExternalLink } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
@@ -46,6 +46,16 @@ type SystemSettings = {
     ANTHROPIC_API_KEY: string
     OPENAI_API_KEY: string
     AI_MODEL: string
+    // Google OAuth
+    GOOGLE_CLIENT_ID: string
+    GOOGLE_CLIENT_SECRET: string
+    ALLOWED_GOOGLE_EMAILS: string
+    // Supabase
+    DATABASE_URL: string
+    DIRECT_URL: string
+    // NextAuth
+    NEXTAUTH_URL: string
+    NEXTAUTH_SECRET: string
 }
 
 const API_TYPES = ['GROUPWARE', 'SLACK', 'EMAIL', 'ERP', 'CUSTOM']
@@ -73,6 +83,13 @@ export default function ApiSettingsPage() {
         ANTHROPIC_API_KEY: '',
         OPENAI_API_KEY: '',
         AI_MODEL: 'claude-sonnet-4-20250514',
+        GOOGLE_CLIENT_ID: '',
+        GOOGLE_CLIENT_SECRET: '',
+        ALLOWED_GOOGLE_EMAILS: 'gai@kaflixcloud.co.jp',
+        DATABASE_URL: '',
+        DIRECT_URL: '',
+        NEXTAUTH_URL: '',
+        NEXTAUTH_SECRET: '',
     })
     const [savingSettings, setSavingSettings] = useState(false)
     const [showPrivateKey, setShowPrivateKey] = useState(false)
@@ -81,6 +98,14 @@ export default function ApiSettingsPage() {
     const [showOpenAIKey, setShowOpenAIKey] = useState(false)
     const [testingAI, setTestingAI] = useState(false)
     const [aiTestResult, setAiTestResult] = useState<ConnectionTestResult | null>(null)
+
+    // 배포 설정 관련 상태
+    const [showGoogleClientSecret, setShowGoogleClientSecret] = useState(false)
+    const [showDatabaseUrl, setShowDatabaseUrl] = useState(false)
+    const [showDirectUrl, setShowDirectUrl] = useState(false)
+    const [showNextAuthSecret, setShowNextAuthSecret] = useState(false)
+    const [testingDb, setTestingDb] = useState(false)
+    const [dbTestResult, setDbTestResult] = useState<ConnectionTestResult | null>(null)
 
     // 환경변수 기반 연결 테스트 상태
     const [calendarTestResult, setCalendarTestResult] = useState<ConnectionTestResult | null>(null)
@@ -139,7 +164,7 @@ export default function ApiSettingsPage() {
     }
 
     // 시스템 설정 저장
-    const saveSystemSettings = async (category: 'CALENDAR' | 'EMAIL' | 'AI') => {
+    const saveSystemSettings = async (category: 'CALENDAR' | 'EMAIL' | 'AI' | 'OAUTH' | 'DATABASE' | 'NEXTAUTH') => {
         setSavingSettings(true)
         try {
             const settingsToSave: Record<string, string> = {}
@@ -159,6 +184,16 @@ export default function ApiSettingsPage() {
                 settingsToSave.ANTHROPIC_API_KEY = systemSettings.ANTHROPIC_API_KEY
                 settingsToSave.OPENAI_API_KEY = systemSettings.OPENAI_API_KEY
                 settingsToSave.AI_MODEL = systemSettings.AI_MODEL
+            } else if (category === 'OAUTH') {
+                settingsToSave.GOOGLE_CLIENT_ID = systemSettings.GOOGLE_CLIENT_ID
+                settingsToSave.GOOGLE_CLIENT_SECRET = systemSettings.GOOGLE_CLIENT_SECRET
+                settingsToSave.ALLOWED_GOOGLE_EMAILS = systemSettings.ALLOWED_GOOGLE_EMAILS
+            } else if (category === 'DATABASE') {
+                settingsToSave.DATABASE_URL = systemSettings.DATABASE_URL
+                settingsToSave.DIRECT_URL = systemSettings.DIRECT_URL
+            } else if (category === 'NEXTAUTH') {
+                settingsToSave.NEXTAUTH_URL = systemSettings.NEXTAUTH_URL
+                settingsToSave.NEXTAUTH_SECRET = systemSettings.NEXTAUTH_SECRET
             }
 
             const res = await fetch('/api/system-settings', {
@@ -252,6 +287,33 @@ export default function ApiSettingsPage() {
         } finally {
             setTestingAI(false)
         }
+    }
+
+    // DB 연결 테스트
+    const handleTestDb = async () => {
+        setTestingDb(true)
+        setDbTestResult(null)
+        try {
+            const res = await fetch('/api/test-connection', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'DATABASE' })
+            })
+            const result = await res.json()
+            setDbTestResult(result)
+        } catch (e) {
+            setDbTestResult({ success: false, message: t('testError') })
+        } finally {
+            setTestingDb(false)
+        }
+    }
+
+    // NEXTAUTH_SECRET 자동 생성
+    const generateNextAuthSecret = () => {
+        const array = new Uint8Array(32)
+        crypto.getRandomValues(array)
+        const secret = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('')
+        setSystemSettings(prev => ({ ...prev, NEXTAUTH_SECRET: secret }))
     }
 
     // 테스트 이메일 발송
@@ -880,6 +942,347 @@ export default function ApiSettingsPage() {
                                     </>
                                 )}
                             </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* 배포 환경 설정 */}
+            <h3 className="mb-3 d-flex align-items-center gap-2">
+                <Globe size={20} className="text-cyan" />
+                {t('deploymentSettingsTitle')}
+            </h3>
+            <p className="text-muted mb-4">{t('deploymentSettingsDesc')}</p>
+
+            <div className="row row-deck row-cards mb-4">
+                {/* Google OAuth */}
+                <div className="col-lg-6">
+                    <div className="card">
+                        <div className="card-header">
+                            <div className="d-flex align-items-center">
+                                <Key size={20} className="me-2 text-red" />
+                                <h3 className="card-title mb-0">{t('googleOAuthTitle')}</h3>
+                            </div>
+                        </div>
+                        <div className="card-body">
+                            <p className="text-muted small mb-3">
+                                {t('googleOAuthDesc')}
+                            </p>
+
+                            <div className="mb-3">
+                                <label className="form-label">{t('googleClientId')}</label>
+                                <input
+                                    type="text"
+                                    className="form-control form-control-sm"
+                                    placeholder="1234567890-xxxxx.apps.googleusercontent.com"
+                                    value={systemSettings.GOOGLE_CLIENT_ID}
+                                    onChange={(e) => setSystemSettings(prev => ({
+                                        ...prev,
+                                        GOOGLE_CLIENT_ID: e.target.value
+                                    }))}
+                                />
+                            </div>
+
+                            <div className="mb-3">
+                                <label className="form-label">{t('googleClientSecret')}</label>
+                                <div className="input-group input-group-sm">
+                                    <input
+                                        type={showGoogleClientSecret ? 'text' : 'password'}
+                                        className="form-control form-control-sm"
+                                        placeholder="GOCSPX-..."
+                                        value={systemSettings.GOOGLE_CLIENT_SECRET}
+                                        onChange={(e) => setSystemSettings(prev => ({
+                                            ...prev,
+                                            GOOGLE_CLIENT_SECRET: e.target.value
+                                        }))}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-secondary"
+                                        onClick={() => setShowGoogleClientSecret(!showGoogleClientSecret)}
+                                    >
+                                        {showGoogleClientSecret ? <EyeOff size={14} /> : <Eye size={14} />}
+                                    </button>
+                                </div>
+                                <small className="text-muted">
+                                    <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer">
+                                        {t('googleConsoleLink')} <ExternalLink size={12} className="ms-1" />
+                                    </a>
+                                </small>
+                            </div>
+
+                            <div className="mb-0">
+                                <label className="form-label">{t('allowedEmails')}</label>
+                                <input
+                                    type="text"
+                                    className="form-control form-control-sm"
+                                    placeholder="user@example.com, admin@company.com"
+                                    value={systemSettings.ALLOWED_GOOGLE_EMAILS}
+                                    onChange={(e) => setSystemSettings(prev => ({
+                                        ...prev,
+                                        ALLOWED_GOOGLE_EMAILS: e.target.value
+                                    }))}
+                                />
+                                <small className="text-muted">{t('allowedEmailsHint')}</small>
+                            </div>
+                        </div>
+                        <div className="card-footer d-flex justify-content-end">
+                            <button
+                                className="btn btn-primary btn-sm"
+                                onClick={() => saveSystemSettings('OAUTH')}
+                                disabled={savingSettings}
+                            >
+                                {savingSettings ? (
+                                    <span className="spinner-border spinner-border-sm"></span>
+                                ) : (
+                                    <>
+                                        <Save size={14} className="me-1" />
+                                        {t('save')}
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Supabase Database */}
+                <div className="col-lg-6">
+                    <div className="card">
+                        <div className="card-header">
+                            <div className="d-flex align-items-center">
+                                <Database size={20} className="me-2 text-green" />
+                                <h3 className="card-title mb-0">{t('supabaseTitle')}</h3>
+                            </div>
+                        </div>
+                        <div className="card-body">
+                            <p className="text-muted small mb-3">
+                                {t('supabaseDesc')}
+                            </p>
+
+                            <div className="mb-3">
+                                <label className="form-label">{t('databaseUrl')}</label>
+                                <div className="input-group input-group-sm">
+                                    <input
+                                        type={showDatabaseUrl ? 'text' : 'password'}
+                                        className="form-control form-control-sm"
+                                        placeholder="postgresql://postgres:password@db.xxx.supabase.co:6543/postgres"
+                                        value={systemSettings.DATABASE_URL}
+                                        onChange={(e) => setSystemSettings(prev => ({
+                                            ...prev,
+                                            DATABASE_URL: e.target.value
+                                        }))}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-secondary"
+                                        onClick={() => setShowDatabaseUrl(!showDatabaseUrl)}
+                                    >
+                                        {showDatabaseUrl ? <EyeOff size={14} /> : <Eye size={14} />}
+                                    </button>
+                                </div>
+                                <small className="text-muted">{t('databaseUrlHint')}</small>
+                            </div>
+
+                            <div className="mb-3">
+                                <label className="form-label">{t('directUrl')}</label>
+                                <div className="input-group input-group-sm">
+                                    <input
+                                        type={showDirectUrl ? 'text' : 'password'}
+                                        className="form-control form-control-sm"
+                                        placeholder="postgresql://postgres:password@db.xxx.supabase.co:5432/postgres"
+                                        value={systemSettings.DIRECT_URL}
+                                        onChange={(e) => setSystemSettings(prev => ({
+                                            ...prev,
+                                            DIRECT_URL: e.target.value
+                                        }))}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-secondary"
+                                        onClick={() => setShowDirectUrl(!showDirectUrl)}
+                                    >
+                                        {showDirectUrl ? <EyeOff size={14} /> : <Eye size={14} />}
+                                    </button>
+                                </div>
+                                <small className="text-muted">{t('directUrlHint')}</small>
+                            </div>
+
+                            <small className="text-muted">
+                                <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer">
+                                    {t('supabaseDashboardLink')} <ExternalLink size={12} className="ms-1" />
+                                </a>
+                            </small>
+
+                            {dbTestResult && (
+                                <div className={`alert ${dbTestResult.success ? 'alert-success' : 'alert-danger'} py-2 mt-3 mb-0`}>
+                                    <div className="d-flex align-items-center">
+                                        {dbTestResult.success ? (
+                                            <CheckCircle size={16} className="me-2" />
+                                        ) : (
+                                            <AlertCircle size={16} className="me-2" />
+                                        )}
+                                        <span className="small">{dbTestResult.message}</span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        <div className="card-footer d-flex justify-content-between">
+                            <button
+                                className="btn btn-outline-primary btn-sm"
+                                onClick={handleTestDb}
+                                disabled={testingDb}
+                            >
+                                {testingDb ? (
+                                    <>
+                                        <span className="spinner-border spinner-border-sm me-1"></span>
+                                        {t('testing')}
+                                    </>
+                                ) : (
+                                    <>
+                                        <TestTube size={14} className="me-1" />
+                                        {t('dbConnectionTest')}
+                                    </>
+                                )}
+                            </button>
+                            <button
+                                className="btn btn-primary btn-sm"
+                                onClick={() => saveSystemSettings('DATABASE')}
+                                disabled={savingSettings}
+                            >
+                                {savingSettings ? (
+                                    <span className="spinner-border spinner-border-sm"></span>
+                                ) : (
+                                    <>
+                                        <Save size={14} className="me-1" />
+                                        {t('save')}
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* NextAuth 설정 */}
+            <div className="row row-deck row-cards mb-4">
+                <div className="col-lg-6">
+                    <div className="card">
+                        <div className="card-header">
+                            <div className="d-flex align-items-center">
+                                <Shield size={20} className="me-2 text-indigo" />
+                                <h3 className="card-title mb-0">{t('nextAuthTitle')}</h3>
+                            </div>
+                        </div>
+                        <div className="card-body">
+                            <p className="text-muted small mb-3">
+                                {t('nextAuthDesc')}
+                            </p>
+
+                            <div className="mb-3">
+                                <label className="form-label">{t('nextAuthUrl')}</label>
+                                <input
+                                    type="text"
+                                    className="form-control form-control-sm"
+                                    placeholder="https://your-app.vercel.app"
+                                    value={systemSettings.NEXTAUTH_URL}
+                                    onChange={(e) => setSystemSettings(prev => ({
+                                        ...prev,
+                                        NEXTAUTH_URL: e.target.value
+                                    }))}
+                                />
+                                <small className="text-muted">{t('nextAuthUrlHint')}</small>
+                            </div>
+
+                            <div className="mb-0">
+                                <label className="form-label">{t('nextAuthSecret')}</label>
+                                <div className="input-group input-group-sm">
+                                    <input
+                                        type={showNextAuthSecret ? 'text' : 'password'}
+                                        className="form-control form-control-sm"
+                                        placeholder="complex-secret-key-here"
+                                        value={systemSettings.NEXTAUTH_SECRET}
+                                        onChange={(e) => setSystemSettings(prev => ({
+                                            ...prev,
+                                            NEXTAUTH_SECRET: e.target.value
+                                        }))}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-secondary"
+                                        onClick={() => setShowNextAuthSecret(!showNextAuthSecret)}
+                                    >
+                                        {showNextAuthSecret ? <EyeOff size={14} /> : <Eye size={14} />}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-primary"
+                                        onClick={generateNextAuthSecret}
+                                        title={t('generateSecret')}
+                                    >
+                                        <RefreshCw size={14} />
+                                    </button>
+                                </div>
+                                <small className="text-muted">{t('nextAuthSecretHint')}</small>
+                            </div>
+                        </div>
+                        <div className="card-footer d-flex justify-content-end">
+                            <button
+                                className="btn btn-primary btn-sm"
+                                onClick={() => saveSystemSettings('NEXTAUTH')}
+                                disabled={savingSettings}
+                            >
+                                {savingSettings ? (
+                                    <span className="spinner-border spinner-border-sm"></span>
+                                ) : (
+                                    <>
+                                        <Save size={14} className="me-1" />
+                                        {t('save')}
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Vercel 배포 정보 */}
+                <div className="col-lg-6">
+                    <div className="card">
+                        <div className="card-header">
+                            <div className="d-flex align-items-center">
+                                <Github size={20} className="me-2" />
+                                <h3 className="card-title mb-0">{t('vercelTitle')}</h3>
+                            </div>
+                        </div>
+                        <div className="card-body">
+                            <p className="text-muted small mb-3">
+                                {t('vercelDesc')}
+                            </p>
+
+                            <div className="list-group list-group-flush">
+                                <div className="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <span className="text-muted">{t('currentEnv')}</span>
+                                    <span className="badge bg-green">{process.env.NODE_ENV === 'production' ? t('production') : t('development')}</span>
+                                </div>
+                                <div className="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <span className="text-muted">{t('vercelProjectUrl')}</span>
+                                    <a href={systemSettings.NEXTAUTH_URL || '#'} target="_blank" rel="noopener noreferrer" className="text-primary">
+                                        {systemSettings.NEXTAUTH_URL || 'localhost:3000'}
+                                        <ExternalLink size={12} className="ms-1" />
+                                    </a>
+                                </div>
+                                <div className="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <span className="text-muted">{t('vercelGitRepo')}</span>
+                                    <a href="https://github.com/your-repo/kiosk-crm" target="_blank" rel="noopener noreferrer" className="text-primary">
+                                        GitHub <ExternalLink size={12} className="ms-1" />
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div className="alert alert-info py-2 mt-3 mb-0">
+                                <small>
+                                    <strong>{t('note')}</strong> 환경 변수 변경 후 Vercel에서 재배포가 필요합니다. 환경 변수는 Vercel Dashboard에서 직접 설정하는 것을 권장합니다.
+                                </small>
+                            </div>
                         </div>
                     </div>
                 </div>

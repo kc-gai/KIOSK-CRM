@@ -4,6 +4,14 @@
   "created_at": "2024-12-24T15:30:00+09:00",
   "status": "completed",
   "task_summary": "거래처 관리 페이지 코드 기반 개선 및 독립법인 지원",
+  "work_hours": 3.5,
+  "session_info": {
+    "ai_assistant": "Claude (Anthropic)",
+    "session_start": "2024-12-24T14:00:00+09:00",
+    "session_end": "2024-12-24T17:30:00+09:00",
+    "conversation_turns": 30,
+    "tools_used": ["Prisma", "Next.js", "TypeScript", "Tabler UI"]
+  },
 
   "completed_tasks": [
     "FC/Corporation/Branch 테이블에 code 필드 추가 (고유 식별자)",

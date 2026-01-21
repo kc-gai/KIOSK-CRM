@@ -82,6 +82,11 @@
   --tblr-font-sans-serif: 'Noto Sans KR', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+/* 일본어 로케일 전용 CSS 변수 */
+html[lang="ja"]:root {
+  --tblr-font-sans-serif: 'Noto Sans JP', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
@@ -125,8 +130,19 @@
   }
 }
 
-* {
+/* 기본 폰트는 한국어 - 아이콘 폰트 제외 */
+*:not(.ti):not([class^="ti-"]):not([class*=" ti-"]):not(i) {
   font-family: 'Noto Sans KR', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+/* 일본어 로케일일 때는 일본어 폰트 우선 - 아이콘 폰트 제외 */
+html[lang="ja"] *:not(.ti):not([class^="ti-"]):not([class*=" ti-"]):not(i) {
+  font-family: 'Noto Sans JP', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+/* Tabler Icons 폰트 복원 */
+.ti, [class^="ti-"], [class*=" ti-"], i.ti {
+  font-family: 'tabler-icons' !important;
 }
 
 /* Next.js Dev Tools 위치 조정 */

@@ -1,9 +1,17 @@
 {
   "report_id": "RPT-20241218-003",
   "order_id": null,
-  "created_at": "2024-12-18T16:00:00",
+  "created_at": "2024-12-18T16:00:00+09:00",
   "status": "completed",
   "task_summary": "AI 검색 기능 구현 및 세션 관리 규칙 업데이트",
+  "work_hours": 1.0,
+  "session_info": {
+    "ai_assistant": "Claude (Anthropic)",
+    "session_start": "2024-12-18T15:30:00+09:00",
+    "session_end": "2024-12-18T16:00:00+09:00",
+    "conversation_turns": 12,
+    "tools_used": ["VS Code", "Next.js Dev Server"]
+  },
   "completed_tasks": [
     "지점 주소 입력 시 관할지역 자동 계산 기능 확인 (이미 구현됨)",
     "AI 검색 API 엔드포인트 생성 (/api/ai-search)",
