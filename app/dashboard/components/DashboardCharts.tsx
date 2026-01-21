@@ -12,8 +12,6 @@ import {
     Tooltip,
     Legend,
     ResponsiveContainer,
-    PieChart,
-    Pie,
     Cell
 } from "recharts"
 import { useTranslations, useLocale } from 'next-intl'
@@ -59,7 +57,21 @@ type DashboardChartsProps = {
     quickInfo: QuickInfoData
 }
 
-const COLORS = ['#206bc4', '#4299e1', '#45aaf2', '#5eba00', '#fab005', '#f76707']
+const COLORS = ['#206bc4', '#4299e1', '#45aaf2', '#5eba00', '#fab005', '#f76707', '#ae3ec9', '#d63939', '#0ca678', '#74b816']
+
+// 관할사무실별 고유 색상
+const AREA_COLORS = [
+    '#206bc4', // 파랑
+    '#5eba00', // 초록
+    '#f76707', // 주황
+    '#ae3ec9', // 보라
+    '#d63939', // 빨강
+    '#0ca678', // 청록
+    '#fab005', // 노랑
+    '#74b816', // 연두
+    '#4299e1', // 하늘
+    '#e91e63', // 분홍
+]
 
 export function DashboardCharts({ monthlyData, partnerData, regionData, areaData, quickInfo }: DashboardChartsProps) {
     const t = useTranslations('dashboard')
@@ -197,7 +209,11 @@ export function DashboardCharts({ monthlyData, partnerData, regionData, areaData
                                                 }}
                                             />
                                             <Legend />
-                                            <Bar dataKey="value" fill="#5eba00" name={t('assetsCount')} radius={[0, 4, 4, 0]} />
+                                            <Bar dataKey="value" name={t('assetsCount')} radius={[0, 4, 4, 0]}>
+                                                {localizedRegionData.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={AREA_COLORS[index % AREA_COLORS.length]} />
+                                                ))}
+                                            </Bar>
                                         </BarChart>
                                     </ResponsiveContainer>
                                 ) : (
@@ -220,7 +236,11 @@ export function DashboardCharts({ monthlyData, partnerData, regionData, areaData
                                                 }}
                                             />
                                             <Legend />
-                                            <Bar dataKey="value" fill="#206bc4" name={t('assetsCount')} radius={[0, 4, 4, 0]} />
+                                            <Bar dataKey="value" name={t('assetsCount')} radius={[0, 4, 4, 0]}>
+                                                {localizedAreaData.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={AREA_COLORS[index % AREA_COLORS.length]} />
+                                                ))}
+                                            </Bar>
                                         </BarChart>
                                     </ResponsiveContainer>
                                 ) : (

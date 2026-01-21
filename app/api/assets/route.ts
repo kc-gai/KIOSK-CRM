@@ -151,10 +151,26 @@ export async function POST(req: Request) {
             }
         }
 
+        // serialNumber가 비어있으면 임시 값 생성 (TEMP-타임스탬프-랜덤)
+        let serialNumber = json.serialNumber
+        if (!serialNumber || serialNumber.trim() === '') {
+            const timestamp = Date.now()
+            const random = Math.floor(Math.random() * 1000)
+            serialNumber = `TEMP-${timestamp}-${random}`
+        }
+
+        // serialNumber 중복 체크
+        const existingSerial = await prisma.kiosk.findUnique({
+            where: { serialNumber }
+        })
+        if (existingSerial) {
+            return NextResponse.json({ error: `시리얼 번호 '${serialNumber}'가 이미 존재합니다` }, { status: 400 })
+        }
+
         const kiosk = await prisma.kiosk.create({
             data: {
                 code: json.code || null,
-                serialNumber: json.serialNumber,
+                serialNumber,
                 kioskNumber: json.kioskNumber || null,
                 anydeskId: json.anydeskId || null,
                 brandName: json.brandName || null,
