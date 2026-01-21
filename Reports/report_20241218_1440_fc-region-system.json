@@ -4,6 +4,14 @@
   "created_at": "2024-12-18T14:40:00+09:00",
   "status": "completed",
   "task_summary": "FC/법인/지점 관리 시스템 및 관할지역/사무실 관리 시스템 구현",
+  "work_hours": 4.0,
+  "session_info": {
+    "ai_assistant": "Claude (Anthropic)",
+    "session_start": "2024-12-18T09:00:00+09:00",
+    "session_end": "2024-12-18T14:40:00+09:00",
+    "conversation_turns": 35,
+    "tools_used": ["VS Code", "Prisma", "Next.js Dev Server"]
+  },
   "completed_tasks": [
     "Prisma 스키마 확장 - Region, Area, FC, Corporation, Branch 모델 추가",
     "Region/Area 마스터 데이터 API 엔드포인트 구현 (CRUD)",

@@ -246,25 +246,28 @@ export default function AIChatbot() {
                 </div>
                 <div className="d-flex gap-1">
                     <button
-                        className="btn btn-sm btn-icon text-white"
+                        className="btn btn-sm btn-icon"
+                        style={{ color: '#ffffff' }}
                         onClick={(e) => { e.stopPropagation(); clearChat() }}
                         title={locale === 'ko' ? '대화 초기화' : '会話リセット'}
                     >
-                        <Trash2 size={16} />
+                        <Trash2 size={16} color="#ffffff" />
                     </button>
                     <button
-                        className="btn btn-sm btn-icon text-white"
+                        className="btn btn-sm btn-icon"
+                        style={{ color: '#ffffff' }}
                         onClick={(e) => { e.stopPropagation(); setIsMinimized(!isMinimized) }}
                         title={isMinimized ? (locale === 'ko' ? '확장' : '展開') : (locale === 'ko' ? '최소화' : '最小化')}
                     >
-                        {isMinimized ? <Maximize2 size={16} /> : <Minimize2 size={16} />}
+                        {isMinimized ? <Maximize2 size={16} color="#ffffff" /> : <Minimize2 size={16} color="#ffffff" />}
                     </button>
                     <button
-                        className="btn btn-sm btn-icon text-white"
+                        className="btn btn-sm btn-icon"
+                        style={{ color: '#ffffff' }}
                         onClick={() => setIsOpen(false)}
                         title={locale === 'ko' ? '닫기' : '閉じる'}
                     >
-                        <X size={16} />
+                        <X size={16} color="#ffffff" />
                     </button>
                 </div>
             </div>
@@ -286,8 +289,12 @@ export default function AIChatbot() {
                                 className={`d-flex mb-2 ${msg.role === 'user' ? 'justify-content-end' : 'justify-content-start'}`}
                             >
                                 <div
-                                    className={`p-2 rounded-3 ${msg.role === 'user' ? 'bg-primary text-white' : 'bg-white border'}`}
-                                    style={{ maxWidth: '85%', fontSize: '13px' }}
+                                    className={`p-2 rounded-3 ${msg.role === 'user' ? 'bg-primary' : 'bg-white border'}`}
+                                    style={{
+                                        maxWidth: '85%',
+                                        fontSize: '13px',
+                                        color: msg.role === 'user' ? '#ffffff' : '#1e293b'
+                                    }}
                                 >
                                     {/* 첨부파일 */}
                                     {msg.attachments && msg.attachments.length > 0 && (
@@ -312,8 +319,8 @@ export default function AIChatbot() {
                                         </div>
                                     )}
                                     {/* 메시지 내용 */}
-                                    <div style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</div>
-                                    <div className={`text-end mt-1 ${msg.role === 'user' ? 'text-white-50' : 'text-muted'}`} style={{ fontSize: '10px' }}>
+                                    <div style={{ whiteSpace: 'pre-wrap', color: msg.role === 'user' ? '#ffffff' : '#1e293b' }}>{msg.content}</div>
+                                    <div className="text-end mt-1" style={{ fontSize: '10px', color: msg.role === 'user' ? 'rgba(255,255,255,0.7)' : '#6c757d' }}>
                                         {msg.timestamp.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
                                     </div>
                                 </div>
@@ -409,7 +416,7 @@ export default function AIChatbot() {
                                 onKeyDown={handleKeyDown}
                                 onPaste={handlePaste}
                                 rows={1}
-                                style={{ resize: 'none', minHeight: '36px', maxHeight: '80px' }}
+                                style={{ resize: 'none', minHeight: '36px', maxHeight: '80px', color: '#1e293b' }}
                             />
                             <button
                                 className="btn btn-primary btn-sm btn-icon"
@@ -419,7 +426,7 @@ export default function AIChatbot() {
                                 <Send size={16} />
                             </button>
                         </div>
-                        <div className="text-muted text-center mt-1" style={{ fontSize: '10px' }}>
+                        <div className="text-center mt-1" style={{ fontSize: '10px', color: '#6c757d' }}>
                             {locale === 'ko' ? 'Ctrl+V로 스크린샷 붙여넣기 가능' : 'Ctrl+Vでスクリーンショット貼り付け可能'}
                         </div>
                     </div>

@@ -280,10 +280,11 @@ export default function AssetDetailPage() {
         setInlineEditHistoryValue('')
     }
 
-    // 인라인 날짜 입력 핸들러
+    // 인라인 날짜 입력 핸들러 - 입력 중에는 그대로 유지, 저장 시에만 파싱
     const handleInlineHistoryDateInput = (value: string) => {
-        const parsed = parseDateString(value)
-        setInlineEditHistoryValue(parsed)
+        // 숫자와 구분자만 허용 (-, /, .)
+        const filtered = value.replace(/[^0-9\-\/\.]/g, '')
+        setInlineEditHistoryValue(filtered)
     }
 
     const fetchData = async () => {
@@ -324,6 +325,40 @@ export default function AssetDetailPage() {
         const area = areas.find(a => a.code === code)
         if (!area) return ''
         return locale === 'ja' ? (area.nameJa || area.name) : area.name
+    }
+
+    // 이력 description 다국어 번역 (API에서 키 형식으로 저장된 값을 번역)
+    const translateDescription = (desc: string | null): string => {
+        if (!desc) return '-'
+
+        // 기존 한국어 텍스트는 그대로 표시 (이전 데이터 호환)
+        if (desc.includes('지점 변경') || desc.includes('소속 회사 변경') ||
+            desc.includes('관할지역 변경') || desc.includes('취득형태 변경') ||
+            desc.includes('상태 변경') || desc.includes('가격 변경')) {
+            return desc
+        }
+
+        // 새로운 키 형식 번역
+        const parts = desc.split(', ')
+        const translated = parts.map(part => {
+            if (part === 'CHANGE_PARTNER') return t('changePartner')
+            if (part === 'CHANGE_BRANCH') return t('changeBranch')
+            if (part === 'CHANGE_AREA') return t('changeArea')
+            if (part.startsWith('CHANGE_STATUS:')) {
+                const [, values] = part.split(':')
+                return `${t('changeStatus')}: ${values}`
+            }
+            if (part.startsWith('CHANGE_ACQUISITION:')) {
+                const [, values] = part.split(':')
+                return `${t('changeAcquisition')}: ${values}`
+            }
+            if (part.startsWith('CHANGE_PRICE:')) {
+                const [, values] = part.split(':')
+                return `${t('changePrice')}: ${values}${t('manYenUnit')}`
+            }
+            return part // 알 수 없는 형식은 그대로 반환
+        })
+        return translated.join(', ')
     }
 
     // 날짜 입력 자동 포맷팅 (YYYY-MM-DD)
@@ -809,7 +844,7 @@ export default function AssetDetailPage() {
                         </div>
                         <div className="col-auto d-flex gap-2">
                             <Link
-                                href={`/dashboard/assets?edit=${kiosk.id}`}
+                                href={`/dashboard/assets?edit=${kiosk.id}&page=${returnPage}`}
                                 className="btn btn-outline-primary"
                             >
                                 <i className="ti ti-edit me-2"></i>
@@ -1086,11 +1121,22 @@ export default function AssetDetailPage() {
                                                                     ? (locale === 'ja' ? (h.newCorporation.nameJa || h.newCorporation.name) : h.newCorporation.name)
                                                                     : ''
 
-                                                                const prevDisplay = h.prevBranch
-                                                                    ? (prevCorpName ? `${prevCorpName} / ${h.prevBranch}` : h.prevBranch)
+                                                                // branchId로 지점 정보를 찾아서 로케일에 맞는 이름 사용
+                                                                const prevBranchObj = h.prevBranchId ? branches.find(b => b.id === h.prevBranchId) : null
+                                                                const newBranchObj = h.newBranchId ? branches.find(b => b.id === h.newBranchId) : null
+
+                                                                const prevBranchName = prevBranchObj
+                                                                    ? (locale === 'ja' ? (prevBranchObj.nameJa || prevBranchObj.name) : prevBranchObj.name)
+                                                                    : h.prevBranch  // branchId가 없으면 저장된 문자열 사용 (이전 데이터 호환)
+                                                                const newBranchName = newBranchObj
+                                                                    ? (locale === 'ja' ? (newBranchObj.nameJa || newBranchObj.name) : newBranchObj.name)
+                                                                    : h.newBranch  // branchId가 없으면 저장된 문자열 사용 (이전 데이터 호환)
+
+                                                                const prevDisplay = prevBranchName
+                                                                    ? (prevCorpName ? `${prevCorpName} / ${prevBranchName}` : prevBranchName)
                                                                     : (prevCorpName || th('none'))
-                                                                const newDisplay = h.newBranch
-                                                                    ? (newCorpName ? `${newCorpName} / ${h.newBranch}` : h.newBranch)
+                                                                const newDisplay = newBranchName
+                                                                    ? (newCorpName ? `${newCorpName} / ${newBranchName}` : newBranchName)
                                                                     : (newCorpName || th('none'))
 
                                                                 return (
@@ -1121,7 +1167,7 @@ export default function AssetDetailPage() {
                                                 </td>
                                                 <td>{h.handledBy || '-'}</td>
                                                 <td>
-                                                    <span className="text-muted small">{h.description || '-'}</span>
+                                                    <span className="text-muted small">{translateDescription(h.description)}</span>
                                                 </td>
                                                 <td>
                                                     <div className="btn-list flex-nowrap">

@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { useSession } from 'next-auth/react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import {
     Plus, ChevronRight, ChevronDown, ChevronLeft, Building2, Store, MapPin, Edit, Trash2, Search,
     Upload, Download, FileSpreadsheet, Check, AlertCircle, X, Code2, RefreshCw,
@@ -66,6 +67,10 @@ type Corporation = {
     address?: string
     isActive: boolean
     fcId?: string | null
+    contractDate?: string
+    erpFeeRate?: number
+    kioskMaintenanceCost?: number
+    kioskSaleCost?: number
     createdAt?: string
     updatedAt?: string
     branches: Branch[]
@@ -142,6 +147,44 @@ type Area = {
     }
 }
 
+// 다양한 날짜 형식을 YYYY-MM-DD로 변환하는 함수
+const parseDateInput = (input: string): string => {
+    if (!input) return ''
+
+    // 이미 YYYY-MM-DD 형식이면 그대로 반환
+    if (/^\d{4}-\d{2}-\d{2}$/.test(input)) return input
+
+    // 공백, 슬래시, 점, 하이픈 등으로 분리
+    const cleaned = input.trim()
+
+    // 다양한 구분자 처리: 2025/05/07, 2025.05.07, 2025-05-07, 2025 05 07
+    const datePatterns = [
+        /^(\d{4})[\/\.\-\s](\d{1,2})[\/\.\-\s](\d{1,2})$/, // YYYY/MM/DD, YYYY.MM.DD, YYYY-MM-DD
+        /^(\d{1,2})[\/\.\-\s](\d{1,2})[\/\.\-\s](\d{4})$/, // MM/DD/YYYY, DD/MM/YYYY
+        /^(\d{4})(\d{2})(\d{2})$/, // YYYYMMDD
+    ]
+
+    // YYYY/MM/DD 또는 YYYY.MM.DD 또는 YYYY-MM-DD
+    let match = cleaned.match(datePatterns[0])
+    if (match) {
+        const year = match[1]
+        const month = match[2].padStart(2, '0')
+        const day = match[3].padStart(2, '0')
+        return `${year}-${month}-${day}`
+    }
+
+    // YYYYMMDD
+    match = cleaned.match(datePatterns[2])
+    if (match) {
+        const year = match[1]
+        const month = match[2]
+        const day = match[3]
+        return `${year}-${month}-${day}`
+    }
+
+    return input
+}
+
 export default function ClientsPage() {
     const t = useTranslations('fc')
     const tp = useTranslations('partners')
@@ -150,6 +193,8 @@ export default function ClientsPage() {
     const locale = useLocale()
     const isJa = locale === 'ja'
     const { data: session } = useSession()
+    const searchParams = useSearchParams()
+    const router = useRouter()
 
     // 슈퍼관리자 여부 확인 (role이 SUPER_ADMIN이거나 email이 admin 이메일인 경우)
     const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN' || session?.user?.email === 'admin@example.com'
@@ -324,6 +369,19 @@ export default function ClientsPage() {
     // 법인 등록 시 기존 법인 코드 목록
     const [existingCorpCodes, setExistingCorpCodes] = useState<string[]>([])
 
+    // 다음 코드 계산 헬퍼 함수
+    const getNextCode = (existingCodes: string[]): string => {
+        if (existingCodes.length === 0) return '001'
+        const numericCodes = existingCodes
+            .map(code => {
+                const match = code.match(/(\d+)$/)
+                return match ? parseInt(match[1], 10) : 0
+            })
+            .filter(n => n > 0)
+        const nextNumber = numericCodes.length > 0 ? Math.max(...numericCodes) + 1 : 1
+        return String(nextNumber).padStart(3, '0')
+    }
+
     const fetchData = async () => {
         try {
             const fcRes = await fetch('/api/fc')
@@ -382,15 +440,69 @@ export default function ClientsPage() {
         fetchData()
     }, [])
 
+    // URL 파라미터 처리 (자산관리에서 신규 점포 추가로 이동 시)
+    useEffect(() => {
+        if (loading || fcs.length === 0) return
+
+        const fcIdParam = searchParams.get('fcId')
+        const corpIdParam = searchParams.get('corpId')
+        const tabParam = searchParams.get('tab')
+        const actionParam = searchParams.get('action')
+        const independentParam = searchParams.get('independent')
+
+        if (fcIdParam && tabParam === 'branch') {
+            // FC 소속 법인인 경우
+            const targetFc = fcs.find(fc => fc.id === fcIdParam)
+            if (targetFc) {
+                setSelectedFc(targetFc)
+                setDetailTab('branch')
+
+                // 신규 지점 추가 액션인 경우 모달 열기
+                if (actionParam === 'addBranch' && corpIdParam) {
+                    setTimeout(() => {
+                        openModal('branch', fcIdParam, corpIdParam)
+                    }, 300)
+                }
+            }
+            // URL 파라미터 정리 (한 번만 처리)
+            router.replace('/dashboard/clients', { scroll: false })
+        } else if (independentParam === 'true' && corpIdParam && tabParam === 'branch') {
+            // 독립 법인인 경우 - 향후 독립 법인 선택 로직 추가 가능
+            // 현재는 거래처 페이지로만 이동
+            router.replace('/dashboard/clients', { scroll: false })
+        }
+    }, [loading, fcs, searchParams])
+
     // selectedFc 변경 시 설정 값 로드
     useEffect(() => {
         if (selectedFc) {
+            // FC의 법인들에서 계약 정보 가져오기 (첫 번째로 값이 있는 법인 기준)
+            let contractDate = selectedFc.contractDate?.split('T')[0] || ''
+            let erpFeeRate = ''
+            let kioskMaintenanceCost = ''
+            let kioskSaleCost = ''
+
+            for (const corp of selectedFc.corporations) {
+                if (!contractDate && corp.contractDate) {
+                    contractDate = corp.contractDate.split('T')[0]
+                }
+                if (!erpFeeRate && corp.erpFeeRate !== undefined && corp.erpFeeRate !== null) {
+                    erpFeeRate = corp.erpFeeRate.toString()
+                }
+                if (!kioskMaintenanceCost && corp.kioskMaintenanceCost !== undefined && corp.kioskMaintenanceCost !== null) {
+                    kioskMaintenanceCost = corp.kioskMaintenanceCost.toString()
+                }
+                if (!kioskSaleCost && corp.kioskSaleCost !== undefined && corp.kioskSaleCost !== null) {
+                    kioskSaleCost = corp.kioskSaleCost.toString()
+                }
+            }
+
             setFcSettings({
-                contractDate: selectedFc.contractDate?.split('T')[0] || '',
+                contractDate,
                 commissionRate: selectedFc.commissionRate?.toString() || '',
-                erpFeeRate: '',
-                kioskMaintenanceCost: '',
-                kioskSaleCost: '',
+                erpFeeRate,
+                kioskMaintenanceCost,
+                kioskSaleCost,
                 memo: selectedFc.memo || ''
             })
         }
@@ -426,15 +538,15 @@ export default function ClientsPage() {
                         })
                     })
                 }
-                alert('설정이 저장되었습니다.')
+                alert(tc('settingsSaved'))
                 fetchData()
             } else {
                 const err = await res.json()
-                alert(err.error || '저장 중 오류가 발생했습니다.')
+                alert(err.error || tc('savingError'))
             }
         } catch (e) {
             console.error(e)
-            alert('저장 중 오류가 발생했습니다.')
+            alert(tc('savingError'))
         } finally {
             setSavingSettings(false)
         }
@@ -726,6 +838,41 @@ export default function ClientsPage() {
             setExistingBranchCodes([])
         }
 
+        // 법인 추가 시 FC의 계약정보를 자동으로 상속
+        let inheritedContractDate = ''
+        let inheritedErpFeeRate = ''
+        let inheritedKioskMaintenanceCost = ''
+        let inheritedKioskSaleCost = ''
+
+        if (type === 'corp' && fcId) {
+            const parentFc = fcs.find(fc => fc.id === fcId)
+            if (parentFc) {
+                // FC 자체의 계약일자
+                if (parentFc.contractDate) {
+                    inheritedContractDate = parentFc.contractDate.split('T')[0]
+                }
+                // 기존 법인들에서 계약정보 가져오기
+                for (const corp of parentFc.corporations) {
+                    if (!inheritedContractDate && corp.contractDate) {
+                        inheritedContractDate = corp.contractDate.split('T')[0]
+                    }
+                    if (!inheritedErpFeeRate && corp.erpFeeRate !== undefined && corp.erpFeeRate !== null) {
+                        inheritedErpFeeRate = corp.erpFeeRate.toString()
+                    }
+                    if (!inheritedKioskMaintenanceCost && corp.kioskMaintenanceCost !== undefined && corp.kioskMaintenanceCost !== null) {
+                        inheritedKioskMaintenanceCost = corp.kioskMaintenanceCost.toString()
+                    }
+                    if (!inheritedKioskSaleCost && corp.kioskSaleCost !== undefined && corp.kioskSaleCost !== null) {
+                        inheritedKioskSaleCost = corp.kioskSaleCost.toString()
+                    }
+                    // 모든 값을 찾았으면 루프 종료
+                    if (inheritedContractDate && inheritedErpFeeRate && inheritedKioskMaintenanceCost && inheritedKioskSaleCost) {
+                        break
+                    }
+                }
+            }
+        }
+
         setFormData({
             code: suggestedCode,
             name: '',
@@ -742,11 +889,11 @@ export default function ClientsPage() {
             managerName: '',
             managerPhone: '',
             commissionRate: '',
-            contractDate: '',
-            erpFeeRate: '',
+            contractDate: inheritedContractDate,
+            erpFeeRate: inheritedErpFeeRate,
             erpFeeNotes: '',
-            kioskMaintenanceCost: '',
-            kioskSaleCost: '',
+            kioskMaintenanceCost: inheritedKioskMaintenanceCost,
+            kioskSaleCost: inheritedKioskSaleCost,
             kioskSaleNotes: '',
             fcId: fcId || '',
             regionCode: '',
@@ -1050,7 +1197,7 @@ export default function ClientsPage() {
             if (res.ok) {
                 fetchData()
             } else {
-                alert('상태 변경에 실패했습니다')
+                alert(tc('statusChangeFailed'))
             }
         } catch (error) {
             console.error(error)
@@ -1068,7 +1215,7 @@ export default function ClientsPage() {
             if (res.ok) {
                 fetchData()
             } else {
-                alert('상태 변경에 실패했습니다')
+                alert(tc('statusChangeFailed'))
             }
         } catch (error) {
             console.error(error)
@@ -1086,7 +1233,7 @@ export default function ClientsPage() {
             if (res.ok) {
                 fetchData()
             } else {
-                alert('상태 변경에 실패했습니다')
+                alert(tc('statusChangeFailed'))
             }
         } catch (error) {
             console.error(error)
@@ -2126,10 +2273,17 @@ export default function ClientsPage() {
                                                             <div className="col-md-6">
                                                                 <label className="form-label" style={{ fontSize: '0.8rem', color: '#64748b' }}>{tcl('contractDate')}</label>
                                                                 <input
-                                                                    type="date"
+                                                                    type="text"
                                                                     className="form-control form-control-sm"
                                                                     value={fcSettings.contractDate}
                                                                     onChange={(e) => setFcSettings(prev => ({ ...prev, contractDate: e.target.value }))}
+                                                                    onBlur={(e) => {
+                                                                        const parsed = parseDateInput(e.target.value)
+                                                                        if (parsed !== e.target.value) {
+                                                                            setFcSettings(prev => ({ ...prev, contractDate: parsed }))
+                                                                        }
+                                                                    }}
+                                                                    placeholder="YYYY-MM-DD"
                                                                     style={{ fontSize: '0.85rem' }}
                                                                 />
                                                             </div>
@@ -2616,27 +2770,14 @@ export default function ClientsPage() {
                             <div className="modal-header border-0 pb-0">
                                 <div>
                                     <h6 className="modal-title mb-0">{getModalTitle()}</h6>
-                                    {/* 지점 편집 시 법인 정보 표시 */}
-                                    {modalType === 'branch' && selectedCorpId && (() => {
-                                        const corp = selectedFc?.corporations.find(c => c.id === selectedCorpId)
-                                        if (corp) {
-                                            return (
-                                                <div className="d-flex align-items-center gap-2 mt-1">
-                                                    <span className="badge bg-purple-lt text-purple" style={{ fontSize: '0.7rem' }}>{corp.code}</span>
-                                                    <span style={{ fontSize: '0.8rem', color: '#64748b' }}>{getDisplayName(corp)}</span>
-                                                </div>
-                                            )
-                                        }
-                                        return null
-                                    })()}
                                 </div>
                                 <button type="button" className="btn-close" onClick={() => { setShowModal(false); setEditingId(null); }} />
                             </div>
                             <form onSubmit={handleSubmit}>
                                 <div className="modal-body">
                                     <div className="row g-2">
-                                        {/* 지점 등록 시 법인 선택 드롭다운 */}
-                                        {modalType === 'branch' && !editingId && (
+                                        {/* 지점 등록/편집 시 법인 선택 드롭다운 */}
+                                        {modalType === 'branch' && (
                                             <div className="col-12">
                                                 <label className="form-label" style={{ fontSize: '0.8rem' }}>
                                                     {tcl('selectCorporation')} *
@@ -2663,8 +2804,8 @@ export default function ClientsPage() {
                                                             setSelectedFcId(null)
                                                         }
 
-                                                        // 새 법인 선택 시 지점 코드 추천 가져오기
-                                                        if (newCorpId) {
+                                                        // 신규 등록 시에만 지점 코드 추천 가져오기
+                                                        if (!editingId && newCorpId) {
                                                             try {
                                                                 const res = await fetch(`/api/branches/next-code?corporationId=${newCorpId}`)
                                                                 if (res.ok) {
@@ -2675,7 +2816,7 @@ export default function ClientsPage() {
                                                             } catch (err) {
                                                                 console.error('지점 코드 조회 실패:', err)
                                                             }
-                                                        } else {
+                                                        } else if (!editingId) {
                                                             setFormData(prev => ({...prev, code: ''}))
                                                             setExistingBranchCodes([])
                                                         }
@@ -2724,23 +2865,77 @@ export default function ClientsPage() {
                                                 <label className="form-label" style={{ fontSize: '0.8rem' }}>
                                                     {modalType === 'branch' ? tcl('branchCode') : modalType === 'corp' ? tcl('corpCode') : modalType === 'fc' ? tcl('fcCode') : tcl('code')}
                                                 </label>
-                                                <input
-                                                    type="text"
-                                                    className="form-control form-control-sm"
-                                                    placeholder={modalType === 'fc' ? tcl('fcCodeHint') : ''}
-                                                    value={formData.code}
-                                                    onChange={e => setFormData({...formData, code: e.target.value.toUpperCase()})}
-                                                />
-                                                {/* 지점 등록 시 기존 지점 코드 목록 표시 */}
-                                                {modalType === 'branch' && !editingId && existingBranchCodes.length > 0 && (
+                                                <div className="input-group input-group-sm">
+                                                    <input
+                                                        type="text"
+                                                        className={`form-control form-control-sm ${
+                                                            modalType === 'branch' && !editingId && formData.code && existingBranchCodes.includes(formData.code)
+                                                                ? 'is-invalid'
+                                                                : modalType === 'corp' && !editingId && formData.code && existingCorpCodes.includes(formData.code)
+                                                                ? 'is-invalid'
+                                                                : ''
+                                                        }`}
+                                                        placeholder={modalType === 'fc' ? tcl('fcCodeHint') : ''}
+                                                        value={formData.code}
+                                                        onChange={e => setFormData({...formData, code: e.target.value.toUpperCase()})}
+                                                    />
+                                                    {/* 지점/법인 등록 시 다음 추천 코드 버튼 */}
+                                                    {!editingId && (modalType === 'branch' || modalType === 'corp') && (
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-outline-secondary"
+                                                            title={tcl('nextSuggestedCode')}
+                                                            onClick={async () => {
+                                                                if (modalType === 'branch') {
+                                                                    // 지점 코드는 단순 숫자 형식
+                                                                    const nextCode = getNextCode(existingBranchCodes)
+                                                                    setFormData({...formData, code: nextCode})
+                                                                } else if (modalType === 'corp') {
+                                                                    // 법인 코드는 API에서 형식에 맞게 가져오기
+                                                                    try {
+                                                                        const url = formData.fcId
+                                                                            ? `/api/corporations/next-code?fcId=${formData.fcId}`
+                                                                            : '/api/corporations/next-code'
+                                                                        const res = await fetch(url)
+                                                                        if (res.ok) {
+                                                                            const data = await res.json()
+                                                                            setFormData({...formData, code: data.nextCode || ''})
+                                                                            setExistingCorpCodes(data.existingCodes || [])
+                                                                        }
+                                                                    } catch (err) {
+                                                                        console.error('법인 코드 조회 실패:', err)
+                                                                    }
+                                                                }
+                                                            }}
+                                                        >
+                                                            <RefreshCw size={14} />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                {/* 지점 코드 중복 경고 */}
+                                                {modalType === 'branch' && !editingId && formData.code && existingBranchCodes.includes(formData.code) && (
+                                                    <div className="invalid-feedback d-block" style={{ fontSize: '0.75rem' }}>
+                                                        <AlertCircle size={12} className="me-1" style={{ display: 'inline' }} />
+                                                        {tcl('codeDuplicate')}
+                                                    </div>
+                                                )}
+                                                {/* 지점 등록 시 기존 지점 코드 목록 표시 및 추천 코드 */}
+                                                {modalType === 'branch' && !editingId && existingBranchCodes.length > 0 && !existingBranchCodes.includes(formData.code) && (
                                                     <div className="mt-1">
                                                         <small className="text-muted" style={{ fontSize: '0.7rem' }}>
                                                             {tcl('existingCodes')}: {existingBranchCodes.join(', ')}
                                                         </small>
                                                     </div>
                                                 )}
+                                                {/* 법인 코드 중복 경고 */}
+                                                {modalType === 'corp' && !editingId && formData.code && existingCorpCodes.includes(formData.code) && (
+                                                    <div className="invalid-feedback d-block" style={{ fontSize: '0.75rem' }}>
+                                                        <AlertCircle size={12} className="me-1" style={{ display: 'inline' }} />
+                                                        {tcl('codeDuplicate')}
+                                                    </div>
+                                                )}
                                                 {/* 법인 등록 시 기존 법인 코드 목록 표시 */}
-                                                {modalType === 'corp' && !editingId && existingCorpCodes.length > 0 && (
+                                                {modalType === 'corp' && !editingId && existingCorpCodes.length > 0 && !existingCorpCodes.includes(formData.code) && (
                                                     <div className="mt-1">
                                                         <small className="text-muted" style={{ fontSize: '0.7rem' }}>
                                                             {tcl('existingCodes')}: {existingCorpCodes.join(', ')}
@@ -2942,7 +3137,15 @@ export default function ClientsPage() {
                                     <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setShowModal(false); setEditingId(null); }}>
                                         {tc('cancel')}
                                     </button>
-                                    <button type="submit" className="btn btn-primary btn-sm" disabled={saving}>
+                                    <button
+                                        type="submit"
+                                        className="btn btn-primary btn-sm"
+                                        disabled={
+                                            saving ||
+                                            (modalType === 'branch' && !editingId && formData.code && existingBranchCodes.includes(formData.code)) ||
+                                            (modalType === 'corp' && !editingId && formData.code && existingCorpCodes.includes(formData.code))
+                                        }
+                                    >
                                         {saving && <span className="spinner-border spinner-border-sm me-1"></span>}
                                         {tc('save')}
                                     </button>

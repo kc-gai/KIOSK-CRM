@@ -106,6 +106,7 @@ type Kiosk = {
     branch?: {
         id: string
         name: string
+        nameJa: string | null
         regionCode: string | null
         areaCode: string | null
         corporation?: {
@@ -203,6 +204,15 @@ export default function AssetsPage() {
     // 페이지네이션 - URL의 page 파라미터로 초기화
     const [currentPage, setCurrentPage] = useState(initialPage)
     const itemsPerPage = 50
+
+    // 페이지 변경 시 URL도 업데이트하는 함수
+    const changePage = (newPage: number) => {
+        setCurrentPage(newPage)
+        // URL 파라미터 업데이트 (히스토리에 추가하지 않고 현재 URL만 변경)
+        const url = new URL(window.location.href)
+        url.searchParams.set('page', String(newPage))
+        window.history.replaceState({}, '', url.toString())
+    }
 
     // 이동이력 모달 관련
     const [showHistoryModal, setShowHistoryModal] = useState(false)
@@ -303,6 +313,11 @@ export default function AssetsPage() {
     const [corpSearchText, setCorpSearchText] = useState('')
     const corpDropdownRef = useRef<HTMLDivElement>(null)
 
+    // 지점 검색 드롭다운 상태
+    const [branchSearchOpen, setBranchSearchOpen] = useState(false)
+    const [branchSearchText, setBranchSearchText] = useState('')
+    const branchDropdownRef = useRef<HTMLDivElement>(null)
+
     const toggleColumn = (key: string) => {
         setVisibleColumns(prev => ({ ...prev, [key]: !prev[key] }))
     }
@@ -344,6 +359,19 @@ export default function AssetsPage() {
 
     // 날짜 입력 헬퍼: YYYYMMDD -> YYYY-MM-DD 자동 변환
     const handleDateInput = (field: string, value: string) => {
+        // YYYY/MM/DD 형식을 YYYY-MM-DD로 변환
+        if (/^\d{4}\/\d{2}\/\d{2}$/.test(value)) {
+            const formatted = value.replace(/\//g, '-')
+            setFormData(prev => ({ ...prev, [field]: formatted }))
+            return
+        }
+
+        // YYYY-MM-DD 형식이면 그대로 사용
+        if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+            setFormData(prev => ({ ...prev, [field]: value }))
+            return
+        }
+
         // 숫자만 추출
         const digits = value.replace(/\D/g, '')
 
@@ -351,8 +379,8 @@ export default function AssetsPage() {
         if (digits.length === 8) {
             const formatted = `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}`
             setFormData(prev => ({ ...prev, [field]: formatted }))
-        } else if (value.includes('-')) {
-            // 이미 형식화된 날짜면 그대로 사용
+        } else if (value.includes('-') || value.includes('/')) {
+            // 하이픈이나 슬래시가 포함된 부분 입력 중
             setFormData(prev => ({ ...prev, [field]: value }))
         } else {
             // 그 외 숫자 입력 중
@@ -429,6 +457,34 @@ export default function AssetsPage() {
         }
     }, [corpSearchOpen])
 
+    // 지점 검색 드롭다운 외부 클릭 시 닫기
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as HTMLElement
+            if (!target.closest('.branch-search-dropdown')) {
+                setBranchSearchOpen(false)
+            }
+        }
+        if (branchSearchOpen) {
+            document.addEventListener('click', handleClickOutside)
+        }
+        return () => {
+            document.removeEventListener('click', handleClickOutside)
+        }
+    }, [branchSearchOpen])
+
+    // 지점 드롭다운이 열릴 때 선택된 항목으로 스크롤
+    useEffect(() => {
+        if (branchSearchOpen && formData.branchId && branchDropdownRef.current) {
+            setTimeout(() => {
+                const selectedElement = branchDropdownRef.current?.querySelector(`[data-branch-id="${formData.branchId}"]`)
+                if (selectedElement) {
+                    selectedElement.scrollIntoView({ block: 'center', behavior: 'instant' })
+                }
+            }, 50)
+        }
+    }, [branchSearchOpen])
+
     // 법인 선택 시 해당 법인의 지점만 필터링
     useEffect(() => {
         if (formData.corporationId) {
@@ -470,10 +526,22 @@ export default function AssetsPage() {
                     : ''
 
                 // Corporation에서 계약 정보 가져옴
-                const contractDate = selectedCorp.contractDate || null
-                const erpFeeRate = selectedCorp.erpFeeRate ?? null
-                const kioskMaintenanceCost = selectedCorp.kioskMaintenanceCost ?? null
-                const kioskSaleCost = selectedCorp.kioskSaleCost ?? null
+                // 값이 없으면 같은 FC 소속의 다른 법인에서 기본값 가져오기
+                let contractDate = selectedCorp.contractDate || null
+                let erpFeeRate = selectedCorp.erpFeeRate ?? null
+                let kioskMaintenanceCost = selectedCorp.kioskMaintenanceCost ?? null
+                let kioskSaleCost = selectedCorp.kioskSaleCost ?? null
+
+                // 같은 FC 소속 법인 중 설정값이 있는 법인에서 기본값 상속
+                if (selectedCorp.fc && (erpFeeRate === null || kioskMaintenanceCost === null || kioskSaleCost === null)) {
+                    const sameFcCorps = corporations.filter(c => c.fc?.id === selectedCorp.fc?.id)
+                    for (const corp of sameFcCorps) {
+                        if (erpFeeRate === null && corp.erpFeeRate !== null) erpFeeRate = corp.erpFeeRate
+                        if (kioskMaintenanceCost === null && corp.kioskMaintenanceCost !== null) kioskMaintenanceCost = corp.kioskMaintenanceCost
+                        if (kioskSaleCost === null && corp.kioskSaleCost !== null) kioskSaleCost = corp.kioskSaleCost
+                        if (contractDate === null && corp.contractDate !== null) contractDate = corp.contractDate
+                    }
+                }
 
                 setFormData(prev => ({
                     ...prev,
@@ -486,7 +554,7 @@ export default function AssetsPage() {
                     address: '',
                     managerPhone: '',
                     brandName,  // FC 브랜드 코드와 이름 자동 입력
-                    contractDate: contractDate ? contractDate.split('T')[0] : '',
+                    contractDate: contractDate ? String(contractDate).split('T')[0] : '',
                     erpFeeRate: erpFeeRate?.toString() || '',
                     kioskMaintenanceCost: kioskMaintenanceCost?.toString() || '',
                     kioskSaleCost: kioskSaleCost?.toString() || ''
@@ -556,9 +624,19 @@ export default function AssetsPage() {
 
     // 지점 선택 시 자동으로 지역코드, 관할코드, 우편번호, 주소, 담당자 연락처 입력
     const handleBranchChange = (branchId: string) => {
-        // 신규 지점 추가 선택 시 거래처/점포 관리 페이지로 이동
+        // 신규 지점 추가 선택 시 거래처/점포 관리 페이지로 이동 (법인ID와 함께)
         if (branchId === 'ADD_NEW') {
-            router.push('/dashboard/clients')
+            // 현재 선택된 법인의 FC를 찾아서 쿼리 파라미터로 전달
+            const selectedCorp = corporations.find(c => c.id === formData.corporationId)
+            if (selectedCorp && selectedCorp.fcId) {
+                // FC 소속 법인인 경우: fcId와 corporationId를 전달하고 점포 탭 활성화
+                router.push(`/dashboard/clients?fcId=${selectedCorp.fcId}&corpId=${selectedCorp.id}&tab=branch&action=addBranch`)
+            } else if (selectedCorp) {
+                // 독립 법인인 경우: corporationId만 전달
+                router.push(`/dashboard/clients?corpId=${selectedCorp.id}&tab=branch&action=addBranch&independent=true`)
+            } else {
+                router.push('/dashboard/clients')
+            }
             return
         }
 
@@ -742,7 +820,7 @@ export default function AssetsPage() {
         const dateToSave = parseDateString(inlineEditValue)
         const testDate = new Date(dateToSave)
         if (isNaN(testDate.getTime())) {
-            alert('유효한 날짜 형식이 아닙니다. (예: 2023-01-01, 2023/01/01)')
+            alert(tc('invalidDateFormat'))
             return
         }
 
@@ -778,7 +856,7 @@ export default function AssetsPage() {
             fetchData()
         } catch (error) {
             console.error('Inline edit error:', error)
-            alert('수정 중 오류가 발생했습니다.')
+            alert(tc('editError'))
         }
     }
 
@@ -815,7 +893,7 @@ export default function AssetsPage() {
             fetchData()
         } catch (error) {
             console.error('Acquisition edit error:', error)
-            alert('수정 중 오류가 발생했습니다.')
+            alert(tc('editError'))
         }
     }
 
@@ -830,6 +908,12 @@ export default function AssetsPage() {
         e.preventDefault()
         console.log('handleCreate called')
 
+        // 리스(무상) 선택 시 리스회사 필수 체크
+        if (formData.acquisition === 'LEASE_FREE' && !formData.leaseCompanyId) {
+            alert(t('leaseCompanyRequired'))
+            return
+        }
+
         const res = await fetch('/api/assets', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -842,7 +926,9 @@ export default function AssetsPage() {
         setEditingKiosk(kiosk)
 
         // branchId가 있으면 해당 브랜치를 찾아서 corporationId와 관련 정보도 설정
+        // branchId가 없으면 latestBranch에서 정보를 가져옴
         let corpId = ''
+        let branchId = kiosk.branchId || ''
         let contractInfo = {
             contractDate: '',
             erpFeeRate: '',
@@ -858,8 +944,9 @@ export default function AssetsPage() {
         }
         let brandName = kiosk.brandName || ''
 
-        if (kiosk.branchId) {
-            const kioskBranch = branches.find(b => b.id === kiosk.branchId)
+        // 1. 먼저 branchId로 찾기
+        if (branchId) {
+            const kioskBranch = branches.find(b => b.id === branchId)
             if (kioskBranch) {
                 corpId = kioskBranch.corporationId
 
@@ -871,28 +958,70 @@ export default function AssetsPage() {
                     address: kioskBranch.address || '',
                     managerPhone: kioskBranch.managerPhone || ''
                 }
+            }
+        }
+        // 2. branchId가 없으면 latestBranch에서 정보 가져오기
+        else if (kiosk.latestBranch) {
+            branchId = kiosk.latestBranch.id
+            if (kiosk.latestBranch.corporation) {
+                corpId = kiosk.latestBranch.corporation.id
+            }
+            branchInfo = {
+                regionCode: kiosk.regionCode || kiosk.latestBranch.regionCode || '',
+                areaCode: kiosk.areaCode || kiosk.latestBranch.areaCode || '',
+                postalCode: '',
+                address: '',
+                managerPhone: ''
+            }
+        }
+        // 3. latestCorporation만 있는 경우
+        else if (kiosk.latestCorporation) {
+            corpId = kiosk.latestCorporation.id
+        }
 
-                // 해당 법인의 계약 정보 및 브랜드 정보 불러오기
-                const corp = corporations.find(c => c.id === corpId)
-                if (corp) {
-                    contractInfo = {
-                        contractDate: corp.contractDate ? corp.contractDate.split('T')[0] : '',
-                        erpFeeRate: corp.erpFeeRate?.toString() || '',
-                        kioskMaintenanceCost: corp.kioskMaintenanceCost?.toString() || '',
-                        kioskSaleCost: corp.kioskSaleCost?.toString() || ''
-                    }
+        // 법인의 계약 정보 및 브랜드 정보 불러오기
+        if (corpId) {
+            const corp = corporations.find(c => c.id === corpId)
+            if (corp) {
+                // 값이 없으면 같은 FC 소속의 다른 법인에서 기본값 가져오기
+                let erpFeeRate = corp.erpFeeRate ?? null
+                let kioskMaintenanceCost = corp.kioskMaintenanceCost ?? null
+                let kioskSaleCost = corp.kioskSaleCost ?? null
+                let contractDate = corp.contractDate || null
 
-                    // 브랜드명 매핑 (kiosk에 값이 없으면 FC 정보 사용)
-                    if (!brandName && corp.fc) {
-                        brandName = `${corp.fc.code} / ${corp.fc.name}`
+                if (corp.fc && (erpFeeRate === null || kioskMaintenanceCost === null || kioskSaleCost === null)) {
+                    const sameFcCorps = corporations.filter(c => c.fc?.id === corp.fc?.id)
+                    for (const c of sameFcCorps) {
+                        if (erpFeeRate === null && c.erpFeeRate !== null) erpFeeRate = c.erpFeeRate
+                        if (kioskMaintenanceCost === null && c.kioskMaintenanceCost !== null) kioskMaintenanceCost = c.kioskMaintenanceCost
+                        if (kioskSaleCost === null && c.kioskSaleCost !== null) kioskSaleCost = c.kioskSaleCost
+                        if (contractDate === null && c.contractDate !== null) contractDate = c.contractDate
                     }
+                }
+
+                contractInfo = {
+                    contractDate: contractDate ? String(contractDate).split('T')[0] : '',
+                    erpFeeRate: erpFeeRate?.toString() || '',
+                    kioskMaintenanceCost: kioskMaintenanceCost?.toString() || '',
+                    kioskSaleCost: kioskSaleCost?.toString() || ''
+                }
+
+                // 브랜드명 매핑 (kiosk에 값이 없으면 FC 정보 사용)
+                if (!brandName && corp.fc) {
+                    brandName = `${corp.fc.code} / ${corp.fc.name}`
                 }
             }
         }
 
         // 판매요금이 0보다 크면 취득형태를 '유상'으로 자동 설정
+        // 구버전 값(PURCHASE, LEASE)을 새 값(FREE, LEASE_FREE)으로 매핑
         const salePriceValue = kiosk.salePrice || 0
-        const acquisitionValue = salePriceValue > 0 ? 'PAID' : kiosk.acquisition
+        let acquisitionValue = kiosk.acquisition
+        // 구버전 → 신버전 매핑
+        if (acquisitionValue === 'PURCHASE') acquisitionValue = 'FREE'
+        if (acquisitionValue === 'LEASE') acquisitionValue = 'LEASE_FREE'
+        // 판매가 있으면 유상으로
+        if (salePriceValue > 0) acquisitionValue = 'PAID'
 
         setFormData({
             serialNumber: kiosk.serialNumber || '',
@@ -901,8 +1030,8 @@ export default function AssetsPage() {
             brandName: brandName,
             currentPartnerId: kiosk.currentPartnerId || '',
             corporationId: corpId,
-            branchId: kiosk.branchId || '',
-            branchName: kiosk.branchName || '',
+            branchId: branchId,
+            branchName: kiosk.branchName || kiosk.latestBranchName || '',
             ...branchInfo,
             ...contractInfo,
             acquisition: acquisitionValue,
@@ -922,6 +1051,13 @@ export default function AssetsPage() {
         e.preventDefault()
         console.log('handleUpdate called, editingKiosk:', editingKiosk?.id)
         if (!editingKiosk) return
+
+        // 리스(무상) 선택 시 리스회사 필수 체크
+        if (formData.acquisition === 'LEASE_FREE' && !formData.leaseCompanyId) {
+            alert(t('leaseCompanyRequired'))
+            return
+        }
+
         try {
             console.log('Updating with formData:', formData)
             const res = await fetch(`/api/assets/${editingKiosk.id}`, {
@@ -936,11 +1072,11 @@ export default function AssetsPage() {
             } else {
                 const errorData = await res.json().catch(() => ({}))
                 console.error('Update failed:', res.status, errorData)
-                alert(`저장 실패: ${errorData.error || res.status}`)
+                alert(`${tc('saveFailed')}: ${errorData.error || res.status}`)
             }
         } catch (error) {
             console.error('Update error:', error)
-            alert('저장 중 오류가 발생했습니다')
+            alert(tc('savingError'))
         }
     }
 
@@ -1067,6 +1203,40 @@ export default function AssetsPage() {
         return locale === 'ja' ? (area.nameJa || area.name) : area.name
     }
 
+    // 이력 description 다국어 번역 (API에서 키 형식으로 저장된 값을 번역)
+    const translateDescription = (desc: string | null): string => {
+        if (!desc) return '-'
+
+        // 기존 한국어 텍스트는 그대로 표시 (이전 데이터 호환)
+        if (desc.includes('지점 변경') || desc.includes('소속 회사 변경') ||
+            desc.includes('관할지역 변경') || desc.includes('취득형태 변경') ||
+            desc.includes('상태 변경') || desc.includes('가격 변경')) {
+            return desc
+        }
+
+        // 새로운 키 형식 번역
+        const parts = desc.split(', ')
+        const translated = parts.map(part => {
+            if (part === 'CHANGE_PARTNER') return t('changePartner')
+            if (part === 'CHANGE_BRANCH') return t('changeBranch')
+            if (part === 'CHANGE_AREA') return t('changeArea')
+            if (part.startsWith('CHANGE_STATUS:')) {
+                const [, values] = part.split(':')
+                return `${t('changeStatus')}: ${values}`
+            }
+            if (part.startsWith('CHANGE_ACQUISITION:')) {
+                const [, values] = part.split(':')
+                return `${t('changeAcquisition')}: ${values}`
+            }
+            if (part.startsWith('CHANGE_PRICE:')) {
+                const [, values] = part.split(':')
+                return `${t('changePrice')}: ${values}${t('manYenUnit')}`
+            }
+            return part
+        })
+        return translated.join(', ')
+    }
+
     // 계약법인명 가져오기 (최신 이력 > branch.corporation > currentPartner 순으로 우선)
     const getContractPartnerName = (k: Kiosk) => {
         // 최신 이력의 corporation 정보 우선
@@ -1086,24 +1256,24 @@ export default function AssetsPage() {
 
     // 지점명 가져오기 (최신 이력 > branch 순으로 우선)
     const getBranchName = (k: Kiosk) => {
-        // 최신 이력의 지점 정보 우선
+        // 최신 이력의 지점 정보 우선 (일본어일 때는 latestBranch.nameJa 우선)
+        if (k.latestBranch) {
+            if (locale === 'ja') {
+                return k.latestBranch.nameJa || k.latestBranch.name || k.latestBranchName || null
+            }
+            return k.latestBranch.name || k.latestBranchName || null
+        }
         if (k.latestBranchName) {
             return k.latestBranchName
         }
-        if (k.latestBranch) {
-            if (locale === 'ja') {
-                return k.latestBranch.nameJa || k.latestBranch.name || null
-            }
-            return k.latestBranch.name || null
-        }
         // 기존 branch 정보
-        if (k.branchName) return k.branchName
         if (k.branch) {
             if (locale === 'ja') {
-                return k.branch.name || null  // branch에는 nameJa가 없을 수 있음
+                return k.branch.nameJa || k.branch.name || k.branchName || null
             }
-            return k.branch.name || null
+            return k.branch.name || k.branchName || null
         }
+        if (k.branchName) return k.branchName
         return null
     }
 
@@ -1231,7 +1401,7 @@ export default function AssetsPage() {
                 })
 
                 if (validData.length === 0) {
-                    alert('유효한 데이터가 없습니다.')
+                    alert(tc('noValidData'))
                     return
                 }
 
@@ -1244,11 +1414,11 @@ export default function AssetsPage() {
                         })
                         const result = await res.json()
                         if (res.ok && result.success) {
-                            let message = `가져오기 완료!\n성공: ${result.count}건`
+                            let message = `${t('importComplete')}\n${t('importSuccessCount', { count: result.count })}`
                             if (result.failed > 0) {
-                                message += `\n실패: ${result.failed}건`
+                                message += `\n${t('importFailedCount', { count: result.failed })}`
                                 if (result.errors && result.errors.length > 0) {
-                                    message += `\n\n오류:\n${result.errors.join('\n')}`
+                                    message += `\n\n${t('importErrors')}:\n${result.errors.join('\n')}`
                                 }
                             }
                             alert(message)
@@ -1514,27 +1684,92 @@ export default function AssetsPage() {
                                             </div>
                                         </div>
 
-                                        {/* 지점 드롭다운 */}
-                                        <div className="col-md-3">
+                                        {/* 지점 드롭다운 (검색 기능 포함) */}
+                                        <div className="col-md-3 branch-search-dropdown">
                                             <label className="form-label">{t('branchName')}</label>
-                                            <select
-                                                className="form-select"
-                                                value={formData.branchId}
-                                                onChange={e => handleBranchChange(e.target.value)}
-                                                disabled={!formData.corporationId}
-                                            >
-                                                <option value="">{t('selectPartner')}</option>
-                                                {filteredBranches.map(branch => (
-                                                    <option key={branch.id} value={branch.id}>
-                                                        {locale === 'ja' ? (branch.nameJa || branch.name) : branch.name}
-                                                    </option>
-                                                ))}
-                                                {formData.corporationId && (
-                                                    <option value="ADD_NEW" style={{ fontWeight: 'bold', color: '#206bc4' }}>
-                                                        + {t('addNewBranch')}
-                                                    </option>
+                                            <div className="position-relative">
+                                                <div
+                                                    className={`form-select d-flex align-items-center justify-content-between ${!formData.corporationId ? 'disabled' : ''}`}
+                                                    style={{ cursor: formData.corporationId ? 'pointer' : 'not-allowed', backgroundColor: !formData.corporationId ? '#e9ecef' : 'white' }}
+                                                    onClick={() => formData.corporationId && setBranchSearchOpen(!branchSearchOpen)}
+                                                >
+                                                    <span className={formData.branchId ? '' : 'text-muted'}>
+                                                        {formData.branchId
+                                                            ? (() => {
+                                                                const branch = branches.find(b => b.id === formData.branchId)
+                                                                return branch ? (locale === 'ja' ? (branch.nameJa || branch.name) : branch.name) : t('selectBranch')
+                                                            })()
+                                                            : t('selectBranch') || '지점 선택...'}
+                                                    </span>
+                                                    <i className={`ti ti-chevron-${branchSearchOpen ? 'up' : 'down'}`}></i>
+                                                </div>
+                                                {branchSearchOpen && formData.corporationId && (
+                                                    <div
+                                                        ref={branchDropdownRef}
+                                                        className="position-absolute w-100 bg-white border rounded shadow-sm mt-1"
+                                                        style={{ zIndex: 1050, maxHeight: '300px', overflowY: 'auto' }}
+                                                    >
+                                                        <div className="p-2 border-bottom sticky-top bg-white">
+                                                            <input
+                                                                type="text"
+                                                                className="form-control form-control-sm"
+                                                                placeholder={t('searchBranch') || '지점 검색...'}
+                                                                value={branchSearchText}
+                                                                onChange={(e) => setBranchSearchText(e.target.value)}
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                autoFocus
+                                                            />
+                                                        </div>
+                                                        <div
+                                                            className="px-3 py-2 border-bottom text-muted small"
+                                                            style={{ cursor: 'pointer' }}
+                                                            onClick={() => {
+                                                                handleBranchChange('')
+                                                                setBranchSearchOpen(false)
+                                                                setBranchSearchText('')
+                                                            }}
+                                                        >
+                                                            {t('selectBranch') || '지점 선택...'}
+                                                        </div>
+                                                        {filteredBranches
+                                                            .filter(branch => {
+                                                                if (!branchSearchText) return true
+                                                                const searchLower = branchSearchText.toLowerCase()
+                                                                return branch.name.toLowerCase().includes(searchLower) ||
+                                                                       (branch.nameJa && branch.nameJa.toLowerCase().includes(searchLower))
+                                                            })
+                                                            .map(branch => (
+                                                                <div
+                                                                    key={branch.id}
+                                                                    data-branch-id={branch.id}
+                                                                    className={`px-3 py-2 ${formData.branchId === branch.id ? 'bg-primary text-white' : 'hover-bg-light'}`}
+                                                                    style={{ cursor: 'pointer' }}
+                                                                    onClick={() => {
+                                                                        handleBranchChange(branch.id)
+                                                                        setBranchSearchOpen(false)
+                                                                        setBranchSearchText('')
+                                                                    }}
+                                                                >
+                                                                    {locale === 'ja' ? (branch.nameJa || branch.name) : branch.name}
+                                                                </div>
+                                                            ))
+                                                        }
+                                                        {formData.corporationId && (
+                                                            <div
+                                                                className="px-3 py-2 border-top text-primary fw-bold"
+                                                                style={{ cursor: 'pointer' }}
+                                                                onClick={() => {
+                                                                    handleBranchChange('ADD_NEW')
+                                                                    setBranchSearchOpen(false)
+                                                                    setBranchSearchText('')
+                                                                }}
+                                                            >
+                                                                + {t('addNewBranch')}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 )}
-                                            </select>
+                                            </div>
                                         </div>
 
                                         {/* 지역명 (자동입력) */}
@@ -1645,7 +1880,7 @@ export default function AssetsPage() {
                                             </div>
                                         </div>
 
-                                        {/* 키오스크 판매 비용 (자동입력) */}
+                                        {/* 키오스크 판매 비용 (자동입력) - 만엔 단위 */}
                                         <div className="col-md-3">
                                             <label className="form-label">{t('kioskSaleCost')}</label>
                                             <div className="input-group">
@@ -1656,7 +1891,7 @@ export default function AssetsPage() {
                                                     readOnly
                                                     style={{ backgroundColor: '#f0f0f0' }}
                                                 />
-                                                <span className="input-group-text">円/台</span>
+                                                <span className="input-group-text">万円/台</span>
                                             </div>
                                         </div>
 
@@ -1676,14 +1911,24 @@ export default function AssetsPage() {
                                         </div>
                                         {formData.acquisition === 'LEASE_FREE' && (
                                             <div className="col-md-3">
-                                                <label className="form-label">{t('selectLeaseCompany')}</label>
-                                                <select className="form-select" value={formData.leaseCompanyId}
-                                                    onChange={e => setFormData({...formData, leaseCompanyId: e.target.value})}>
+                                                <label className="form-label">
+                                                    {t('selectLeaseCompany')}
+                                                    <span className="text-danger ms-1">*</span>
+                                                </label>
+                                                <select
+                                                    className={`form-select ${!formData.leaseCompanyId ? 'is-invalid' : ''}`}
+                                                    value={formData.leaseCompanyId}
+                                                    onChange={e => setFormData({...formData, leaseCompanyId: e.target.value})}
+                                                    required
+                                                >
                                                     <option value="">{t('selectLeaseCompany')}</option>
                                                     {leaseCompanies.map(lc => (
                                                         <option key={lc.id} value={lc.id}>{lc.name}</option>
                                                     ))}
                                                 </select>
+                                                {!formData.leaseCompanyId && (
+                                                    <div className="invalid-feedback">{t('leaseCompanyRequired')}</div>
+                                                )}
                                             </div>
                                         )}
                                         <div className="col-md-3">
@@ -1706,19 +1951,19 @@ export default function AssetsPage() {
                                             <label className="form-label">{t('orderRequestDate')}</label>
                                             <input type="text" className="form-control" value={formData.orderRequestDate}
                                                 onChange={e => handleDateInput('orderRequestDate', e.target.value)}
-                                                placeholder="YYYYMMDD" />
+                                                placeholder={t('datePlaceholder')} />
                                         </div>
                                         <div className="col-md-3">
                                             <label className="form-label">{t('deliveryDueDate')}</label>
                                             <input type="text" className="form-control" value={formData.deliveryDueDate}
                                                 onChange={e => setFormData({...formData, deliveryDueDate: e.target.value})}
-                                                placeholder="예: 3/24(月)の週, 2025-03-24" />
+                                                placeholder={t('deliveryDueDatePlaceholder')} />
                                         </div>
                                         <div className="col-md-3">
                                             <label className="form-label">{t('deliveryDate')}</label>
                                             <input type="text" className="form-control" value={formData.deliveryDate}
                                                 onChange={e => handleDateInput('deliveryDate', e.target.value)}
-                                                placeholder="YYYYMMDD" />
+                                                placeholder={t('datePlaceholder')} />
                                         </div>
                                         <div className="col-md-3">
                                             <label className="form-label">{t('deliveryStatus')}</label>
@@ -1908,8 +2153,8 @@ export default function AssetsPage() {
                                 </p>
                                 <ul className="pagination pagination-sm m-0">
                                     <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                                        <button className="page-link" onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}>
-                                            이전
+                                        <button className="page-link" onClick={() => changePage(Math.max(1, currentPage - 1))}>
+                                            {tc('previous')}
                                         </button>
                                     </li>
                                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -1925,15 +2170,15 @@ export default function AssetsPage() {
                                         }
                                         return (
                                             <li key={pageNum} className={`page-item ${currentPage === pageNum ? 'active' : ''}`}>
-                                                <button className="page-link" onClick={() => setCurrentPage(pageNum)}>
+                                                <button className="page-link" onClick={() => changePage(pageNum)}>
                                                     {pageNum}
                                                 </button>
                                             </li>
                                         )
                                     })}
                                     <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                                        <button className="page-link" onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}>
-                                            다음
+                                        <button className="page-link" onClick={() => changePage(Math.min(totalPages, currentPage + 1))}>
+                                            {tc('next')}
                                         </button>
                                     </li>
                                 </ul>
@@ -2302,8 +2547,8 @@ export default function AssetsPage() {
                             {totalPages > 1 && (
                                 <ul className="pagination m-0 ms-auto">
                                     <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                                        <button className="page-link" onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}>
-                                            이전
+                                        <button className="page-link" onClick={() => changePage(Math.max(1, currentPage - 1))}>
+                                            {tc('previous')}
                                         </button>
                                     </li>
                                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -2319,15 +2564,15 @@ export default function AssetsPage() {
                                         }
                                         return (
                                             <li key={pageNum} className={`page-item ${currentPage === pageNum ? 'active' : ''}`}>
-                                                <button className="page-link" onClick={() => setCurrentPage(pageNum)}>
+                                                <button className="page-link" onClick={() => changePage(pageNum)}>
                                                     {pageNum}
                                                 </button>
                                             </li>
                                         )
                                     })}
                                     <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                                        <button className="page-link" onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}>
-                                            다음
+                                        <button className="page-link" onClick={() => changePage(Math.min(totalPages, currentPage + 1))}>
+                                            {tc('next')}
                                         </button>
                                     </li>
                                 </ul>
@@ -2380,7 +2625,7 @@ export default function AssetsPage() {
                                                         </div>
                                                         <div className="row g-2">
                                                             <div className="col-md-5">
-                                                                <div className="text-muted small">이전</div>
+                                                                <div className="text-muted small">{th('before')}</div>
                                                                 {item.prevCorporation && (
                                                                     <div className="fw-semibold text-azure">{locale === 'ja' ? (item.prevCorporation.nameJa || item.prevCorporation.name) : item.prevCorporation.name}</div>
                                                                 )}
@@ -2396,7 +2641,7 @@ export default function AssetsPage() {
                                                                 <i className="ti ti-arrow-right text-warning" style={{ fontSize: '1.5rem' }}></i>
                                                             </div>
                                                             <div className="col-md-5">
-                                                                <div className="text-muted small">이후</div>
+                                                                <div className="text-muted small">{th('after')}</div>
                                                                 {item.newCorporation && (
                                                                     <div className="fw-semibold text-azure">{locale === 'ja' ? (item.newCorporation.nameJa || item.newCorporation.name) : item.newCorporation.name}</div>
                                                                 )}
@@ -2421,7 +2666,7 @@ export default function AssetsPage() {
                                                         )}
                                                         {item.description && (
                                                             <div className="mt-2 text-muted small">
-                                                                <i className="ti ti-note me-1"></i>{item.description}
+                                                                <i className="ti ti-note me-1"></i>{translateDescription(item.description)}
                                                             </div>
                                                         )}
                                                     </div>

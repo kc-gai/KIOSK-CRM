@@ -1,7 +1,7 @@
 {
-  "report_id": "RPT-20250118-001",
+  "report_id": "RPT-20260118-001",
   "order_id": null,
-  "created_at": "2025-01-18T10:00:00+09:00",
+  "created_at": "2026-01-18T10:00:00+09:00",
   "status": "completed",
   "task_summary": "법인/지점 코드 등록 UI/UX 개선",
   "work_hours": 3.0,

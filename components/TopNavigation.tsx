@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { LanguageSwitcher } from './LanguageSwitcher'
+import { signOut } from 'next-auth/react'
 
 interface NavItem {
     href?: string
@@ -35,6 +36,7 @@ interface TopNavigationProps {
     allowedMenus?: string[]
     tabHomeLabel?: string
     settingsItems?: NavItem[]
+    logoutLabel?: string
 }
 
 const getMenuKey = (href: string): string => {
@@ -50,10 +52,12 @@ export function TopNavigation({
     userRole = 'ADMIN',
     allowedMenus = [],
     tabHomeLabel = '홈',
-    settingsItems = []
+    settingsItems = [],
+    logoutLabel = '로그아웃'
 }: TopNavigationProps) {
     const [openTabs, setOpenTabs] = useState<Tab[]>([])
     const [activeCategory, setActiveCategory] = useState<string | null>(null)
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const pathname = usePathname()
     const router = useRouter()
 
@@ -158,6 +162,7 @@ export function TopNavigation({
             addTab({ href: item.href })
             router.push(item.href)
             setActiveCategory(null)
+            setMobileMenuOpen(false)
         }
     }
 
@@ -181,16 +186,25 @@ export function TopNavigation({
                 }}
             >
                 <div className="d-flex align-items-center h-100 px-3">
+                    {/* Mobile Hamburger Button */}
+                    <button
+                        className="btn btn-ghost-light text-white d-lg-none me-2 p-2"
+                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                        style={{ border: 'none' }}
+                    >
+                        <i className={`ti ${mobileMenuOpen ? 'ti-x' : 'ti-menu-2'}`} style={{ fontSize: '1.2rem' }}></i>
+                    </button>
+
                     {/* Logo */}
                     <Link href="/dashboard" className="d-flex align-items-center text-decoration-none text-white me-4">
                         <span className="badge bg-blue text-white me-2 p-2">
                             <i className="ti ti-device-desktop" style={{ fontSize: '1rem' }}></i>
                         </span>
-                        <span className="fw-bold">Kiosk CRM</span>
+                        <span className="fw-bold d-none d-sm-inline">Kiosk CRM</span>
                     </Link>
 
-                    {/* Categories */}
-                    <nav className="d-flex align-items-center gap-1 flex-grow-1">
+                    {/* Categories - Desktop Only */}
+                    <nav className="d-none d-lg-flex align-items-center gap-1 flex-grow-1">
                         {categories.map(category => (
                             <div
                                 key={category.id}
@@ -247,6 +261,9 @@ export function TopNavigation({
                         ))}
                     </nav>
 
+                    {/* Spacer for mobile */}
+                    <div className="flex-grow-1 d-lg-none"></div>
+
                     {/* Right Side - User Info & Language */}
                     <div className="d-flex align-items-center gap-3">
                         <LanguageSwitcher />
@@ -280,6 +297,11 @@ export function TopNavigation({
                                         paddingTop: '4px'
                                     }}
                                 >
+                                    {/* 사용자 정보 */}
+                                    <div className="px-3 py-2 border-bottom" style={{ backgroundColor: '#f8f9fa' }}>
+                                        <div className="small fw-medium">{userName}</div>
+                                        <div className="small text-muted">{userEmail}</div>
+                                    </div>
                                     {settingsItems.map((item, idx) => (
                                         <button
                                             key={idx}
@@ -287,7 +309,7 @@ export function TopNavigation({
                                             onClick={() => handleMenuClick(item)}
                                             style={{
                                                 borderRadius: 0,
-                                                borderBottom: idx < settingsItems.length - 1 ? '1px solid #f0f0f0' : 'none',
+                                                borderBottom: '1px solid #f0f0f0',
                                                 paddingLeft: '12px',
                                                 paddingRight: '12px'
                                             }}
@@ -296,12 +318,130 @@ export function TopNavigation({
                                             <span className="flex-grow-1">{item.label}</span>
                                         </button>
                                     ))}
+                                    {/* 로그아웃 버튼 */}
+                                    <button
+                                        className="btn btn-ghost-danger w-100 text-start d-flex align-items-center py-2"
+                                        onClick={() => {
+                                            // 탭 상태 초기화
+                                            localStorage.removeItem('nav-open-tabs')
+                                            // 로그아웃
+                                            signOut({ callbackUrl: '/login' })
+                                        }}
+                                        style={{
+                                            borderRadius: 0,
+                                            paddingLeft: '12px',
+                                            paddingRight: '12px'
+                                        }}
+                                    >
+                                        <i className="ti ti-logout text-danger me-2" style={{ width: '16px', textAlign: 'center' }}></i>
+                                        <span className="flex-grow-1 text-danger">{logoutLabel}</span>
+                                    </button>
                                 </div>
                             )}
                         </div>
                     </div>
                 </div>
             </header>
+
+            {/* Mobile Menu Drawer */}
+            {mobileMenuOpen && (
+                <>
+                    {/* Backdrop */}
+                    <div
+                        className="d-lg-none"
+                        style={{
+                            position: 'fixed',
+                            top: '48px',
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: 'rgba(0,0,0,0.5)',
+                            zIndex: 1050
+                        }}
+                        onClick={() => setMobileMenuOpen(false)}
+                    />
+                    {/* Menu Drawer */}
+                    <div
+                        className="d-lg-none bg-white shadow-lg"
+                        style={{
+                            position: 'fixed',
+                            top: '48px',
+                            left: 0,
+                            width: '280px',
+                            maxWidth: '85vw',
+                            height: 'calc(100vh - 48px)',
+                            overflowY: 'auto',
+                            zIndex: 1051
+                        }}
+                    >
+                        {/* User Info */}
+                        <div className="p-3 bg-light border-bottom">
+                            <div className="d-flex align-items-center gap-2">
+                                <span className="avatar avatar-md bg-blue rounded">{userName?.charAt(0) || 'A'}</span>
+                                <div>
+                                    <div className="fw-medium">{userName}</div>
+                                    <div className="small text-muted">{userEmail}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Categories */}
+                        {categories.map(category => (
+                            <div key={category.id} className="border-bottom">
+                                <div className="px-3 py-2 bg-light fw-medium small text-muted d-flex align-items-center gap-2">
+                                    <i className={`ti ${category.icon}`}></i>
+                                    {category.label}
+                                </div>
+                                {getFilteredItems(category.items).map((item, idx) => (
+                                    <button
+                                        key={idx}
+                                        className="btn btn-ghost-secondary w-100 text-start d-flex align-items-center py-2 px-3"
+                                        onClick={() => handleMenuClick(item)}
+                                        style={{ borderRadius: 0 }}
+                                    >
+                                        <i className={`ti ${item.icon} text-muted me-2`} style={{ width: '20px' }}></i>
+                                        <span className="flex-grow-1">{item.label}</span>
+                                        {item.newCount && item.newCount > 0 && (
+                                            <span className="badge bg-danger">{item.newCount}</span>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        ))}
+
+                        {/* Settings */}
+                        {settingsItems.length > 0 && (
+                            <div className="border-bottom">
+                                <div className="px-3 py-2 bg-light fw-medium small text-muted">설정</div>
+                                {settingsItems.map((item, idx) => (
+                                    <button
+                                        key={idx}
+                                        className="btn btn-ghost-secondary w-100 text-start d-flex align-items-center py-2 px-3"
+                                        onClick={() => handleMenuClick(item)}
+                                        style={{ borderRadius: 0 }}
+                                    >
+                                        <i className={`ti ${item.icon} text-muted me-2`} style={{ width: '20px' }}></i>
+                                        <span className="flex-grow-1">{item.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Logout */}
+                        <button
+                            className="btn btn-ghost-danger w-100 text-start d-flex align-items-center py-2 px-3"
+                            onClick={() => {
+                                localStorage.removeItem('nav-open-tabs')
+                                signOut({ callbackUrl: '/login' })
+                            }}
+                            style={{ borderRadius: 0 }}
+                        >
+                            <i className="ti ti-logout text-danger me-2" style={{ width: '20px' }}></i>
+                            <span className="text-danger">{logoutLabel}</span>
+                        </button>
+                    </div>
+                </>
+            )}
 
             {/* Tab Bar */}
             <div
@@ -316,7 +456,12 @@ export function TopNavigation({
                     display: 'flex',
                     alignItems: 'end',
                     paddingLeft: '8px',
-                    backgroundColor: '#e9ecef'
+                    backgroundColor: '#e9ecef',
+                    overflowX: 'auto',
+                    overflowY: 'hidden',
+                    WebkitOverflowScrolling: 'touch',
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none'
                 }}
             >
                 {/* Home Tab - Always visible */}
@@ -377,6 +522,10 @@ export function TopNavigation({
                     padding-top: 86px !important;
                     min-height: 100vh;
                     background-color: #f4f6fa;
+                }
+                /* Hide scrollbar for tab bar */
+                .bg-light.border-bottom::-webkit-scrollbar {
+                    display: none;
                 }
                 @media print {
                     .main-content-tabs {

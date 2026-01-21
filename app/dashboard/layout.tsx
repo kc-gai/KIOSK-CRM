@@ -3,26 +3,30 @@ import { TopNavigation } from "@/components/TopNavigation"
 import { prisma } from "@/lib/prisma"
 import AIChatbot from "@/components/ai-chatbot"
 import { menuProgress } from "@/lib/dev-progress"
-
-// 기본 관리자 계정 ID (DB에 admin@example.com이 있으면 해당 정보 사용)
-const DEFAULT_ADMIN_EMAIL = "admin@example.com"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
+import { redirect } from "next/navigation"
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-    // DB에서 기본 관리자 계정 정보 가져오기
-    const adminUser = await prisma.user.findFirst({
-        where: {
-            role: "ADMIN",
-            isActive: true
-        },
-        orderBy: { createdAt: 'asc' }
+    // 실제 세션 확인
+    const authSession = await getServerSession(authOptions)
+
+    // 세션이 없으면 로그인 페이지로 리다이렉트
+    if (!authSession?.user) {
+        redirect("/login")
+    }
+
+    // DB에서 사용자 정보 가져오기
+    const dbUser = await prisma.user.findUnique({
+        where: { email: authSession.user.email || "" }
     })
 
     const session = {
         user: {
-            email: adminUser?.email || DEFAULT_ADMIN_EMAIL,
-            role: adminUser?.role || "ADMIN",
-            name: adminUser?.name || "Admin",
-            allowedMenus: adminUser?.allowedMenus ? JSON.parse(adminUser.allowedMenus) : []
+            email: authSession.user.email || "",
+            role: dbUser?.role || "USER",
+            name: authSession.user.name || dbUser?.name || "User",
+            allowedMenus: dbUser?.allowedMenus ? JSON.parse(dbUser.allowedMenus) : []
         }
     }
     const t = await getTranslations('nav')
@@ -112,6 +116,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
                 allowedMenus={session.user?.allowedMenus || []}
                 tabHomeLabel={t('tabHome')}
                 settingsItems={settingsItems}
+                logoutLabel={t('logout')}
             />
 
             {/* Main Content */}

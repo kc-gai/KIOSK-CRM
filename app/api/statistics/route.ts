@@ -31,10 +31,14 @@ export async function GET(request: NextRequest) {
             prisma.kiosk.count({ where: { status: 'RETIRED' } })
         ])
 
-        // 취득형태별 통계
-        const [purchaseKiosks, leaseKiosks] = await Promise.all([
+        // 취득형태별 통계 (모든 형태 포함)
+        const [purchaseKiosks, leaseKiosks, leaseFreeKiosks, freeKiosks, paidKiosks, rentalKiosks] = await Promise.all([
             prisma.kiosk.count({ where: { acquisition: 'PURCHASE' } }),
-            prisma.kiosk.count({ where: { acquisition: 'LEASE' } })
+            prisma.kiosk.count({ where: { acquisition: 'LEASE' } }),
+            prisma.kiosk.count({ where: { acquisition: 'LEASE_FREE' } }),
+            prisma.kiosk.count({ where: { acquisition: 'FREE' } }),
+            prisma.kiosk.count({ where: { acquisition: 'PAID' } }),
+            prisma.kiosk.count({ where: { acquisition: 'RENTAL' } })
         ])
 
         // 발주 통계
@@ -130,8 +134,13 @@ export async function GET(request: NextRequest) {
             inStockKiosks,
             maintenanceKiosks,
             retiredKiosks,
+            // 취득형태별 (기존 호환성 + 신규)
             purchaseKiosks,
-            leaseKiosks,
+            leaseKiosks: leaseKiosks + leaseFreeKiosks, // LEASE + LEASE_FREE 합산
+            leaseFreeKiosks,
+            freeKiosks,
+            paidKiosks,
+            rentalKiosks,
             totalOrders,
             totalDeliveries,
             completedDeliveries,

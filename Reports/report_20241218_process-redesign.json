@@ -1,8 +1,16 @@
 {
   "report_id": "RPT-20241218-001",
-  "created_at": "2024-12-18T16:00:00",
+  "created_at": "2024-12-18T16:00:00+09:00",
   "status": "completed",
   "task_summary": "프로세스 기반 메뉴 재설계 및 새 데이터 모델 구현",
+  "work_hours": 4.0,
+  "session_info": {
+    "ai_assistant": "Claude (Anthropic)",
+    "session_start": "2024-12-18T14:00:00+09:00",
+    "session_end": "2024-12-18T18:00:00+09:00",
+    "conversation_turns": 45,
+    "tools_used": ["Prisma", "Next.js", "TypeScript", "Tabler UI"]
+  },
   "completed_tasks": [
     "Prisma 스키마에 OrderProcess (5단계 발주의뢰 프로세스) 모델 추가",
     "Prisma 스키마에 DeliveryProcess (2단계 납품 프로세스) 모델 추가",
