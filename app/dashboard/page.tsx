@@ -93,38 +93,53 @@ export default async function DashboardPage() {
         select: { regionCode: true, areaCode: true }
     })
 
-    // Region별 통계
-    const regionMap = new Map<string, number>()
+    // Region별 통계 - 모든 지역 마스터 기반으로 생성 (키오스크가 없는 지역도 0으로 표시)
+    const regionCountMap = new Map<string, number>()
     allKiosks.forEach(k => {
         const region = k.regionCode || "unassigned"
-        regionMap.set(region, (regionMap.get(region) || 0) + 1)
+        regionCountMap.set(region, (regionCountMap.get(region) || 0) + 1)
     })
-    // 코드를 명칭으로 변환하여 전달 (다국어 지원을 위해 code, name, nameJa 모두 전달)
-    const regionData = Array.from(regionMap.entries()).map(([code, value]) => {
-        const regionInfo = regionNameMap.get(code)
-        return {
-            code,
-            name: regionInfo?.name || code,
-            nameJa: regionInfo?.nameJa || null,
-            value
-        }
-    })
+    // 모든 지역 마스터를 기반으로 데이터 생성
+    const regionData = regions.map(region => ({
+        code: region.code,
+        name: region.name,
+        nameJa: region.nameJa,
+        value: regionCountMap.get(region.code) || 0
+    }))
+    // 미배정 키오스크가 있으면 추가
+    const unassignedRegionCount = regionCountMap.get("unassigned") || 0
+    if (unassignedRegionCount > 0) {
+        regionData.push({
+            code: "unassigned",
+            name: "미배정",
+            nameJa: "未配属",
+            value: unassignedRegionCount
+        })
+    }
 
-    // Area별 통계
-    const areaMap = new Map<string, number>()
+    // Area별 통계 - 모든 관할사무실 마스터 기반으로 생성
+    const areaCountMap = new Map<string, number>()
     allKiosks.forEach(k => {
         const area = k.areaCode || "unassigned"
-        areaMap.set(area, (areaMap.get(area) || 0) + 1)
+        areaCountMap.set(area, (areaCountMap.get(area) || 0) + 1)
     })
-    const areaData = Array.from(areaMap.entries()).map(([code, value]) => {
-        const areaInfo = areaNameMap.get(code)
-        return {
-            code,
-            name: areaInfo?.name || code,
-            nameJa: areaInfo?.nameJa || null,
-            value
-        }
-    })
+    // 모든 관할사무실 마스터를 기반으로 데이터 생성
+    const areaData = areas.map(area => ({
+        code: area.code,
+        name: area.name,
+        nameJa: area.nameJa,
+        value: areaCountMap.get(area.code) || 0
+    }))
+    // 미배정 키오스크가 있으면 추가
+    const unassignedAreaCount = areaCountMap.get("unassigned") || 0
+    if (unassignedAreaCount > 0) {
+        areaData.push({
+            code: "unassigned",
+            name: "미배정",
+            nameJa: "未配属",
+            value: unassignedAreaCount
+        })
+    }
 
     // 3. 실시간 운영 통계
     const now = new Date()

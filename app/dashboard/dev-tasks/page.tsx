@@ -162,6 +162,7 @@ export default function DevTasksPage() {
     const t = useTranslations('devTasks')
     const locale = useLocale()
     const isKorean = locale === 'ko'
+    const isJapanese = locale === 'ja'
 
     // 중앙 데이터에서 작업 목록 로드, LocalStorage에서 subtask 상태 오버라이드
     const [taskStates, setTaskStates] = useState<Record<string, Record<string, boolean>>>({})
@@ -372,10 +373,10 @@ export default function DevTasksPage() {
     }
 
     // 작업 제목/설명/노트 표시 (언어별)
-    const getTaskTitle = (task: DevTask) => isKorean ? task.titleKo : task.title
-    const getTaskDescription = (task: DevTask) => isKorean ? task.descriptionKo : task.description
-    const getTaskNotes = (task: DevTask) => isKorean ? task.notesKo : task.notes
-    const getTaskCategory = (task: DevTask) => isKorean ? task.categoryKo : task.category
+    const getTaskTitle = (task: DevTask) => isKorean ? task.titleKo : (isJapanese ? task.titleJa : task.title)
+    const getTaskDescription = (task: DevTask) => isKorean ? task.descriptionKo : (isJapanese ? task.descriptionJa : task.description)
+    const getTaskNotes = (task: DevTask) => isKorean ? task.notesKo : (isJapanese ? task.notesJa : task.notes)
+    const getTaskCategory = (task: DevTask) => isKorean ? task.categoryKo : (isJapanese ? task.categoryJa : task.category)
 
     return (
         <div className="container-xl">
@@ -567,8 +568,8 @@ export default function DevTasksPage() {
                             if (!task) return null
                             return (
                                 <li key={item.id} className={index < recommendedOrder.length - 1 ? 'mb-2' : ''}>
-                                    <strong>{isKorean ? task.titleKo : task.title}</strong>
-                                    <span className="text-muted ms-2">- {isKorean ? item.reasonKo : item.reason}</span>
+                                    <strong>{isKorean ? task.titleKo : (isJapanese ? task.titleJa : task.title)}</strong>
+                                    <span className="text-muted ms-2">- {isKorean ? item.reasonKo : (isJapanese ? item.reasonJa : item.reason)}</span>
                                 </li>
                             )
                         })}

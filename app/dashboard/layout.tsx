@@ -31,13 +31,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
     }
     const t = await getTranslations('nav')
 
-    // 신규안건 카운트 (실제로는 DB에서 조회해야 함)
-    const newItemCounts: Record<string, number> = {
-        'order-process': 3,
-        'delivery-process': 2,
-        'assets': 0,
-    }
-
     // 카테고리별로 메뉴 구성
     const categories = [
         {
@@ -50,12 +43,20 @@ export default async function DashboardLayout({ children }: { children: React.Re
             ]
         },
         {
-            id: 'process',
-            label: t('categoryProcess'),
-            icon: 'ti-arrows-exchange',
+            id: 'order',
+            label: t('categoryOrder'),
+            icon: 'ti-file-plus',
             items: [
-                { href: '/dashboard/order-process', icon: 'ti-file-plus', label: t('orderProcess'), progress: menuProgress['order-process'], newCount: newItemCounts['order-process'] },
-                { href: '/dashboard/delivery-status', icon: 'ti-truck-delivery', label: t('deliveryStatus'), progress: menuProgress['delivery-status'], newCount: newItemCounts['delivery-status'] },
+                { href: '/dashboard/order', icon: 'ti-file-plus', label: t('orderProcess'), progress: menuProgress['order-process'] },
+                { href: '/dashboard/delivery-status', icon: 'ti-list-check', label: t('deliveryStatus'), progress: menuProgress['delivery-status'] },
+                { href: '/dashboard/order-process', icon: 'ti-archive', label: t('orderProcessOld'), progress: menuProgress['order-process'] },
+            ]
+        },
+        {
+            id: 'delivery',
+            label: t('categoryDelivery'),
+            icon: 'ti-truck',
+            items: [
                 { href: '/dashboard/delivery-process', icon: 'ti-truck', label: t('deliveryProcess'), progress: menuProgress['delivery-process'] },
                 { href: '/dashboard/delivery-request', icon: 'ti-mail', label: t('deliveryRequest'), progress: menuProgress['delivery-request'] },
             ]
@@ -65,8 +66,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
             label: t('categoryAssets'),
             icon: 'ti-device-desktop',
             items: [
-                { href: '/dashboard/assets', icon: 'ti-device-desktop', label: t('assets'), progress: menuProgress['assets'], newCount: newItemCounts['assets'] },
-                { href: '/dashboard/repairs', icon: 'ti-settings', label: t('repairs'), progress: menuProgress['repairs'] },
+                { href: '/dashboard/assets', icon: 'ti-device-desktop', label: t('assets'), progress: menuProgress['assets'] },
+                { href: '/dashboard/repairs', icon: 'ti-tool', label: t('repairs'), progress: menuProgress['repairs'] },
                 { href: '/dashboard/sample-loans', icon: 'ti-package', label: t('sampleLoans'), progress: menuProgress['sample-loans'] },
                 { href: '/dashboard/history', icon: 'ti-history', label: t('history'), progress: menuProgress['history'] },
             ]

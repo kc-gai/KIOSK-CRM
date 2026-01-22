@@ -13,7 +13,6 @@ interface NavItem {
     type?: string
     adminOnly?: boolean
     progress?: number
-    newCount?: number
 }
 
 interface Category {
@@ -250,9 +249,6 @@ export function TopNavigation({
                                             >
                                                 <i className={`ti ${item.icon} text-muted me-2`} style={{ width: '16px', textAlign: 'center' }}></i>
                                                 <span className="flex-grow-1">{item.label}</span>
-                                                {item.newCount && item.newCount > 0 && (
-                                                    <span className="badge bg-danger">{item.newCount}</span>
-                                                )}
                                             </button>
                                         ))}
                                     </div>
@@ -401,9 +397,6 @@ export function TopNavigation({
                                     >
                                         <i className={`ti ${item.icon} text-muted me-2`} style={{ width: '20px' }}></i>
                                         <span className="flex-grow-1">{item.label}</span>
-                                        {item.newCount && item.newCount > 0 && (
-                                            <span className="badge bg-danger">{item.newCount}</span>
-                                        )}
                                     </button>
                                 ))}
                             </div>
