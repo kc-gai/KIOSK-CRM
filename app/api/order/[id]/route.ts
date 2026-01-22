@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 // GET: 단일 발주 조회
 export async function GET(
-    request: Request,
+    request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
@@ -153,7 +153,7 @@ export async function GET(
 
 // DELETE: 발주 삭제
 export async function DELETE(
-    request: Request,
+    request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
@@ -188,7 +188,7 @@ export async function DELETE(
 
 // PUT: 발주 수정
 export async function PUT(
-    request: Request,
+    request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
@@ -211,20 +211,26 @@ export async function PUT(
         // 첫 번째 항목의 정보를 대표로 저장
         const firstItem = items?.[0]
 
+        // step1Notes에 메타데이터 저장
+        const metaNotes = [
+            notes || '',
+            requesterName ? `의뢰자: ${requesterName}` : '',
+            kioskUnitPrice ? `키오스크단가: ${kioskUnitPrice}` : '',
+            plateUnitPrice ? `철판단가: ${plateUnitPrice}` : '',
+            totalPlateCount ? `철판수량: ${totalPlateCount}` : '',
+            orderRequestDate ? `발주의뢰일: ${orderRequestDate}` : ''
+        ].filter(Boolean).join('\n')
+
         const orderProcess = await prisma.orderProcess.update({
             where: { id },
             data: {
                 title: title,
                 requesterName: requesterName,
-                orderRequestDate: orderRequestDate || null,
-                desiredDeliveryDate: desiredDeliveryDate || null,
-                kioskUnitPrice: kioskUnitPrice,
-                plateUnitPrice: plateUnitPrice,
-                step1Notes: notes,
+                desiredDeliveryDate: desiredDeliveryDate ? new Date(desiredDeliveryDate) : null,
+                step1Notes: metaNotes,
                 quantity: totalKioskCount,
-                totalAmount: totalAmount,
                 // 첫 번째 항목 정보
-                clientId: firstItem?.branchId || null,
+                clientId: firstItem?.branchId || undefined,
                 acquisition: firstItem?.acquisition || 'FREE',
                 leaseCompanyId: firstItem?.leaseCompanyId || null,
                 // items JSON 저장
