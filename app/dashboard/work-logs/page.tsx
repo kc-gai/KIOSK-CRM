@@ -24,10 +24,13 @@ interface WorkReport {
     created_at: string
     status: string
     task_summary: string
+    task_summary_ja?: string
     completed_tasks: string[]
+    completed_tasks_ja?: string[]
     modified_files: { path: string; changes: string }[]
     created_files?: { path: string; description: string }[]
     next_steps?: string[]
+    next_steps_ja?: string[]
     blockers?: string[]
     work_hours?: number
     work_type?: string  // 'manual_data_entry' | 'coding' 등
@@ -261,6 +264,15 @@ export default function WorkLogsPage() {
     const monthStats = getMonthStats()
     const totalStats = getTotalStats()
     const calendarDays = generateCalendar()
+    const isJapanese = locale === 'ja'
+
+    // 다국어 헬퍼 함수
+    const getTaskSummary = (report: WorkReport) =>
+        isJapanese ? (report.task_summary_ja || report.task_summary) : report.task_summary
+    const getCompletedTasks = (report: WorkReport) =>
+        isJapanese ? (report.completed_tasks_ja || report.completed_tasks) : report.completed_tasks
+    const getNextSteps = (report: WorkReport) =>
+        isJapanese ? (report.next_steps_ja || report.next_steps) : report.next_steps
 
     if (loading) {
         return (
@@ -526,7 +538,7 @@ export default function WorkLogsPage() {
                                         <div className="d-flex align-items-center justify-content-between mb-2">
                                             <div className="d-flex align-items-center gap-2">
                                                 <FolderOpen size={16} className="text-primary" />
-                                                <span className="fw-bold">{report.task_summary}</span>
+                                                <span className="fw-bold">{getTaskSummary(report)}</span>
                                             </div>
                                             <span className={`badge ${report.status === 'completed' ? 'bg-success' : 'bg-warning'}`}>
                                                 {report.status === 'completed' ? t('completed') : report.status}
@@ -573,10 +585,10 @@ export default function WorkLogsPage() {
                                             <div className="mb-2">
                                                 <div className="text-muted small mb-1">
                                                     <CheckCircle2 size={12} className="me-1" />
-                                                    {t('completedTasks')} ({report.completed_tasks.length})
+                                                    {t('completedTasks')} ({getCompletedTasks(report).length})
                                                 </div>
                                                 <ul className="list-unstyled mb-0 ms-3" style={{ fontSize: '0.85rem' }}>
-                                                    {report.completed_tasks.map((task, i) => (
+                                                    {getCompletedTasks(report).map((task, i) => (
                                                         <li key={i} className="text-success">
                                                             <CheckCircle2 size={10} className="me-1" />
                                                             {task}
@@ -628,7 +640,7 @@ export default function WorkLogsPage() {
                                                     {t('nextTasks')}
                                                 </div>
                                                 <ul className="list-unstyled mb-0 ms-3" style={{ fontSize: '0.8rem' }}>
-                                                    {report.next_steps.slice(0, 3).map((step, i) => (
+                                                    {getNextSteps(report)?.slice(0, 3).map((step, i) => (
                                                         <li key={i} className="text-muted">• {step}</li>
                                                     ))}
                                                 </ul>
