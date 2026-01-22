@@ -4,11 +4,12 @@ import { prisma } from '@/lib/prisma'
 // GET: 단일 발주 조회
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params
         const orderProcess = await prisma.orderProcess.findUnique({
-            where: { id: params.id },
+            where: { id },
             include: {
                 client: true
             }
@@ -153,12 +154,13 @@ export async function GET(
 // DELETE: 발주 삭제
 export async function DELETE(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params
         // 연관된 Kiosk 찾기 (발주번호로)
         const orderProcess = await prisma.orderProcess.findUnique({
-            where: { id: params.id }
+            where: { id }
         })
 
         if (!orderProcess) {
@@ -174,7 +176,7 @@ export async function DELETE(
 
         // OrderProcess 삭제
         await prisma.orderProcess.delete({
-            where: { id: params.id }
+            where: { id }
         })
 
         return NextResponse.json({ message: 'Order deleted successfully' })
@@ -187,9 +189,10 @@ export async function DELETE(
 // PUT: 발주 수정
 export async function PUT(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params
         const body = await request.json()
         const {
             title,
@@ -202,7 +205,7 @@ export async function PUT(
         } = body
 
         const orderProcess = await prisma.orderProcess.update({
-            where: { id: params.id },
+            where: { id },
             data: {
                 title: title,
                 quantity: quantity,
