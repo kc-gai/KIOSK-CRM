@@ -131,7 +131,7 @@ export default function OrderPage() {
     const [formData, setFormData] = useState({
         title: 'キオスク端末＆決済端末の鉄板・金具',
         requesterName: '',
-        orderRequestDate: new Date().toISOString().slice(0, 10),
+        orderRequestDate: new Date().toISOString().slice(0, 10).replace(/-/g, ''),
         desiredDeliveryDate: '',
         kioskUnitPrice: 240000,
         plateUnitPrice: 5000,
@@ -375,7 +375,7 @@ export default function OrderPage() {
                 setFormData({
                     title: 'キオスク端末＆決済端末の鉄板・金具',
                     requesterName: session?.user?.name || '',
-                    orderRequestDate: new Date().toISOString().slice(0, 10),
+                    orderRequestDate: new Date().toISOString().slice(0, 10).replace(/-/g, ''),
                     desiredDeliveryDate: '',
                     kioskUnitPrice: 240000,
                     plateUnitPrice: 5000,
