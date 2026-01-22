@@ -211,30 +211,28 @@ export async function PUT(
         // 첫 번째 항목의 정보를 대표로 저장
         const firstItem = items?.[0]
 
-        // step1Notes에 메타데이터 저장
-        const metaNotes = [
-            notes || '',
-            requesterName ? `의뢰자: ${requesterName}` : '',
-            kioskUnitPrice ? `키오스크단가: ${kioskUnitPrice}` : '',
-            plateUnitPrice ? `철판단가: ${plateUnitPrice}` : '',
-            totalPlateCount ? `철판수량: ${totalPlateCount}` : '',
-            orderRequestDate ? `발주의뢰일: ${orderRequestDate}` : ''
-        ].filter(Boolean).join('\n')
+        // step1Notes에 메타데이터 및 items JSON 저장
+        const metaData = {
+            notes: notes || '',
+            kioskUnitPrice,
+            plateUnitPrice,
+            totalPlateCount,
+            orderRequestDate,
+            items: items || []
+        }
 
         const orderProcess = await prisma.orderProcess.update({
             where: { id },
             data: {
                 title: title,
                 requesterName: requesterName,
-                desiredDeliveryDate: desiredDeliveryDate ? new Date(desiredDeliveryDate) : null,
-                step1Notes: metaNotes,
+                desiredDeliveryDate: desiredDeliveryDate || null,
+                step1Notes: JSON.stringify(metaData),
                 quantity: totalKioskCount,
                 // 첫 번째 항목 정보
                 clientId: firstItem?.branchId || undefined,
                 acquisition: firstItem?.acquisition || 'FREE',
-                leaseCompanyId: firstItem?.leaseCompanyId || null,
-                // items JSON 저장
-                step2Notes: items ? JSON.stringify(items) : null
+                leaseCompanyId: firstItem?.leaseCompanyId || null
             }
         })
 

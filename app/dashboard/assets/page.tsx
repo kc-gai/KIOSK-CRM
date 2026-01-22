@@ -628,9 +628,9 @@ export default function AssetsPage() {
         if (branchId === 'ADD_NEW') {
             // 현재 선택된 법인의 FC를 찾아서 쿼리 파라미터로 전달
             const selectedCorp = corporations.find(c => c.id === formData.corporationId)
-            if (selectedCorp && selectedCorp.fcId) {
+            if (selectedCorp && selectedCorp.fc?.id) {
                 // FC 소속 법인인 경우: fcId와 corporationId를 전달하고 점포 탭 활성화
-                router.push(`/dashboard/clients?fcId=${selectedCorp.fcId}&corpId=${selectedCorp.id}&tab=branch&action=addBranch`)
+                router.push(`/dashboard/clients?fcId=${selectedCorp.fc.id}&corpId=${selectedCorp.id}&tab=branch&action=addBranch`)
             } else if (selectedCorp) {
                 // 독립 법인인 경우: corporationId만 전달
                 router.push(`/dashboard/clients?corpId=${selectedCorp.id}&tab=branch&action=addBranch&independent=true`)
