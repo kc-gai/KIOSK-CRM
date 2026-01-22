@@ -41,7 +41,9 @@ type LeaseCompany = {
 type DeliveryItem = {
     id: number
     corporationId: string
+    corporationName?: string  // 저장용
     branchId: string
+    branchName?: string  // 저장용
     brandName: string
     postalCode: string
     address: string
@@ -230,31 +232,35 @@ export default function OrderPage() {
             if (item.id === id) {
                 const updated = { ...item, [field]: value }
 
-                // 지점 선택 시 주소, 우편번호, 연락처 자동 입력
+                // 지점 선택 시 주소, 우편번호, 연락처 자동 입력 + 지점명 저장
                 if (field === 'branchId' && value) {
                     const branch = branches.find(b => b.id === value)
                     if (branch) {
                         updated.postalCode = branch.postalCode || ''
                         updated.address = branch.address || ''
                         updated.contact = branch.managerPhone || ''
+                        updated.branchName = branch.name || ''  // 지점명 저장
                     }
                 }
 
-                // 법인 변경 시 지점 초기화 + 브랜드명 자동 입력
+                // 법인 변경 시 지점 초기화 + 브랜드명 자동 입력 + 법인명 저장
                 if (field === 'corporationId') {
                     updated.branchId = ''
+                    updated.branchName = ''
                     updated.postalCode = ''
                     updated.address = ''
                     updated.contact = ''
-                    // 브랜드명 자동 입력
+                    // 브랜드명 자동 입력 + 법인명 저장
                     if (value) {
                         const corp = corporations.find(c => c.id === value)
+                        updated.corporationName = corp?.name || ''  // 법인명 저장
                         if (corp?.fc) {
                             updated.brandName = locale === 'ja' ? (corp.fc.nameJa || corp.fc.name) : corp.fc.name
                         } else {
                             updated.brandName = ''
                         }
                     } else {
+                        updated.corporationName = ''
                         updated.brandName = ''
                     }
                 }
@@ -729,53 +735,97 @@ export default function OrderPage() {
         // 납품 항목 로드
         if (order.items && order.items.length > 0) {
             const items: DeliveryItem[] = order.items.map((item, idx) => {
-                // 법인 ID 찾기
-                const corp = corporations.find(c =>
-                    (locale === 'ja' ? (c.nameJa || c.name) : c.name) === (locale === 'ja' ? (item.corporationNameJa || item.corporationName) : item.corporationName)
-                )
-                // 지점 ID 찾기
-                const branch = branches.find(b =>
-                    (locale === 'ja' ? (b.nameJa || b.name) : b.name) === (locale === 'ja' ? (item.branchNameJa || item.branchName) : item.branchName) &&
-                    (corp ? b.corporationId === corp.id : true)
-                )
+                // 법인 ID 찾기 (ID가 직접 있으면 사용, 없으면 이름으로 검색)
+                let corpId = item.corporationId || ''
+                let corpName = item.corporationName || ''
+                if (!corpId && corpName) {
+                    const corp = corporations.find(c =>
+                        c.name === corpName || c.nameJa === corpName
+                    )
+                    corpId = corp?.id || ''
+                }
+                if (corpId && !corpName) {
+                    const corp = corporations.find(c => c.id === corpId)
+                    corpName = corp?.name || ''
+                }
+
+                // 지점 ID 찾기 (ID가 직접 있으면 사용, 없으면 이름으로 검색)
+                let branchId = item.branchId || ''
+                let branchName = item.branchName || ''
+                let branch = branchId ? branches.find(b => b.id === branchId) : null
+                if (!branchId && branchName) {
+                    branch = branches.find(b =>
+                        (b.name === branchName || b.nameJa === branchName) &&
+                        (corpId ? b.corporationId === corpId : true)
+                    )
+                    branchId = branch?.id || ''
+                }
+                if (branchId && !branchName) {
+                    branch = branches.find(b => b.id === branchId)
+                    branchName = branch?.name || ''
+                }
 
                 return {
                     id: idx + 1,
-                    corporationId: corp?.id || '',
-                    branchId: branch?.id || '',
+                    corporationId: corpId,
+                    corporationName: corpName,
+                    branchId: branchId,
+                    branchName: branchName,
                     brandName: item.brandName || '',
-                    postalCode: branch?.postalCode || '',
-                    address: branch?.address || '',
-                    contact: branch?.managerPhone || '',
+                    postalCode: branch?.postalCode || item.postalCode || '',
+                    address: branch?.address || item.address || '',
+                    contact: branch?.managerPhone || item.contact || '',
                     kioskCount: item.kioskCount || 1,
                     plateCount: item.plateCount || 1,
                     acquisition: item.acquisition || 'FREE',
-                    leaseCompanyId: ''
+                    leaseCompanyId: item.leaseCompanyId || ''
                 }
             })
             setDeliveryItems(items)
         } else {
             // 단일 항목인 경우
-            const corp = corporations.find(c =>
-                (locale === 'ja' ? (c.nameJa || c.name) : c.name) === (locale === 'ja' ? (order.corporationNameJa || order.corporationName) : order.corporationName)
-            )
-            const branch = branches.find(b =>
-                (locale === 'ja' ? (b.nameJa || b.name) : b.name) === (locale === 'ja' ? (order.branchNameJa || order.branchName) : order.branchName) &&
-                (corp ? b.corporationId === corp.id : true)
-            )
+            let corpId = order.corporationId || ''
+            let corpName = order.corporationName || ''
+            if (!corpId && corpName) {
+                const corp = corporations.find(c =>
+                    c.name === corpName || c.nameJa === corpName
+                )
+                corpId = corp?.id || ''
+            }
+            if (corpId && !corpName) {
+                const corp = corporations.find(c => c.id === corpId)
+                corpName = corp?.name || ''
+            }
+
+            let branchId = order.branchId || ''
+            let branchName = order.branchName || ''
+            let branch = branchId ? branches.find(b => b.id === branchId) : null
+            if (!branchId && branchName) {
+                branch = branches.find(b =>
+                    (b.name === branchName || b.nameJa === branchName) &&
+                    (corpId ? b.corporationId === corpId : true)
+                )
+                branchId = branch?.id || ''
+            }
+            if (branchId && !branchName) {
+                branch = branches.find(b => b.id === branchId)
+                branchName = branch?.name || ''
+            }
 
             setDeliveryItems([{
                 id: 1,
-                corporationId: corp?.id || '',
-                branchId: branch?.id || '',
+                corporationId: corpId,
+                corporationName: corpName,
+                branchId: branchId,
+                branchName: branchName,
                 brandName: order.brandName || '',
-                postalCode: branch?.postalCode || '',
-                address: branch?.address || '',
-                contact: branch?.managerPhone || '',
+                postalCode: branch?.postalCode || order.postalCode || '',
+                address: branch?.address || order.address || '',
+                contact: branch?.managerPhone || order.contact || '',
                 kioskCount: order.kioskCount || order.quantity || 1,
                 plateCount: order.plateCount || 1,
                 acquisition: order.acquisition || 'FREE',
-                leaseCompanyId: ''
+                leaseCompanyId: order.leaseCompanyId || ''
             }])
         }
 
