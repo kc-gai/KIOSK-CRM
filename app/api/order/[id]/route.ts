@@ -196,24 +196,39 @@ export async function PUT(
         const body = await request.json()
         const {
             title,
-            quantity,
-            acquisition,
-            leaseCompanyId,
+            requesterName,
+            orderRequestDate,
             desiredDeliveryDate,
-            memo,
-            status
+            kioskUnitPrice,
+            plateUnitPrice,
+            notes,
+            items,
+            totalKioskCount,
+            totalPlateCount,
+            totalAmount
         } = body
+
+        // 첫 번째 항목의 정보를 대표로 저장
+        const firstItem = items?.[0]
 
         const orderProcess = await prisma.orderProcess.update({
             where: { id },
             data: {
                 title: title,
-                quantity: quantity,
-                acquisition: acquisition,
-                leaseCompanyId: leaseCompanyId || null,
-                desiredDeliveryDate: desiredDeliveryDate ? new Date(desiredDeliveryDate) : null,
-                step1Notes: memo,
-                status: status
+                requesterName: requesterName,
+                orderRequestDate: orderRequestDate || null,
+                desiredDeliveryDate: desiredDeliveryDate || null,
+                kioskUnitPrice: kioskUnitPrice,
+                plateUnitPrice: plateUnitPrice,
+                step1Notes: notes,
+                quantity: totalKioskCount,
+                totalAmount: totalAmount,
+                // 첫 번째 항목 정보
+                clientId: firstItem?.branchId || null,
+                acquisition: firstItem?.acquisition || 'FREE',
+                leaseCompanyId: firstItem?.leaseCompanyId || null,
+                // items JSON 저장
+                step2Notes: items ? JSON.stringify(items) : null
             }
         })
 
@@ -222,11 +237,6 @@ export async function PUT(
             orderNumber: orderProcess.processNumber,
             title: orderProcess.title,
             quantity: orderProcess.quantity,
-            acquisition: orderProcess.acquisition,
-            leaseCompanyId: orderProcess.leaseCompanyId,
-            desiredDeliveryDate: orderProcess.desiredDeliveryDate,
-            status: orderProcess.status,
-            memo: orderProcess.step1Notes,
             updatedAt: orderProcess.updatedAt
         })
     } catch (error) {
