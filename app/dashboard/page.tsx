@@ -189,9 +189,14 @@ export default async function DashboardPage() {
     const sevenDaysAgo = new Date()
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
-    // 최근 7일 등록 자산
+    // 최근 7일 등록 자산 (TEMP- 시리얼 번호 제외 - 발주 대기 자산 제외)
     const recentAssets = await prisma.kiosk.findMany({
-        where: { createdAt: { gte: sevenDaysAgo } },
+        where: {
+            createdAt: { gte: sevenDaysAgo },
+            NOT: {
+                serialNumber: { startsWith: 'TEMP-' }
+            }
+        },
         select: {
             serialNumber: true,
             createdAt: true,
