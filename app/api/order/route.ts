@@ -226,6 +226,11 @@ export async function POST(request: Request) {
             // 철판 총 수량 계산
             const totalPlates = totalPlateCount || items.reduce((sum: number, item: { plateCount?: number }) => sum + (item.plateCount || 0), 0)
 
+            // clientId가 필수이므로 확인
+            if (!partnerId) {
+                return NextResponse.json({ message: 'Client (Partner) is required' }, { status: 400 })
+            }
+
             // OrderProcess 생성 - 상태를 PENDING으로 설정 (대기)
             const orderProcess = await prisma.orderProcess.create({
                 data: {
@@ -265,12 +270,12 @@ export async function POST(request: Request) {
                             data: {
                                 serialNumber: `TEMP-${kioskNumber}`,
                                 kioskNumber: kioskNumber,
-                                branchId: item.branchId || null,
+                                branchId: item.branchId || undefined,
                                 brandName: corporation?.fc?.name || corporation?.name || '',
                                 acquisition: itemAcquisition,
                                 leaseCompanyId: itemLeaseCompanyId,
                                 orderRequestDate: orderRequestDate ? new Date(orderRequestDate) : null,
-                                deliveryDueDate: desiredDeliveryDate ? new Date(desiredDeliveryDate) : null,
+                                deliveryDueDate: desiredDeliveryDate || undefined,
                                 deliveryStatus: 'PENDING',
                                 status: 'ORDERED',
                                 memo: `발주: ${orderNumber}`
@@ -359,11 +364,11 @@ export async function POST(request: Request) {
                     data: {
                         serialNumber: `TEMP-${kioskNumber}`,
                         kioskNumber: kioskNumber,
-                        branchId: branchId || null,
+                        branchId: branchId || undefined,
                         brandName: corporation.fc?.name || corporation.name,
                         acquisition: acquisition || 'FREE',
                         leaseCompanyId: leaseCompanyId || null,
-                        deliveryDueDate: desiredDeliveryDate ? new Date(desiredDeliveryDate) : null,
+                        deliveryDueDate: desiredDeliveryDate || undefined,
                         deliveryStatus: 'PENDING',
                         status: 'ORDERED',
                         memo: `발주: ${orderNumber}`

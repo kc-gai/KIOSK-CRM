@@ -3142,8 +3142,8 @@ export default function ClientsPage() {
                                         className="btn btn-primary btn-sm"
                                         disabled={
                                             saving ||
-                                            (modalType === 'branch' && !editingId && formData.code && existingBranchCodes.includes(formData.code)) ||
-                                            (modalType === 'corp' && !editingId && formData.code && existingCorpCodes.includes(formData.code))
+                                            Boolean(modalType === 'branch' && !editingId && formData.code && existingBranchCodes.includes(formData.code)) ||
+                                            Boolean(modalType === 'corp' && !editingId && formData.code && existingCorpCodes.includes(formData.code))
                                         }
                                     >
                                         {saving && <span className="spinner-border spinner-border-sm me-1"></span>}
