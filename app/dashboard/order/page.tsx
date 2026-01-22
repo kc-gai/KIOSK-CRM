@@ -118,6 +118,9 @@ export default function OrderPage() {
     // 아코디언 확장 상태 (복수 거래처가 있는 발주)
     const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set())
 
+    // 편집 중인 발주 ID
+    const [editingOrderId, setEditingOrderId] = useState<string | null>(null)
+
     // 드롭다운 상태 (각 행별로)
     const [openCorpDropdown, setOpenCorpDropdown] = useState<number | null>(null)
     const [openBranchDropdown, setOpenBranchDropdown] = useState<number | null>(null)
@@ -342,8 +345,11 @@ export default function OrderPage() {
 
         setIsSaving(true)
         try {
-            const res = await fetch('/api/order', {
-                method: 'POST',
+            const url = editingOrderId ? `/api/order/${editingOrderId}` : '/api/order'
+            const method = editingOrderId ? 'PUT' : 'POST'
+
+            const res = await fetch(url, {
+                method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     ...formData,
@@ -356,9 +362,14 @@ export default function OrderPage() {
 
             if (res.ok) {
                 const result = await res.json()
-                alert(locale === 'ja'
-                    ? `発注 ${result.orderNumber} が作成されました。\nキオスク ${result.quantity}台が登録されました。`
-                    : `발주 ${result.orderNumber}가 생성되었습니다.\n키오스크 ${result.quantity}대가 등록되었습니다.`)
+                if (editingOrderId) {
+                    alert(locale === 'ja' ? '更新しました' : '수정되었습니다')
+                    setEditingOrderId(null)
+                } else {
+                    alert(locale === 'ja'
+                        ? `発注 ${result.orderNumber} が作成されました。\nキオスク ${result.quantity}台が登録されました。`
+                        : `발주 ${result.orderNumber}가 생성되었습니다.\n키오스크 ${result.quantity}대가 등록되었습니다.`)
+                }
 
                 // 폼 초기화 (납품의뢰자는 로그인 사용자 이름 유지)
                 setFormData({
@@ -700,6 +711,96 @@ export default function OrderPage() {
         )
     }
 
+    // 발주 편집 - 기본정보 입력창에 데이터 로드
+    const handleEditOrder = async (order: OrderProcess) => {
+        setEditingOrderId(order.id)
+
+        // 기본 정보 로드
+        setFormData({
+            title: order.title || 'キオスク端末＆決済端末の鉄板・金具',
+            requesterName: order.requesterName || '',
+            orderRequestDate: order.orderRequestDate || '',
+            desiredDeliveryDate: order.desiredDeliveryDate || '',
+            kioskUnitPrice: order.kioskUnitPrice || 240000,
+            plateUnitPrice: order.plateUnitPrice || 5000,
+            notes: order.notes || ''
+        })
+
+        // 납품 항목 로드
+        if (order.items && order.items.length > 0) {
+            const items: DeliveryItem[] = order.items.map((item, idx) => {
+                // 법인 ID 찾기
+                const corp = corporations.find(c =>
+                    (locale === 'ja' ? (c.nameJa || c.name) : c.name) === (locale === 'ja' ? (item.corporationNameJa || item.corporationName) : item.corporationName)
+                )
+                // 지점 ID 찾기
+                const branch = branches.find(b =>
+                    (locale === 'ja' ? (b.nameJa || b.name) : b.name) === (locale === 'ja' ? (item.branchNameJa || item.branchName) : item.branchName) &&
+                    (corp ? b.corporationId === corp.id : true)
+                )
+
+                return {
+                    id: idx + 1,
+                    corporationId: corp?.id || '',
+                    branchId: branch?.id || '',
+                    brandName: item.brandName || '',
+                    postalCode: branch?.postalCode || '',
+                    address: branch?.address || '',
+                    contact: branch?.managerPhone || '',
+                    kioskCount: item.kioskCount || 1,
+                    plateCount: item.plateCount || 1,
+                    acquisition: item.acquisition || 'FREE',
+                    leaseCompanyId: ''
+                }
+            })
+            setDeliveryItems(items)
+        } else {
+            // 단일 항목인 경우
+            const corp = corporations.find(c =>
+                (locale === 'ja' ? (c.nameJa || c.name) : c.name) === (locale === 'ja' ? (order.corporationNameJa || order.corporationName) : order.corporationName)
+            )
+            const branch = branches.find(b =>
+                (locale === 'ja' ? (b.nameJa || b.name) : b.name) === (locale === 'ja' ? (order.branchNameJa || order.branchName) : order.branchName) &&
+                (corp ? b.corporationId === corp.id : true)
+            )
+
+            setDeliveryItems([{
+                id: 1,
+                corporationId: corp?.id || '',
+                branchId: branch?.id || '',
+                brandName: order.brandName || '',
+                postalCode: branch?.postalCode || '',
+                address: branch?.address || '',
+                contact: branch?.managerPhone || '',
+                kioskCount: order.kioskCount || order.quantity || 1,
+                plateCount: order.plateCount || 1,
+                acquisition: order.acquisition || 'FREE',
+                leaseCompanyId: ''
+            }])
+        }
+
+        // 페이지 상단으로 스크롤
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+
+    // 편집 취소
+    const handleCancelEdit = () => {
+        setEditingOrderId(null)
+        // 폼 초기화
+        setFormData({
+            title: 'キオスク端末＆決済端末の鉄板・金具',
+            requesterName: session?.user?.name || '',
+            orderRequestDate: new Date().toISOString().slice(0, 10).replace(/-/g, ''),
+            desiredDeliveryDate: '',
+            kioskUnitPrice: 240000,
+            plateUnitPrice: 5000,
+            notes: ''
+        })
+        setDeliveryItems([
+            { id: 1, corporationId: '', branchId: '', brandName: '', postalCode: '', address: '', contact: '', kioskCount: 1, plateCount: 1, acquisition: 'FREE', leaseCompanyId: '' }
+        ])
+    }
+
     // 발주 삭제
     const handleDelete = async (orderId: string, orderNumber: string) => {
         const confirmMsg = locale === 'ja'
@@ -763,9 +864,20 @@ export default function OrderPage() {
                             </h4>
                         </div>
                     {/* 기본 정보 */}
-                    <div className="card mb-3" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-                        <div className="card-header">
-                            <h3 className="card-title">{locale === 'ja' ? '基本情報' : '기본 정보'}</h3>
+                    <div className="card mb-3" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)', border: editingOrderId ? '2px solid #fd7e14' : undefined }}>
+                        <div className="card-header d-flex justify-content-between align-items-center">
+                            <h3 className="card-title mb-0">
+                                {locale === 'ja' ? '基本情報' : '기본 정보'}
+                                {editingOrderId && (
+                                    <span className="badge bg-warning ms-2">{locale === 'ja' ? '編集中' : '편집 중'}</span>
+                                )}
+                            </h3>
+                            {editingOrderId && (
+                                <button className="btn btn-outline-secondary btn-sm" onClick={handleCancelEdit}>
+                                    <i className="ti ti-x me-1"></i>
+                                    {locale === 'ja' ? '編集キャンセル' : '편집 취소'}
+                                </button>
+                            )}
                         </div>
                         <div className="card-body">
                             <div className="row g-3">
@@ -794,25 +906,27 @@ export default function OrderPage() {
                                     />
                                 </div>
 
-                                {/* 발주의뢰일 */}
+                                {/* 발주의뢰일 (YYYYMMDD 텍스트) */}
                                 <div className="col-md-4">
                                     <label className="form-label">{ta('orderRequestDate')}</label>
                                     <input
-                                        type="date"
+                                        type="text"
                                         className="form-control"
                                         value={formData.orderRequestDate}
                                         onChange={e => setFormData({ ...formData, orderRequestDate: e.target.value })}
+                                        placeholder="YYYYMMDD"
                                     />
                                 </div>
 
-                                {/* 납기희망일 */}
+                                {/* 납기희망일 (텍스트 자유 입력) */}
                                 <div className="col-md-4">
                                     <label className="form-label">{ta('deliveryDueDate')}</label>
                                     <input
-                                        type="date"
+                                        type="text"
                                         className="form-control"
                                         value={formData.desiredDeliveryDate}
                                         onChange={e => setFormData({ ...formData, desiredDeliveryDate: e.target.value })}
+                                        placeholder={locale === 'ja' ? '例: 3/24(月)の週, 2025-03-24' : '예: 3/24(월)의 주, 2025-03-24'}
                                     />
                                 </div>
 
@@ -1077,11 +1191,16 @@ export default function OrderPage() {
                                         ({locale === 'ja' ? '税抜' : '세금별도'})
                                     </span>
                                 </div>
-                                <button className="btn btn-primary" onClick={handleSave} disabled={isSaving}>
+                                <button className={`btn ${editingOrderId ? 'btn-warning' : 'btn-primary'}`} onClick={handleSave} disabled={isSaving}>
                                     {isSaving ? (
                                         <>
                                             <span className="spinner-border spinner-border-sm me-2"></span>
                                             {tc('saving')}
+                                        </>
+                                    ) : editingOrderId ? (
+                                        <>
+                                            <i className="ti ti-check me-2"></i>
+                                            {locale === 'ja' ? '更新' : '수정'}
                                         </>
                                     ) : (
                                         <>
@@ -1315,16 +1434,9 @@ export default function OrderPage() {
                                                                 <button
                                                                     className="btn btn-ghost-primary btn-icon btn-sm"
                                                                     title={locale === 'ja' ? '編集' : '편집'}
-                                                                    onClick={() => router.push(`/dashboard/order/${order.id}/edit`)}
+                                                                    onClick={() => handleEditOrder(order)}
                                                                 >
                                                                     <i className="ti ti-edit"></i>
-                                                                </button>
-                                                                <button
-                                                                    className="btn btn-ghost-secondary btn-icon btn-sm"
-                                                                    title="PDF"
-                                                                    onClick={() => handleDownloadPdf(order.id, order.orderNumber)}
-                                                                >
-                                                                    <i className="ti ti-file-type-pdf"></i>
                                                                 </button>
                                                                 <button
                                                                     className="btn btn-ghost-danger btn-icon btn-sm"
