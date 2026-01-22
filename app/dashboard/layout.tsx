@@ -69,7 +69,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
                 { href: '/dashboard/assets', icon: 'ti-device-desktop', label: t('assets'), progress: menuProgress['assets'] },
                 { href: '/dashboard/repairs', icon: 'ti-tool', label: t('repairs'), progress: menuProgress['repairs'] },
                 { href: '/dashboard/sample-loans', icon: 'ti-package', label: t('sampleLoans'), progress: menuProgress['sample-loans'] },
-                { href: '/dashboard/history', icon: 'ti-history', label: t('history'), progress: menuProgress['history'] },
             ]
         },
         {
