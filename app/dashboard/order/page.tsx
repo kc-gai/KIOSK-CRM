@@ -150,12 +150,16 @@ export default function OrderPage() {
         notes: ''
     })
 
+    // 납품의뢰자 초기값 설정 여부 추적
+    const [requesterInitialized, setRequesterInitialized] = useState(false)
+
     // 로그인 사용자 이름을 납품의뢰자에 자동 설정
     useEffect(() => {
-        if (session?.user?.name && !formData.requesterName) {
+        if (session?.user?.name && !requesterInitialized) {
             setFormData(prev => ({ ...prev, requesterName: session.user.name || '' }))
+            setRequesterInitialized(true)
         }
-    }, [session?.user?.name])
+    }, [session?.user?.name, requesterInitialized])
 
     // 납품 항목 리스트
     const [deliveryItems, setDeliveryItems] = useState<DeliveryItem[]>([
@@ -393,13 +397,12 @@ export default function OrderPage() {
                     title: 'キオスク端末＆決済端末の鉄板・金具',
                     requesterName: session?.user?.name || '',
                     orderRequestDate: new Date().toISOString().slice(0, 10).replace(/-/g, ''),
-                    desiredDeliveryDate: '',
                     kioskUnitPrice: 240000,
                     plateUnitPrice: 5000,
                     notes: ''
                 })
                 setDeliveryItems([
-                    { id: 1, corporationId: '', branchId: '', brandName: '', postalCode: '', address: '', contact: '', kioskCount: 1, plateCount: 1, acquisition: 'FREE', leaseCompanyId: '' }
+                    { id: 1, corporationId: '', branchId: '', brandName: '', postalCode: '', address: '', contact: '', kioskCount: 1, plateCount: 1, acquisition: 'FREE', leaseCompanyId: '', desiredDeliveryDate: '' }
                 ])
 
                 // 목록 새로고침 및 폼 닫기
@@ -737,7 +740,6 @@ export default function OrderPage() {
             title: order.title || 'キオスク端末＆決済端末の鉄板・金具',
             requesterName: order.requesterName || '',
             orderRequestDate: order.orderRequestDate || '',
-            desiredDeliveryDate: order.desiredDeliveryDate || '',
             kioskUnitPrice: order.kioskUnitPrice || 240000,
             plateUnitPrice: order.plateUnitPrice || 5000,
             notes: order.notes || ''
@@ -789,7 +791,8 @@ export default function OrderPage() {
                     kioskCount: item.kioskCount || 1,
                     plateCount: item.plateCount || 1,
                     acquisition: item.acquisition || 'FREE',
-                    leaseCompanyId: item.leaseCompanyId || ''
+                    leaseCompanyId: item.leaseCompanyId || '',
+                    desiredDeliveryDate: ''
                 }
             })
             setDeliveryItems(items)
@@ -836,7 +839,8 @@ export default function OrderPage() {
                 kioskCount: order.kioskCount || order.quantity || 1,
                 plateCount: order.plateCount || 1,
                 acquisition: order.acquisition || 'FREE',
-                leaseCompanyId: order.leaseCompanyId || ''
+                leaseCompanyId: order.leaseCompanyId || '',
+                desiredDeliveryDate: ''
             }])
         }
 
@@ -852,13 +856,12 @@ export default function OrderPage() {
             title: 'キオスク端末＆決済端末の鉄板・金具',
             requesterName: session?.user?.name || '',
             orderRequestDate: new Date().toISOString().slice(0, 10).replace(/-/g, ''),
-            desiredDeliveryDate: '',
             kioskUnitPrice: 240000,
             plateUnitPrice: 5000,
             notes: ''
         })
         setDeliveryItems([
-            { id: 1, corporationId: '', branchId: '', brandName: '', postalCode: '', address: '', contact: '', kioskCount: 1, plateCount: 1, acquisition: 'FREE', leaseCompanyId: '' }
+            { id: 1, corporationId: '', branchId: '', brandName: '', postalCode: '', address: '', contact: '', kioskCount: 1, plateCount: 1, acquisition: 'FREE', leaseCompanyId: '', desiredDeliveryDate: '' }
         ])
     }
 
