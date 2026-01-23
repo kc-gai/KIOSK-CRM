@@ -62,7 +62,11 @@ type OrderItem = {
     branchName: string | null
     branchNameJa: string | null
     brandName: string | null
+    postalCode: string | null
+    address: string | null
+    contact: string | null
     acquisition: string
+    leaseCompanyId: string | null
     kioskCount: number
     plateCount: number
 }
@@ -83,14 +87,20 @@ type OrderProcess = {
     desiredDeliveryDate: string | null
     createdAt: string
     // 납품항목 정보
+    corporationId: string | null
     corporationName: string | null
     corporationNameJa: string | null
+    branchId: string | null
     branchName: string | null
     branchNameJa: string | null
     brandName: string | null
+    postalCode: string | null
+    address: string | null
+    contact: string | null
     kioskCount: number
     plateCount: number
     acquisition: string | null
+    leaseCompanyId: string | null
     // 복수 업체 정보
     items: OrderItem[] | null
     itemCount: number
