@@ -56,7 +56,7 @@
         "accounts": "アカウント管理",
         "settings": "環境設定",
         "apiSettings": "API管理",
-        "devTasks": "開発タスク管理",
+        "devTasks": "開発スケジュール",
         "workLogs": "作業日誌",
         "logout": "ログアウト",
         "sectionProcess": "プロセス",
@@ -1519,7 +1519,7 @@
         "saveFailed": "保存に失敗しました"
     },
     "devTasks": {
-        "title": "開発タスク管理",
+        "title": "開発スケジュール",
         "subtitle": "リアルタイム開発進捗状況とチェックリスト",
         "reset": "初期化",
         "confirmReset": "すべてのタスクを初期状態に戻しますか？",

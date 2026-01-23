@@ -56,7 +56,7 @@
         "accounts": "계정 관리",
         "settings": "환경설정",
         "apiSettings": "API 관리",
-        "devTasks": "개발 작업 관리",
+        "devTasks": "개발 스케쥴",
         "workLogs": "작업 일지",
         "logout": "로그아웃",
         "sectionProcess": "프로세스",
@@ -1517,7 +1517,7 @@
         "saveFailed": "저장에 실패했습니다"
     },
     "devTasks": {
-        "title": "개발 작업 관리",
+        "title": "개발 스케쥴",
         "subtitle": "실시간 개발 진행 현황 및 체크리스트",
         "reset": "초기화",
         "confirmReset": "모든 작업을 초기 상태로 되돌리시겠습니까?",

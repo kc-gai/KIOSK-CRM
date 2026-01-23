@@ -101,9 +101,11 @@ export const authOptions: NextAuthOptions = {
                 if (dbUser) {
                     session.user.id = dbUser.id
                     session.user.role = dbUser.role
+                    session.user.name = dbUser.name  // DB에서 이름 가져오기
                 } else {
                     session.user.id = token.id as string
                     session.user.role = token.role as string
+                    session.user.name = token.name as string
                 }
             }
             return session
@@ -113,6 +115,7 @@ export const authOptions: NextAuthOptions = {
                 const u = user as any
                 token.id = u.id
                 token.role = u.role
+                token.name = u.name
             }
             return token
         }
