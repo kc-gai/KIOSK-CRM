@@ -1,5 +1,19 @@
 # Claude Code 작업 규칙
 
+> 상위 설정 상속: `D:\99_개인\website\.claude\` 참조
+
+## 빌드 체크 (필수!)
+커밋 전 항상 실행:
+```bash
+npx next build
+```
+
+## 테스트 계정
+- ID: test
+- Password: admin1234
+
+---
+
 ## 프로젝트 개요
 - **프로젝트명**: Kiosk Asset CRM
 - **기술 스택**: Next.js 16 + React 19 + TypeScript, SQLite + Prisma, Tabler UI (CDN), next-intl (ko/ja)

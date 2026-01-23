@@ -4,6 +4,9 @@
 export type TaskStatus = 'completed' | 'in_progress' | 'pending' | 'blocked'
 export type TaskPriority = 'high' | 'medium' | 'low'
 
+// 프로세스 카테고리 정의 (발주 → 납품 → 설치 → 자산 → 통계 → 거래처 → 공통)
+export type ProcessCategory = 'order' | 'delivery' | 'installation' | 'assets' | 'statistics' | 'partners' | 'common'
+
 export interface SubTask {
     id: string
     title: string
@@ -24,11 +27,119 @@ export interface DevTask {
     category: string
     categoryKo: string
     categoryJa: string
+    processCategory: ProcessCategory // 프로세스 카테고리 추가
     notes?: string
     notesKo?: string
     notesJa?: string
     relatedMenus?: string[] // layout.tsx의 menuProgress와 연동
     subtasks?: SubTask[]
+}
+
+// 프로세스 카테고리 정보
+export const processCategories: Record<ProcessCategory, {
+    label: string
+    labelKo: string
+    labelJa: string
+    icon: string
+    description: string
+    descriptionKo: string
+    descriptionJa: string
+    stakeholders: string
+    stakeholdersKo: string
+    stakeholdersJa: string
+    integrations: string[]
+}> = {
+    order: {
+        label: 'Order Process',
+        labelKo: '발주',
+        labelJa: '発注',
+        icon: 'ti-file-invoice',
+        description: 'Order management through status and list',
+        descriptionKo: '발주를 통한 상태 및 리스트 관리',
+        descriptionJa: '発注による状態およびリスト管理',
+        stakeholders: 'Sales, General Management',
+        stakeholdersKo: '영업, 통괄관리',
+        stakeholdersJa: '営業、統括管理',
+        integrations: ['Jobcan API', 'Gmail', 'Google Calendar']
+    },
+    delivery: {
+        label: 'Delivery Process',
+        labelKo: '납품',
+        labelJa: '納品',
+        icon: 'ti-truck-delivery',
+        description: 'Kiosk manufacturer (Ooe Electric) preparation status and delivery management',
+        descriptionKo: '키오스크 생산업체(오오에전기)의 준비 상태 및 배송 상황 관리',
+        descriptionJa: 'キオスクメーカー(オオエ電機)の準備状況および配送状況管理',
+        stakeholders: 'Ooe Electric, General Management',
+        stakeholdersKo: '오오에전기 담당, 통괄관리',
+        stakeholdersJa: 'オオエ電機担当、統括管理',
+        integrations: ['Gmail', 'Google Calendar']
+    },
+    installation: {
+        label: 'Installation Process',
+        labelKo: '설치',
+        labelJa: '設置',
+        icon: 'ti-tool',
+        description: 'Installation completion check and management at branch locations',
+        descriptionKo: '설치 지점에 설치완료 여부를 체크 및 관리',
+        descriptionJa: '設置拠点の設置完了チェックおよび管理',
+        stakeholders: 'CS Team',
+        stakeholdersKo: 'CS팀',
+        stakeholdersJa: 'CSチーム',
+        integrations: ['GitHub']
+    },
+    assets: {
+        label: 'Asset Management',
+        labelKo: '자산',
+        labelJa: '資産',
+        icon: 'ti-device-desktop',
+        description: 'Kiosk asset integrated management',
+        descriptionKo: '키오스크 자산 통합 관리 (자산목록, 이력관리)',
+        descriptionJa: 'キオスク資産統合管理（資産一覧、履歴管理）',
+        stakeholders: 'General Management',
+        stakeholdersKo: '통괄관리부',
+        stakeholdersJa: '統括管理部',
+        integrations: []
+    },
+    statistics: {
+        label: 'Statistics Process',
+        labelKo: '통계',
+        labelJa: '統計',
+        icon: 'ti-chart-bar',
+        description: 'Check and integrate status from order/delivery/installation for statistics',
+        descriptionKo: '발주/납품/설치의 상태를 체크하고 통합하여 통계 처리',
+        descriptionJa: '発注/納品/設置の状態を確認し統合して統計処理',
+        stakeholders: 'Management, All Employees',
+        stakeholdersKo: '경영자 및 전사원',
+        stakeholdersJa: '経営者および全社員',
+        integrations: []
+    },
+    partners: {
+        label: 'Partner Management',
+        labelKo: '거래처',
+        labelJa: '取引先',
+        icon: 'ti-building-store',
+        description: 'FC, corporation, branch and lease company management',
+        descriptionKo: 'FC, 법인, 지점 및 리스회사 관리',
+        descriptionJa: 'FC、法人、支店およびリース会社管理',
+        stakeholders: 'Sales, General Management',
+        stakeholdersKo: '영업, 통괄관리',
+        stakeholdersJa: '営業、統括管理',
+        integrations: []
+    },
+    common: {
+        label: 'Common Features',
+        labelKo: '공통 기능',
+        labelJa: '共通機能',
+        icon: 'ti-settings',
+        description: 'Common features across all processes',
+        descriptionKo: '모든 프로세스에 공통으로 적용되는 기능',
+        descriptionJa: '全プロセスに共通で適用される機能',
+        stakeholders: 'All Users',
+        stakeholdersKo: '전체 사용자',
+        stakeholdersJa: '全ユーザー',
+        integrations: []
+    }
 }
 
 // 메뉴별 진척도 (UI 완성도 기준)
@@ -48,7 +159,8 @@ export const menuProgress: Record<string, number> = {
     'assets': 100,
     'repairs': 100,
     'sample-loans': 100,
-    'history': 100,
+    'history': 30,            // 이력 관리 - 기본 목록만 있음, 필터/검색 미구현
+    'installation': 0,        // 설치 관리 - 미구현
 
     // 통계
     'statistics': 100,
@@ -71,164 +183,422 @@ export const menuProgress: Record<string, number> = {
     'dev-tasks': 100,
 }
 
-// 개발 작업 목록 (High Priority)
+// 개발 작업 목록 - 프로세스 카테고리별 정리
+// 프로세스: 발주(order) → 납품(delivery) → 설치(installation) → 통계(statistics)
 export const devTasks: DevTask[] = [
+    // ========== 발주 프로세스 (Order) ==========
     {
-        id: '1',
-        title: 'Google Calendar Integration',
-        titleKo: 'Google Calendar 연동',
-        titleJa: 'Google Calendar連携',
-        description: 'OAuth setup, Calendar API implementation',
-        descriptionKo: 'OAuth 설정, Calendar API 호출 구현',
-        descriptionJa: 'OAuth設定、Calendar API実装',
-        status: 'in_progress',
-        priority: 'high',
-        progress: 40, // 2/5 subtasks
-        category: 'Integration',
-        categoryKo: '연동',
-        categoryJa: '連携',
-        notes: 'Structure exists - need API call implementation',
-        notesKo: '구조만 있음 - API 호출 구현 필요',
-        notesJa: '構造は存在 - API呼び出し実装が必要',
-        relatedMenus: ['api-settings'],
-        subtasks: [
-            { id: '1-1', title: 'OAuth client setup', completed: true },
-            { id: '1-2', title: 'Google Calendar API activation', completed: true },
-            { id: '1-3', title: 'Calendar event query implementation', completed: false },
-            { id: '1-4', title: 'Calendar event creation implementation', completed: false },
-            { id: '1-5', title: 'Auto-register order/delivery schedules', completed: false },
-        ]
-    },
-    {
-        id: '2',
+        id: 'order-1',
         title: 'Order Process Detail Completion',
         titleKo: '발주 프로세스 상세 완성',
         titleJa: '発注プロセス詳細完成',
         description: 'Approval workflow, PDF generation',
-        descriptionKo: '승인 워크플로우, PDF 생성 추가',
-        descriptionJa: '承認ワークフロー、PDF生成',
+        descriptionKo: '정보입력 → 품의서 → 발주의뢰 흐름 완성',
+        descriptionJa: '情報入力→稟議書→発注依頼フロー完成',
         status: 'in_progress',
         priority: 'high',
-        progress: 60, // 3/5 subtasks
+        progress: 60,
         category: 'Process',
         categoryKo: '프로세스',
         categoryJa: 'プロセス',
+        processCategory: 'order',
         notes: 'UI implemented - need business logic',
         notesKo: 'UI 구현됨 - 비즈니스 로직 추가 필요',
         notesJa: 'UI実装済み - ビジネスロジック追加必要',
         relatedMenus: ['order-process'],
         subtasks: [
-            { id: '2-1', title: 'Order process UI complete', completed: true },
-            { id: '2-2', title: '5-step workflow implementation', completed: true },
-            { id: '2-3', title: 'Delivery request generation', completed: true },
-            { id: '2-4', title: 'PDF generation/print function', completed: false },
-            { id: '2-5', title: 'Approval/rejection workflow', completed: false },
+            { id: 'order-1-1', title: '정보입력 UI 완성', completed: true },
+            { id: 'order-1-2', title: '품의서 작성 기능', completed: true },
+            { id: 'order-1-3', title: '발주의뢰 기능', completed: true },
+            { id: 'order-1-4', title: 'PDF 생성/출력 기능', completed: false },
+            { id: 'order-1-5', title: '승인/반려 워크플로우', completed: false },
         ]
     },
     {
-        id: '3',
-        title: 'Delivery Process Detail Completion',
-        titleKo: '납품 프로세스 상세 완성',
-        titleJa: '納品プロセス詳細完成',
-        description: 'ERP integration, auto-load contract info',
-        descriptionKo: 'ERP 연동, 계약 정보 자동 로드',
-        descriptionJa: 'ERP連携、契約情報自動ロード',
-        status: 'in_progress',
-        priority: 'high',
-        progress: 40, // 2/5 subtasks
-        category: 'Process',
-        categoryKo: '프로세스',
-        categoryJa: 'プロセス',
-        notes: 'UI implemented - need ERP integration',
-        notesKo: 'UI 구현됨 - ERP 연동 필요',
-        notesJa: 'UI実装済み - ERP連携必要',
-        relatedMenus: ['delivery-process'],
-        subtasks: [
-            { id: '3-1', title: 'Delivery process UI complete', completed: true },
-            { id: '3-2', title: '2-step workflow implementation', completed: true },
-            { id: '3-3', title: 'ERP integration implementation', completed: false },
-            { id: '3-4', title: 'Auto-load contract info', completed: false },
-            { id: '3-5', title: 'Delivery completion processing', completed: false },
-        ]
-    },
-    {
-        id: '4',
-        title: 'Email/Slack Notifications',
-        titleKo: '이메일/Slack 알림',
-        titleJa: 'メール/Slack通知',
-        description: 'SMTP setup, template creation, delivery notification',
-        descriptionKo: 'SMTP 설정, 템플릿 작성, 납품정보 입력 시 알림',
-        descriptionJa: 'SMTP設定、テンプレート作成、納品通知',
-        status: 'in_progress',
-        priority: 'high',
-        progress: 14, // 1/7 subtasks
-        category: 'Notification',
-        categoryKo: '알림',
-        categoryJa: '通知',
-        notes: 'Nodemailer ready - need config and templates. Add delivery info notification.',
-        notesKo: 'Nodemailer 준비됨 - 설정 및 템플릿 필요. 납품정보 입력 시 메일/슬랙 전송 추가',
-        notesJa: 'Nodemailer準備済み - 設定とテンプレート必要。納品情報入力時通知追加',
-        relatedMenus: ['api-settings', 'delivery-process'],
-        subtasks: [
-            { id: '4-1', title: 'Nodemailer setup', completed: true },
-            { id: '4-2', title: 'SMTP environment variables', completed: false },
-            { id: '4-3', title: 'Email template creation', completed: false },
-            { id: '4-4', title: 'Slack Webhook integration', completed: false },
-            { id: '4-5', title: 'Notification trigger implementation', completed: false },
-            { id: '4-6', title: 'Delivery info email notification', completed: false },
-            { id: '4-7', title: 'Delivery info Slack notification', completed: false },
-        ]
-    },
-    {
-        id: '5',
-        title: 'AI Chatbot Enhancement',
-        titleKo: 'AI 채팅 보완',
-        titleJa: 'AIチャットボット改善',
-        description: 'Environment check, conversation history improvement',
-        descriptionKo: '환경변수 확인, 대화 히스토리 개선',
-        descriptionJa: '環境変数確認、会話履歴改善',
-        status: 'in_progress',
-        priority: 'high',
-        progress: 60, // 3/5 subtasks
-        category: 'AI',
-        categoryKo: 'AI',
-        categoryJa: 'AI',
-        notes: 'Basic implementation done - need history improvement',
-        notesKo: '기본 구현됨 - 히스토리 개선 필요',
-        notesJa: '基本実装完了 - 履歴改善必要',
-        relatedMenus: ['ai-search'],
-        subtasks: [
-            { id: '5-1', title: 'OpenAI API integration', completed: true },
-            { id: '5-2', title: 'Chat UI implementation', completed: true },
-            { id: '5-3', title: 'Environment variables setup', completed: true },
-            { id: '5-4', title: 'Conversation history storage', completed: false },
-            { id: '5-5', title: 'Context improvement', completed: false },
-        ]
-    },
-    {
-        id: '6',
-        title: 'ERP System Integration',
-        titleKo: 'ERP 시스템 연동',
-        titleJa: 'ERPシステム連携',
-        description: 'External ERP data synchronization',
-        descriptionKo: '외부 ERP 시스템과 데이터 동기화',
-        descriptionJa: '外部ERPシステムとデータ同期',
+        id: 'order-2',
+        title: 'Jobcan Approval System Integration',
+        titleKo: 'Jobcan 품의 시스템 API 연동',
+        titleJa: 'Jobcan稟議システムAPI連携',
+        description: 'Jobcan approval workflow integration',
+        descriptionKo: 'Jobcan 품의 시스템과 API 연동',
+        descriptionJa: 'Jobcan稟議システムとAPI連携',
         status: 'pending',
-        priority: 'medium',
-        progress: 0, // 0/4 subtasks
+        priority: 'high',
+        progress: 0,
         category: 'Integration',
         categoryKo: '연동',
         categoryJa: '連携',
-        relatedMenus: ['delivery-process'],
+        processCategory: 'order',
+        relatedMenus: ['api-settings', 'order-process'],
         subtasks: [
-            { id: '6-1', title: 'ERP API spec review', completed: false },
-            { id: '6-2', title: 'API client implementation', completed: false },
-            { id: '6-3', title: 'Data mapping', completed: false },
-            { id: '6-4', title: 'Sync logic implementation', completed: false },
+            { id: 'order-2-1', title: 'Jobcan API 스펙 확인', completed: false },
+            { id: 'order-2-2', title: 'API 클라이언트 구현', completed: false },
+            { id: 'order-2-3', title: '품의서 자동 제출', completed: false },
+            { id: 'order-2-4', title: '승인 상태 동기화', completed: false },
         ]
     },
     {
-        id: '7',
+        id: 'order-3',
+        title: 'Google Calendar Integration (Order)',
+        titleKo: 'Google Calendar 연동 (발주)',
+        titleJa: 'Google Calendar連携（発注）',
+        description: 'Order schedule registration to Calendar',
+        descriptionKo: '발주 일정 Google Calendar 등록',
+        descriptionJa: '発注日程Google Calendar登録',
+        status: 'in_progress',
+        priority: 'high',
+        progress: 40,
+        category: 'Integration',
+        categoryKo: '연동',
+        categoryJa: '連携',
+        processCategory: 'order',
+        notes: 'OAuth ready - need calendar event creation',
+        notesKo: 'OAuth 준비됨 - 캘린더 이벤트 생성 필요',
+        notesJa: 'OAuth準備済み - カレンダーイベント作成必要',
+        relatedMenus: ['api-settings'],
+        subtasks: [
+            { id: 'order-3-1', title: 'OAuth 클라이언트 설정', completed: true },
+            { id: 'order-3-2', title: 'Google Calendar API 활성화', completed: true },
+            { id: 'order-3-3', title: '발주 일정 이벤트 생성', completed: false },
+            { id: 'order-3-4', title: '납기희망일 자동 등록', completed: false },
+        ]
+    },
+    {
+        id: 'order-4',
+        title: 'Gmail Integration (Order)',
+        titleKo: 'Gmail 연동 (발주)',
+        titleJa: 'Gmail連携（発注）',
+        description: 'Order notification email via Gmail',
+        descriptionKo: '발주 관련 알림 이메일 발송',
+        descriptionJa: '発注関連通知メール送信',
+        status: 'in_progress',
+        priority: 'high',
+        progress: 14,
+        category: 'Notification',
+        categoryKo: '알림',
+        categoryJa: '通知',
+        processCategory: 'order',
+        notesKo: 'Nodemailer 준비됨 - SMTP 설정 필요',
+        relatedMenus: ['api-settings'],
+        subtasks: [
+            { id: 'order-4-1', title: 'Nodemailer 설정', completed: true },
+            { id: 'order-4-2', title: 'SMTP 환경변수', completed: false },
+            { id: 'order-4-3', title: '발주 알림 템플릿', completed: false },
+            { id: 'order-4-4', title: '품의 승인 알림', completed: false },
+        ]
+    },
+
+    // ========== 납품 프로세스 (Delivery) ==========
+    {
+        id: 'delivery-1',
+        title: 'Delivery Process Detail Completion',
+        titleKo: '납품 프로세스 상세 완성',
+        titleJa: '納品プロセス詳細完成',
+        description: 'Delivery info input (serial, Anydesk)',
+        descriptionKo: '배송정보 입력 (시리얼, Anydesk No) 기능 완성',
+        descriptionJa: '配送情報入力（シリアル、Anydesk No）機能完成',
+        status: 'in_progress',
+        priority: 'high',
+        progress: 40,
+        category: 'Process',
+        categoryKo: '프로세스',
+        categoryJa: 'プロセス',
+        processCategory: 'delivery',
+        notes: 'UI implemented - need delivery info features',
+        notesKo: 'UI 구현됨 - 배송정보 기능 필요',
+        notesJa: 'UI実装済み - 配送情報機能必要',
+        relatedMenus: ['delivery-process'],
+        subtasks: [
+            { id: 'delivery-1-1', title: '납품 프로세스 UI 완성', completed: true },
+            { id: 'delivery-1-2', title: '발주 리스트 연동', completed: true },
+            { id: 'delivery-1-3', title: '배송일 입력', completed: false },
+            { id: 'delivery-1-4', title: '키오스크 시리얼 입력', completed: false },
+            { id: 'delivery-1-5', title: 'Anydesk No 입력', completed: false },
+        ]
+    },
+    {
+        id: 'delivery-2',
+        title: 'Gmail Integration (Delivery)',
+        titleKo: 'Gmail 연동 (납품)',
+        titleJa: 'Gmail連携（納品）',
+        description: 'Delivery notification to Ooe Electric',
+        descriptionKo: '오오에전기 담당자 배송 알림',
+        descriptionJa: 'オオエ電機担当者配送通知',
+        status: 'pending',
+        priority: 'high',
+        progress: 0,
+        category: 'Notification',
+        categoryKo: '알림',
+        categoryJa: '通知',
+        processCategory: 'delivery',
+        relatedMenus: ['api-settings', 'delivery-process'],
+        subtasks: [
+            { id: 'delivery-2-1', title: '납품 알림 템플릿', completed: false },
+            { id: 'delivery-2-2', title: '배송 완료 알림', completed: false },
+            { id: 'delivery-2-3', title: '담당자 이메일 목록 관리', completed: false },
+        ]
+    },
+    {
+        id: 'delivery-3',
+        title: 'Google Calendar Integration (Delivery)',
+        titleKo: 'Google Calendar 연동 (납품)',
+        titleJa: 'Google Calendar連携（納品）',
+        description: 'Delivery schedule registration',
+        descriptionKo: '배송 일정 Calendar 등록',
+        descriptionJa: '配送日程Calendar登録',
+        status: 'pending',
+        priority: 'medium',
+        progress: 0,
+        category: 'Integration',
+        categoryKo: '연동',
+        categoryJa: '連携',
+        processCategory: 'delivery',
+        relatedMenus: ['api-settings'],
+        subtasks: [
+            { id: 'delivery-3-1', title: '배송일 이벤트 생성', completed: false },
+            { id: 'delivery-3-2', title: '도착예정일 알림', completed: false },
+        ]
+    },
+
+    // ========== 설치 프로세스 (Installation) ==========
+    {
+        id: 'installation-1',
+        title: 'Installation Management Page',
+        titleKo: '설치 관리 페이지 개발',
+        titleJa: '設置管理ページ開発',
+        description: 'Installation completion check and management',
+        descriptionKo: '설치 완료 체크 및 관리 페이지',
+        descriptionJa: '設置完了チェックおよび管理ページ',
+        status: 'pending',
+        priority: 'high',
+        progress: 0,
+        category: 'Feature',
+        categoryKo: '기능',
+        categoryJa: '機能',
+        processCategory: 'installation',
+        relatedMenus: ['installation'],
+        subtasks: [
+            { id: 'installation-1-1', title: '설치 관리 페이지 UI', completed: false },
+            { id: 'installation-1-2', title: '납품 완료 리스트 연동', completed: false },
+            { id: 'installation-1-3', title: '설치 완료 체크 기능', completed: false },
+            { id: 'installation-1-4', title: '설치 일자/담당자 입력', completed: false },
+        ]
+    },
+    {
+        id: 'installation-2',
+        title: 'GitHub Integration',
+        titleKo: 'GitHub 연동',
+        titleJa: 'GitHub連携',
+        description: 'Auto-create GitHub issue for statistics request',
+        descriptionKo: '설치 완료 시 개발팀에 통계요청 이슈 자동 생성',
+        descriptionJa: '設置完了時開発チームに統計要請Issue自動作成',
+        status: 'pending',
+        priority: 'high',
+        progress: 0,
+        category: 'Integration',
+        categoryKo: '연동',
+        categoryJa: '連携',
+        processCategory: 'installation',
+        relatedMenus: ['api-settings', 'installation'],
+        subtasks: [
+            { id: 'installation-2-1', title: 'GitHub API 연동', completed: false },
+            { id: 'installation-2-2', title: '이슈 템플릿 작성', completed: false },
+            { id: 'installation-2-3', title: '자동 이슈 생성 기능', completed: false },
+            { id: 'installation-2-4', title: '이슈 상태 동기화', completed: false },
+        ]
+    },
+
+    // ========== 자산 관리 (Assets) ==========
+    {
+        id: 'assets-1',
+        title: 'Asset List Management',
+        titleKo: '자산 목록 관리',
+        titleJa: '資産一覧管理',
+        description: 'Kiosk asset list CRUD and display',
+        descriptionKo: '키오스크 자산 목록 CRUD 및 표시',
+        descriptionJa: 'キオスク資産一覧CRUDおよび表示',
+        status: 'completed',
+        priority: 'high',
+        progress: 100,
+        category: 'Feature',
+        categoryKo: '기능',
+        categoryJa: '機能',
+        processCategory: 'assets',
+        notes: 'Fully implemented',
+        notesKo: '완전 구현됨',
+        notesJa: '完全実装済み',
+        relatedMenus: ['assets'],
+        subtasks: [
+            { id: 'assets-1-1', title: '자산 목록 UI', completed: true },
+            { id: 'assets-1-2', title: '필터/검색 기능', completed: true },
+            { id: 'assets-1-3', title: '인라인 편집', completed: true },
+            { id: 'assets-1-4', title: '페이지네이션', completed: true },
+            { id: 'assets-1-5', title: '컬럼 토글', completed: true },
+        ]
+    },
+    {
+        id: 'assets-2',
+        title: 'Asset Detail Page',
+        titleKo: '자산 상세 페이지',
+        titleJa: '資産詳細ページ',
+        description: 'Kiosk individual asset detail view',
+        descriptionKo: '키오스크 개별 자산 상세 조회',
+        descriptionJa: 'キオスク個別資産詳細照会',
+        status: 'completed',
+        priority: 'high',
+        progress: 100,
+        category: 'Feature',
+        categoryKo: '기능',
+        categoryJa: '機能',
+        processCategory: 'assets',
+        notes: 'Fully implemented',
+        notesKo: '완전 구현됨',
+        notesJa: '完全実装済み',
+        relatedMenus: ['assets'],
+        subtasks: [
+            { id: 'assets-2-1', title: '상세 정보 표시', completed: true },
+            { id: 'assets-2-2', title: '이동 이력 표시', completed: true },
+            { id: 'assets-2-3', title: '이동 등록 기능', completed: true },
+            { id: 'assets-2-4', title: '기본 정보 편집', completed: true },
+        ]
+    },
+    {
+        id: 'assets-3',
+        title: 'History Page Enhancement',
+        titleKo: '이력 페이지 고도화',
+        titleJa: '履歴ページ高度化',
+        description: 'Enhance history page with filters and search',
+        descriptionKo: '이력 페이지 필터/검색 기능 추가',
+        descriptionJa: '履歴ページフィルター/検索機能追加',
+        status: 'pending',
+        priority: 'low',
+        progress: 30,
+        category: 'Feature',
+        categoryKo: '기능',
+        categoryJa: '機能',
+        processCategory: 'assets',
+        notes: 'Basic list only - needs enhancement',
+        notesKo: '기본 목록만 있음 - 고도화 필요',
+        notesJa: '基本一覧のみ - 高度化必要',
+        relatedMenus: ['history'],
+        subtasks: [
+            { id: 'assets-3-1', title: '기본 목록 표시', completed: true },
+            { id: 'assets-3-2', title: '날짜 필터', completed: false },
+            { id: 'assets-3-3', title: '이동유형 필터', completed: false },
+            { id: 'assets-3-4', title: '키오스크 검색', completed: false },
+        ]
+    },
+
+    // ========== 통계 프로세스 (Statistics) ==========
+    {
+        id: 'statistics-1',
+        title: 'Integrated Statistics Dashboard',
+        titleKo: '통합 통계 대시보드',
+        titleJa: '統合統計ダッシュボード',
+        description: 'Order/Delivery/Installation integrated statistics',
+        descriptionKo: '발주/납품/설치 현황 통합 통계',
+        descriptionJa: '発注/納品/設置状況統合統計',
+        status: 'in_progress',
+        priority: 'high',
+        progress: 50,
+        category: 'Feature',
+        categoryKo: '기능',
+        categoryJa: '機能',
+        processCategory: 'statistics',
+        relatedMenus: ['statistics', 'dashboard'],
+        subtasks: [
+            { id: 'statistics-1-1', title: '대시보드 기본 통계', completed: true },
+            { id: 'statistics-1-2', title: '발주 현황 통계', completed: true },
+            { id: 'statistics-1-3', title: '납품 현황 통계', completed: false },
+            { id: 'statistics-1-4', title: '설치 현황 통계', completed: false },
+            { id: 'statistics-1-5', title: '통합 리포트', completed: false },
+        ]
+    },
+    {
+        id: 'statistics-2',
+        title: 'Pricing Management',
+        titleKo: '매출 관리 완성',
+        titleJa: '売上管理完成',
+        description: 'Sales/cost management completion',
+        descriptionKo: '매출/원가 관리 기능 완성',
+        descriptionJa: '売上/原価管理機能完成',
+        status: 'in_progress',
+        priority: 'medium',
+        progress: 25,
+        category: 'Feature',
+        categoryKo: '기능',
+        categoryJa: '機能',
+        processCategory: 'statistics',
+        notes: 'Basic UI only',
+        notesKo: '기본 UI만 구현됨',
+        notesJa: '基本UIのみ実装',
+        relatedMenus: ['pricing'],
+        subtasks: [
+            { id: 'statistics-2-1', title: '기본 UI 구현', completed: true },
+            { id: 'statistics-2-2', title: '원가/판매가 관리', completed: false },
+            { id: 'statistics-2-3', title: '마진 계산', completed: false },
+            { id: 'statistics-2-4', title: '리포트 생성', completed: false },
+        ]
+    },
+
+    // ========== 거래처 관리 (Partners) ==========
+    {
+        id: 'partners-1',
+        title: 'FC/Corporation/Branch Management',
+        titleKo: 'FC/법인/지점 관리',
+        titleJa: 'FC/法人/支店管理',
+        description: 'Client hierarchy management',
+        descriptionKo: 'FC → 법인 → 지점 계층 구조 관리',
+        descriptionJa: 'FC→法人→支店階層構造管理',
+        status: 'completed',
+        priority: 'high',
+        progress: 100,
+        category: 'Feature',
+        categoryKo: '기능',
+        categoryJa: '機能',
+        processCategory: 'partners',
+        notes: 'Fully implemented',
+        notesKo: '완전 구현됨',
+        notesJa: '完全実装済み',
+        relatedMenus: ['clients'],
+        subtasks: [
+            { id: 'partners-1-1', title: 'FC 목록 및 편집', completed: true },
+            { id: 'partners-1-2', title: '법인 목록 및 편집', completed: true },
+            { id: 'partners-1-3', title: '지점 목록 및 편집', completed: true },
+            { id: 'partners-1-4', title: 'CSV 임포트', completed: true },
+            { id: 'partners-1-5', title: '다국어 이름 지원', completed: true },
+        ]
+    },
+    {
+        id: 'partners-2',
+        title: 'Lease Company Management',
+        titleKo: '리스회사 관리',
+        titleJa: 'リース会社管理',
+        description: 'Lease company CRUD',
+        descriptionKo: '리스회사 등록/수정/삭제',
+        descriptionJa: 'リース会社登録/修正/削除',
+        status: 'completed',
+        priority: 'medium',
+        progress: 100,
+        category: 'Feature',
+        categoryKo: '기능',
+        categoryJa: '機能',
+        processCategory: 'partners',
+        notes: 'Fully implemented',
+        notesKo: '완전 구현됨',
+        notesJa: '完全実装済み',
+        relatedMenus: ['lease-companies'],
+        subtasks: [
+            { id: 'partners-2-1', title: '리스회사 목록', completed: true },
+            { id: 'partners-2-2', title: '리스회사 등록', completed: true },
+            { id: 'partners-2-3', title: '리스회사 편집', completed: true },
+            { id: 'partners-2-4', title: '기본 수수료 설정', completed: true },
+        ]
+    },
+
+    // ========== 공통 기능 (Common) ==========
+    {
+        id: 'common-1',
         title: 'PDF Generation',
         titleKo: 'PDF 생성 기능',
         titleJa: 'PDF生成機能',
@@ -237,72 +607,51 @@ export const devTasks: DevTask[] = [
         descriptionJa: '発注書、納品書PDF出力',
         status: 'in_progress',
         priority: 'medium',
-        progress: 25, // 1/4 subtasks
+        progress: 25,
         category: 'Feature',
         categoryKo: '기능',
         categoryJa: '機能',
+        processCategory: 'common',
         notes: 'Reviewing react-pdf or puppeteer',
         notesKo: 'react-pdf 또는 puppeteer 검토 중',
         notesJa: 'react-pdfまたはpuppeteer検討中',
         relatedMenus: ['order-process', 'delivery-request'],
         subtasks: [
-            { id: '7-1', title: 'PDF library selection', completed: true },
-            { id: '7-2', title: 'Order document template design', completed: false },
-            { id: '7-3', title: 'Delivery document template design', completed: false },
-            { id: '7-4', title: 'PDF generation API implementation', completed: false },
+            { id: 'common-1-1', title: 'PDF 라이브러리 선정', completed: true },
+            { id: 'common-1-2', title: '발주서 템플릿 디자인', completed: false },
+            { id: 'common-1-3', title: '납품서 템플릿 디자인', completed: false },
+            { id: 'common-1-4', title: 'PDF 생성 API 구현', completed: false },
         ]
     },
     {
-        id: '8',
-        title: 'Dashboard Progress Enhancement',
-        titleKo: '대시보드 진척현황 개선',
-        titleJa: 'ダッシュボード進捗改善',
-        description: 'Real-time data display improvement',
-        descriptionKo: '실시간 데이터 표시 개선',
-        descriptionJa: 'リアルタイムデータ表示改善',
-        status: 'completed',
+        id: 'common-2',
+        title: 'AI Chatbot Enhancement',
+        titleKo: 'AI 채팅 보완',
+        titleJa: 'AIチャットボット改善',
+        description: 'Environment check, conversation history improvement',
+        descriptionKo: '환경변수 확인, 대화 히스토리 개선',
+        descriptionJa: '環境変数確認、会話履歴改善',
+        status: 'in_progress',
         priority: 'medium',
-        progress: 100,
-        category: 'UI',
-        categoryKo: 'UI',
-        categoryJa: 'UI',
-        notes: 'Real-time status added',
-        notesKo: '실시간 운영 현황 추가 완료',
-        notesJa: 'リアルタイム運用状況追加完了',
-        relatedMenus: ['dashboard'],
+        progress: 60,
+        category: 'AI',
+        categoryKo: 'AI',
+        categoryJa: 'AI',
+        processCategory: 'common',
+        notes: 'Basic implementation done - need history improvement',
+        notesKo: '기본 구현됨 - 히스토리 개선 필요',
+        notesJa: '基本実装完了 - 履歴改善必要',
+        relatedMenus: ['ai-search'],
         subtasks: [
-            { id: '8-1', title: 'Real-time status cards', completed: true },
-            { id: '8-2', title: 'Chart data integration', completed: true },
-            { id: '8-3', title: 'Statistics quick links', completed: true },
+            { id: 'common-2-1', title: 'OpenAI API 연동', completed: true },
+            { id: 'common-2-2', title: '채팅 UI 구현', completed: true },
+            { id: 'common-2-3', title: '환경변수 설정', completed: true },
+            { id: 'common-2-4', title: '대화 히스토리 저장', completed: false },
+            { id: 'common-2-5', title: '컨텍스트 개선', completed: false },
         ]
     },
     {
-        id: '9',
-        title: 'CSV Function Enhancement',
-        titleKo: 'CSV 기능 강화',
-        titleJa: 'CSV機能強化',
-        description: 'CSV import/export improvement',
-        descriptionKo: 'CSV 가져오기/내보내기 개선',
-        descriptionJa: 'CSVインポート/エクスポート改善',
-        status: 'completed',
-        priority: 'medium',
-        progress: 100,
-        category: 'Feature',
-        categoryKo: '기능',
-        categoryJa: '機能',
-        notes: 'Client CSV import completed',
-        notesKo: '거래처 CSV 임포트 구현 완료',
-        notesJa: '取引先CSVインポート実装完了',
-        relatedMenus: ['clients'],
-        subtasks: [
-            { id: '9-1', title: 'CSV import modal implementation', completed: true },
-            { id: '9-2', title: 'CSV parsing logic', completed: true },
-            { id: '9-3', title: 'Error handling', completed: true },
-            { id: '9-4', title: 'Multilingual CSV support', completed: true },
-        ]
-    },
-    {
-        id: '10',
+        id: 'common-3',
         title: 'Internationalization (i18n)',
         titleKo: '다국어(i18n) 처리',
         titleJa: '多言語(i18n)対応',
@@ -315,95 +664,42 @@ export const devTasks: DevTask[] = [
         category: 'UI',
         categoryKo: 'UI',
         categoryJa: 'UI',
+        processCategory: 'common',
         notes: 'next-intl applied',
         notesKo: 'next-intl 적용 완료',
         notesJa: 'next-intl適用完了',
         relatedMenus: [],
         subtasks: [
-            { id: '10-1', title: 'next-intl setup', completed: true },
-            { id: '10-2', title: 'ko.json translation file', completed: true },
-            { id: '10-3', title: 'ja.json translation file', completed: true },
-            { id: '10-4', title: 'All pages multilingual applied', completed: true },
+            { id: 'common-3-1', title: 'next-intl 설정', completed: true },
+            { id: 'common-3-2', title: 'ko.json 번역 파일', completed: true },
+            { id: 'common-3-3', title: 'ja.json 번역 파일', completed: true },
+            { id: 'common-3-4', title: '전체 페이지 다국어 적용', completed: true },
         ]
     },
     {
-        id: '11',
-        title: 'Pricing Management',
-        titleKo: '매출 관리 완성',
-        titleJa: '売上管理完成',
-        description: 'Sales/cost management completion',
-        descriptionKo: '매출/원가 관리 기능 완성',
-        descriptionJa: '売上/原価管理機能完成',
-        status: 'in_progress',
-        priority: 'medium',
-        progress: 25, // 1/4 subtasks
-        category: 'Feature',
-        categoryKo: '기능',
-        categoryJa: '機能',
-        notes: 'Basic UI only',
-        notesKo: '기본 UI만 구현됨',
-        notesJa: '基本UIのみ実装',
-        relatedMenus: ['pricing'],
-        subtasks: [
-            { id: '11-1', title: 'Basic UI implementation', completed: true },
-            { id: '11-2', title: 'Cost/sale price management', completed: false },
-            { id: '11-3', title: 'Margin calculation', completed: false },
-            { id: '11-4', title: 'Report generation', completed: false },
-        ]
-    },
-    {
-        id: '12',
-        title: 'Assembly Manual',
-        titleKo: '조립 매뉴얼 완성',
-        titleJa: '組立マニュアル完成',
-        description: 'Step-by-step assembly guide',
-        descriptionKo: '단계별 조립 가이드 기능',
-        descriptionJa: 'ステップバイステップ組立ガイド',
-        status: 'in_progress',
-        priority: 'low',
-        progress: 25, // 1/4 subtasks
-        category: 'Feature',
-        categoryKo: '기능',
-        categoryJa: '機能',
-        notes: 'Basic structure only',
-        notesKo: '기본 구조만 구현됨',
-        notesJa: '基本構造のみ実装',
-        relatedMenus: ['assembly-manual'],
-        subtasks: [
-            { id: '12-1', title: 'Basic page structure', completed: true },
-            { id: '12-2', title: 'Step editor implementation', completed: false },
-            { id: '12-3', title: 'Image upload function', completed: false },
-            { id: '12-4', title: 'Preview function', completed: false },
-        ]
-    },
-    {
-        id: '13',
-        title: 'Client/Branch Management Enhancement',
-        titleKo: '거래처/지점 관리 개선',
-        titleJa: '取引先/支店管理改善',
-        description: 'Branch data import, multilingual display, edit functions',
-        descriptionKo: '지점 데이터 임포트, 다국어 표시, 편집 기능 보완',
-        descriptionJa: '支店データインポート、多言語表示、編集機能補完',
+        id: 'common-4',
+        title: 'Client/Branch Management',
+        titleKo: '거래처/지점 관리',
+        titleJa: '取引先/支店管理',
+        description: 'Branch data import, multilingual display',
+        descriptionKo: '지점 데이터 임포트, 다국어 표시',
+        descriptionJa: '支店データインポート、多言語表示',
         status: 'completed',
         priority: 'high',
         progress: 100,
         category: 'Feature',
         categoryKo: '기능',
         categoryJa: '機能',
+        processCategory: 'common',
         notes: 'All features completed',
         notesKo: '모든 기능 완료',
         notesJa: '全機能完了',
         relatedMenus: ['clients'],
         subtasks: [
-            { id: '13-1', title: 'FC/Corp/Branch UI structure', completed: true },
-            { id: '13-2', title: 'CSV import function', completed: true },
-            { id: '13-3', title: 'Corp/Branch create/edit modals', completed: true },
-            { id: '13-4', title: 'Korean/Japanese font support', completed: true },
-            { id: '13-5', title: 'Multilingual name display (getDisplayName)', completed: true },
-            { id: '13-6', title: 'Branch CSV import - actual data verification', completed: true },
-            { id: '13-7', title: 'Branch tab list improvement', completed: true },
-            { id: '13-8', title: 'Settings tab save function', completed: true },
-            { id: '13-9', title: 'History tab actual data', completed: true },
+            { id: 'common-4-1', title: 'FC/법인/지점 UI 구조', completed: true },
+            { id: 'common-4-2', title: 'CSV 임포트 기능', completed: true },
+            { id: 'common-4-3', title: '법인/지점 생성/편집 모달', completed: true },
+            { id: 'common-4-4', title: '다국어 이름 표시', completed: true },
         ]
     },
 ]
@@ -435,11 +731,25 @@ export function getTaskStats() {
     }
 }
 
-// 권장 작업 순서
+// 프로세스별 통계 계산
+export function getProcessStats(processCategory: ProcessCategory) {
+    const processTasks = devTasks.filter(t => t.processCategory === processCategory)
+    const total = processTasks.length
+    const completed = processTasks.filter(t => t.status === 'completed').length
+    const inProgress = processTasks.filter(t => t.status === 'in_progress').length
+    const pending = processTasks.filter(t => t.status === 'pending').length
+    const progress = total > 0
+        ? Math.round(processTasks.reduce((sum, t) => sum + calculateTaskProgress(t), 0) / total)
+        : 0
+    return { total, completed, inProgress, pending, progress }
+}
+
+// 권장 작업 순서 (프로세스 흐름 기준)
 export const recommendedOrder = [
-    { id: '1', reason: 'Structure exists, just need API implementation', reasonKo: '이미 구조가 있어서 API 호출만 구현하면 됨', reasonJa: '構造が存在、API実装のみ必要' },
-    { id: '2', reason: 'UI complete, just add business logic', reasonKo: 'UI 완성되어 있고 비즈니스 로직만 추가', reasonJa: 'UI完成済み、ビジネスロジック追加のみ' },
-    { id: '4', reason: 'Nodemailer ready, need SMTP config', reasonKo: 'Nodemailer 준비됨, SMTP 설정 필요', reasonJa: 'Nodemailer準備済み、SMTP設定必要' },
-    { id: '7', reason: 'Required for order/delivery document printing', reasonKo: '발주서/납품서 출력을 위해 필요', reasonJa: '発注書/納品書出力に必要' },
-    { id: '6', reason: 'External system integration, lower priority', reasonKo: '외부 시스템 연동으로 후순위', reasonJa: '外部システム連携で後順位' },
+    { id: 'order-1', reason: 'Core order workflow completion', reasonKo: '발주 핵심 워크플로우 완성', reasonJa: '発注コアワークフロー完成' },
+    { id: 'order-2', reason: 'Jobcan integration for approval', reasonKo: 'Jobcan 품의 시스템 연동', reasonJa: 'Jobcan稟議システム連携' },
+    { id: 'delivery-1', reason: 'Delivery info input for Ooe Electric', reasonKo: '오오에전기 배송정보 입력', reasonJa: 'オオエ電機配送情報入力' },
+    { id: 'installation-1', reason: 'Installation check for CS team', reasonKo: 'CS팀 설치 완료 체크', reasonJa: 'CSチーム設置完了チェック' },
+    { id: 'installation-2', reason: 'GitHub issue for statistics request', reasonKo: 'GitHub 통계요청 이슈 연동', reasonJa: 'GitHub統計要請Issue連携' },
+    { id: 'statistics-1', reason: 'Integrated statistics dashboard', reasonKo: '통합 통계 대시보드', reasonJa: '統合統計ダッシュボード' },
 ]

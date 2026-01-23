@@ -2,25 +2,10 @@
 
 import React, { useState, useEffect } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
-import { CheckCircle2, Circle, Clock, AlertCircle, ChevronDown, ChevronRight, Calendar, MessageSquare, Zap, FileText, Truck, Mail, Bot, Database, FileSpreadsheet, BarChart, GripVertical } from 'lucide-react'
-import { devTasks, recommendedOrder, getTaskStats, type DevTask, type TaskStatus, type TaskPriority, type SubTask } from '@/lib/dev-progress'
-import {
-    DndContext,
-    closestCenter,
-    KeyboardSensor,
-    PointerSensor,
-    useSensor,
-    useSensors,
-    DragEndEvent,
-} from '@dnd-kit/core'
-import {
-    arrayMove,
-    SortableContext,
-    sortableKeyboardCoordinates,
-    useSortable,
-    verticalListSortingStrategy,
-} from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
+import { CheckCircle2, Circle, Clock, AlertCircle, ChevronDown, ChevronRight, MessageSquare, Zap, FileText, Truck, BarChart, Settings, Wrench, Monitor, Building2, Link } from 'lucide-react'
+import Link2 from 'next/link'
+import { menuProgress } from '@/lib/dev-progress'
+import { devTasks, processCategories, recommendedOrder, type DevTask, type TaskStatus, type TaskPriority, type ProcessCategory } from '@/lib/dev-progress'
 
 // LocalStorage용 타입 (subtask 완료 상태 저장)
 interface TaskState {
@@ -29,162 +14,20 @@ interface TaskState {
     lastUpdated: string
 }
 
-// 드래그 가능한 작업 아이템 컴포넌트
-interface SortableTaskItemProps {
-    task: DevTask & { subtasks?: (SubTask & { completed: boolean })[] }
-    index: number
-    expandedTasks: Set<string>
-    toggleExpand: (taskId: string) => void
-    toggleSubtask: (taskId: string, subtaskId: string) => void
-    getStatusIcon: (status: TaskStatus) => React.ReactElement
-    getPriorityBadge: (priority: TaskPriority) => React.ReactElement
-    getCategoryIcon: (categoryKo: string) => React.ReactElement
-    getTaskTitle: (task: DevTask) => string
-    getTaskDescription: (task: DevTask) => string | undefined
-    getTaskNotes: (task: DevTask) => string | undefined
-    getTaskCategory: (task: DevTask) => string
-}
-
-function SortableTaskItem({
-    task,
-    index,
-    expandedTasks,
-    toggleExpand,
-    toggleSubtask,
-    getStatusIcon,
-    getPriorityBadge,
-    getCategoryIcon,
-    getTaskTitle,
-    getTaskDescription,
-    getTaskNotes,
-    getTaskCategory,
-}: SortableTaskItemProps) {
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging,
-    } = useSortable({ id: task.id })
-
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.5 : 1,
-        backgroundColor: isDragging ? '#f8f9fa' : undefined,
-    }
-
-    return (
-        <div ref={setNodeRef} style={style} className="list-group-item">
-            <div className="row align-items-center">
-                <div className="col-auto" {...attributes} {...listeners} style={{ cursor: 'grab' }}>
-                    <GripVertical size={16} className="text-muted" />
-                </div>
-                <div className="col-auto">
-                    <span className="text-muted">{index + 1}</span>
-                </div>
-                <div className="col-auto">
-                    {getStatusIcon(task.status)}
-                </div>
-                <div className="col">
-                    <div className="d-flex align-items-center gap-2 mb-1">
-                        <button
-                            className="btn btn-link p-0 text-decoration-none fw-bold"
-                            onClick={() => toggleExpand(task.id)}
-                        >
-                            {expandedTasks.has(task.id) ? (
-                                <ChevronDown size={16} className="me-1" />
-                            ) : (
-                                <ChevronRight size={16} className="me-1" />
-                            )}
-                            {getTaskTitle(task)}
-                        </button>
-                        {getPriorityBadge(task.priority)}
-                        <span className="badge bg-secondary-lt text-secondary">
-                            {getCategoryIcon(task.categoryKo)}
-                            <span className="ms-1">{getTaskCategory(task)}</span>
-                        </span>
-                    </div>
-                    <div className="text-muted small">{getTaskDescription(task)}</div>
-                    {getTaskNotes(task) && (
-                        <div className="text-info small mt-1">
-                            <MessageSquare size={12} className="me-1" />
-                            {getTaskNotes(task)}
-                        </div>
-                    )}
-                </div>
-                <div className="col-auto">
-                    <div className="d-flex align-items-center gap-2">
-                        <div style={{ width: '100px' }}>
-                            <div className="progress" style={{ height: '8px' }}>
-                                <div
-                                    className={`progress-bar ${task.progress === 100 ? 'bg-success' : task.progress > 0 ? 'bg-primary' : 'bg-secondary'}`}
-                                    style={{ width: `${task.progress}%` }}
-                                />
-                            </div>
-                        </div>
-                        <span className="text-muted small" style={{ minWidth: '40px' }}>
-                            {task.progress}%
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            {/* 서브태스크 - 인라인 표시 */}
-            {expandedTasks.has(task.id) && task.subtasks && (
-                <div className="mt-2 ms-5 d-flex flex-wrap gap-2">
-                    {task.subtasks.map(subtask => (
-                        <label
-                            key={subtask.id}
-                            className={`d-inline-flex align-items-center gap-1 px-2 py-1 rounded border ${subtask.completed ? 'bg-success-lt border-success' : 'bg-light border-secondary'}`}
-                            style={{ cursor: 'pointer', fontSize: '0.8rem' }}
-                        >
-                            <input
-                                type="checkbox"
-                                className="form-check-input m-0"
-                                checked={subtask.completed}
-                                onChange={() => toggleSubtask(task.id, subtask.id)}
-                                style={{ width: '14px', height: '14px' }}
-                            />
-                            <span className={subtask.completed ? 'text-muted text-decoration-line-through' : ''}>
-                                {subtask.title}
-                            </span>
-                        </label>
-                    ))}
-                </div>
-            )}
-        </div>
-    )
-}
-
 export default function DevTasksPage() {
     const t = useTranslations('devTasks')
     const locale = useLocale()
     const isKorean = locale === 'ko'
     const isJapanese = locale === 'ja'
 
-    // 중앙 데이터에서 작업 목록 로드, LocalStorage에서 subtask 상태 오버라이드
     const [taskStates, setTaskStates] = useState<Record<string, Record<string, boolean>>>({})
-    const [taskOrder, setTaskOrder] = useState<string[]>([])
     const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set())
+    const [expandedCategories, setExpandedCategories] = useState<Set<ProcessCategory>>(new Set(['order', 'delivery', 'installation', 'assets', 'statistics', 'partners', 'common']))
     const [filter, setFilter] = useState<'all' | TaskStatus | TaskPriority>('all')
 
-    // 드래그 센서 설정
-    const sensors = useSensors(
-        useSensor(PointerSensor, {
-            activationConstraint: {
-                distance: 8,
-            },
-        }),
-        useSensor(KeyboardSensor, {
-            coordinateGetter: sortableKeyboardCoordinates,
-        })
-    )
-
-    // LocalStorage에서 subtask 상태 및 순서 로드
+    // LocalStorage에서 subtask 상태 로드
     useEffect(() => {
-        const saved = localStorage.getItem('dev-tasks-states')
+        const saved = localStorage.getItem('dev-tasks-states-v2')
         if (saved) {
             const parsed: TaskState[] = JSON.parse(saved)
             const statesMap: Record<string, Record<string, boolean>> = {}
@@ -192,15 +35,6 @@ export default function DevTasksPage() {
                 statesMap[state.id] = state.subtaskStates
             })
             setTaskStates(statesMap)
-        }
-
-        // 저장된 순서 로드
-        const savedOrder = localStorage.getItem('dev-tasks-order')
-        if (savedOrder) {
-            setTaskOrder(JSON.parse(savedOrder))
-        } else {
-            // 기본 순서 설정
-            setTaskOrder(devTasks.map(t => t.id))
         }
     }, [])
 
@@ -212,12 +46,12 @@ export default function DevTasksPage() {
             subtaskStates,
             lastUpdated: new Date().toISOString()
         }))
-        localStorage.setItem('dev-tasks-states', JSON.stringify(stateArray))
+        localStorage.setItem('dev-tasks-states-v2', JSON.stringify(stateArray))
     }
 
-    // 중앙 데이터에 LocalStorage 상태 적용 + 순서 적용
+    // 중앙 데이터에 LocalStorage 상태 적용
     const getTasksWithState = () => {
-        const tasksWithState = devTasks.map(task => {
+        return devTasks.map(task => {
             if (!task.subtasks) return task
             const savedStates = taskStates[task.id] || {}
             const subtasksWithState = task.subtasks.map(st => ({
@@ -234,35 +68,9 @@ export default function DevTasksPage() {
                 status
             }
         })
-
-        // 저장된 순서에 따라 정렬
-        if (taskOrder.length > 0) {
-            return tasksWithState.sort((a, b) => {
-                const indexA = taskOrder.indexOf(a.id)
-                const indexB = taskOrder.indexOf(b.id)
-                if (indexA === -1) return 1
-                if (indexB === -1) return -1
-                return indexA - indexB
-            })
-        }
-        return tasksWithState
     }
 
     const tasks = getTasksWithState()
-
-    // 드래그 종료 핸들러
-    const handleDragEnd = (event: DragEndEvent) => {
-        const { active, over } = event
-
-        if (over && active.id !== over.id) {
-            const oldIndex = tasks.findIndex(t => t.id === active.id)
-            const newIndex = tasks.findIndex(t => t.id === over.id)
-
-            const newOrder = arrayMove(tasks.map(t => t.id), oldIndex, newIndex)
-            setTaskOrder(newOrder)
-            localStorage.setItem('dev-tasks-order', JSON.stringify(newOrder))
-        }
-    }
 
     const toggleExpand = (taskId: string) => {
         const newExpanded = new Set(expandedTasks)
@@ -272,6 +80,16 @@ export default function DevTasksPage() {
             newExpanded.add(taskId)
         }
         setExpandedTasks(newExpanded)
+    }
+
+    const toggleCategory = (category: ProcessCategory) => {
+        const newExpanded = new Set(expandedCategories)
+        if (newExpanded.has(category)) {
+            newExpanded.delete(category)
+        } else {
+            newExpanded.add(category)
+        }
+        setExpandedCategories(newExpanded)
     }
 
     const toggleSubtask = (taskId: string, subtaskId: string) => {
@@ -311,31 +129,69 @@ export default function DevTasksPage() {
             medium: 'bg-yellow text-dark',
             low: 'bg-secondary text-white'
         }
-        const labels = {
-            high: 'High',
-            medium: 'Medium',
-            low: 'Low'
-        }
-        return <span className={`badge ${colors[priority]}`}>{labels[priority]}</span>
+        return <span className={`badge ${colors[priority]}`}>{priority.toUpperCase()}</span>
     }
 
-    const getCategoryIcon = (categoryKo: string) => {
-        switch (categoryKo) {
-            case '연동':
-                return <Calendar size={16} />
-            case '프로세스':
-                return <FileText size={16} />
-            case '알림':
-                return <Mail size={16} />
-            case 'AI':
-                return <Bot size={16} />
-            case 'UI':
-                return <BarChart size={16} />
-            case '기능':
-                return <Zap size={16} />
+    const getCategoryIcon = (category: ProcessCategory) => {
+        switch (category) {
+            case 'order':
+                return <FileText size={20} />
+            case 'delivery':
+                return <Truck size={20} />
+            case 'installation':
+                return <Wrench size={20} />
+            case 'assets':
+                return <Monitor size={20} />
+            case 'statistics':
+                return <BarChart size={20} />
+            case 'partners':
+                return <Building2 size={20} />
+            case 'common':
+                return <Settings size={20} />
             default:
-                return <Database size={16} />
+                return <Zap size={20} />
         }
+    }
+
+    const getCategoryColor = (category: ProcessCategory) => {
+        switch (category) {
+            case 'order': return 'primary'
+            case 'delivery': return 'info'
+            case 'installation': return 'warning'
+            case 'assets': return 'cyan'
+            case 'statistics': return 'success'
+            case 'partners': return 'purple'
+            case 'common': return 'secondary'
+            default: return 'secondary'
+        }
+    }
+
+    // 메뉴 이름 매핑
+    const menuNameMap: Record<string, { ko: string, ja: string, en: string, href: string }> = {
+        'order-process': { ko: '발주 프로세스', ja: '発注プロセス', en: 'Order Process', href: '/dashboard/order' },
+        'delivery-process': { ko: '납품 프로세스', ja: '納品プロセス', en: 'Delivery Process', href: '/dashboard/delivery-process' },
+        'delivery-status': { ko: '발주 현황', ja: '発注状況', en: 'Delivery Status', href: '/dashboard/delivery-status' },
+        'delivery-request': { ko: '납품의뢰', ja: '納品依頼', en: 'Delivery Request', href: '/dashboard/delivery-request' },
+        'installation': { ko: '설치 관리', ja: '設置管理', en: 'Installation', href: '/dashboard/installation' },
+        'assets': { ko: '자산 목록', ja: '資産一覧', en: 'Assets', href: '/dashboard/assets' },
+        'history': { ko: '이력 관리', ja: '履歴管理', en: 'History', href: '/dashboard/history' },
+        'statistics': { ko: '통계', ja: '統計', en: 'Statistics', href: '/dashboard/statistics' },
+        'pricing': { ko: '매출 관리', ja: '売上管理', en: 'Pricing', href: '/dashboard/pricing' },
+        'clients': { ko: '거래처 관리', ja: '取引先管理', en: 'Clients', href: '/dashboard/clients' },
+        'lease-companies': { ko: '리스회사', ja: 'リース会社', en: 'Lease Companies', href: '/dashboard/lease-companies' },
+        'api-settings': { ko: 'API 설정', ja: 'API設定', en: 'API Settings', href: '/dashboard/api-settings' },
+        'ai-search': { ko: 'AI 검색', ja: 'AI検索', en: 'AI Search', href: '/dashboard/ai-search' },
+        'dashboard': { ko: '대시보드', ja: 'ダッシュボード', en: 'Dashboard', href: '/dashboard' },
+    }
+
+    const getMenuName = (menuKey: string) => {
+        const menu = menuNameMap[menuKey]
+        if (!menu) return menuKey
+        return isKorean ? menu.ko : (isJapanese ? menu.ja : menu.en)
+    }
+
+    const getMenuHref = (menuKey: string) => {
+        return menuNameMap[menuKey]?.href || '/dashboard'
     }
 
     const filteredTasks = tasks.filter(task => {
@@ -349,7 +205,7 @@ export default function DevTasksPage() {
         return true
     })
 
-    // 통계 계산
+    // 전체 통계 계산
     const stats = {
         total: tasks.length,
         completed: tasks.filter(t => t.status === 'completed').length,
@@ -365,10 +221,6 @@ export default function DevTasksPage() {
     const resetTasks = () => {
         if (confirm(t('confirmReset'))) {
             saveTaskStates({})
-            // 순서도 리셋
-            const defaultOrder = devTasks.map(t => t.id)
-            setTaskOrder(defaultOrder)
-            localStorage.setItem('dev-tasks-order', JSON.stringify(defaultOrder))
         }
     }
 
@@ -376,7 +228,21 @@ export default function DevTasksPage() {
     const getTaskTitle = (task: DevTask) => isKorean ? task.titleKo : (isJapanese ? task.titleJa : task.title)
     const getTaskDescription = (task: DevTask) => isKorean ? task.descriptionKo : (isJapanese ? task.descriptionJa : task.description)
     const getTaskNotes = (task: DevTask) => isKorean ? task.notesKo : (isJapanese ? task.notesJa : task.notes)
-    const getTaskCategory = (task: DevTask) => isKorean ? task.categoryKo : (isJapanese ? task.categoryJa : task.category)
+    const getCategoryLabel = (cat: ProcessCategory) => {
+        const info = processCategories[cat]
+        return isKorean ? info.labelKo : (isJapanese ? info.labelJa : info.label)
+    }
+    const getCategoryDescription = (cat: ProcessCategory) => {
+        const info = processCategories[cat]
+        return isKorean ? info.descriptionKo : (isJapanese ? info.descriptionJa : info.description)
+    }
+    const getCategoryStakeholders = (cat: ProcessCategory) => {
+        const info = processCategories[cat]
+        return isKorean ? info.stakeholdersKo : (isJapanese ? info.stakeholdersJa : info.stakeholders)
+    }
+
+    // 프로세스 카테고리 목록 (발주 → 납품 → 설치 → 자산 → 통계 → 거래처 → 공통)
+    const categoryList: ProcessCategory[] = ['order', 'delivery', 'installation', 'assets', 'statistics', 'partners', 'common']
 
     return (
         <div className="container-xl">
@@ -398,7 +264,7 @@ export default function DevTasksPage() {
                 </div>
             </div>
 
-            {/* 통계 카드 */}
+            {/* 전체 진척도 통계 */}
             <div className="row row-deck row-cards mb-4">
                 <div className="col-sm-6 col-lg-3">
                     <div className="card">
@@ -413,10 +279,7 @@ export default function DevTasksPage() {
                                 </div>
                             </div>
                             <div className="progress mt-2" style={{ height: '6px' }}>
-                                <div
-                                    className="progress-bar bg-primary"
-                                    style={{ width: `${overallProgress}%` }}
-                                />
+                                <div className="progress-bar bg-primary" style={{ width: `${overallProgress}%` }} />
                             </div>
                         </div>
                     </div>
@@ -468,6 +331,39 @@ export default function DevTasksPage() {
                 </div>
             </div>
 
+            {/* 프로세스별 진척도 카드 */}
+            <div className="row row-deck row-cards mb-4">
+                {categoryList.map(cat => {
+                    const catTasks = tasks.filter(t => t.processCategory === cat)
+                    const catCompleted = catTasks.filter(t => t.status === 'completed').length
+                    const catProgress = catTasks.length > 0
+                        ? Math.round(catTasks.reduce((sum, t) => sum + t.progress, 0) / catTasks.length)
+                        : 0
+                    const color = getCategoryColor(cat)
+                    return (
+                        <div key={cat} className="col-sm-6 col-lg">
+                            <div className={`card border-${color}`}>
+                                <div className="card-body p-3">
+                                    <div className="d-flex align-items-center mb-2">
+                                        <div className={`rounded-circle bg-${color}-lt p-2 me-2`}>
+                                            {getCategoryIcon(cat)}
+                                        </div>
+                                        <div>
+                                            <div className="fw-bold">{getCategoryLabel(cat)}</div>
+                                            <div className="small text-muted">{catCompleted}/{catTasks.length} {t('completed')}</div>
+                                        </div>
+                                    </div>
+                                    <div className="progress" style={{ height: '8px' }}>
+                                        <div className={`progress-bar bg-${color}`} style={{ width: `${catProgress}%` }} />
+                                    </div>
+                                    <div className="text-end small text-muted mt-1">{catProgress}%</div>
+                                </div>
+                            </div>
+                        </div>
+                    )
+                })}
+            </div>
+
             {/* 필터 */}
             <div className="card mb-4">
                 <div className="card-body py-2">
@@ -516,42 +412,147 @@ export default function DevTasksPage() {
                 </div>
             </div>
 
-            {/* 작업 목록 */}
-            <div className="card">
-                <div className="card-header d-flex justify-content-between align-items-center">
-                    <h3 className="card-title mb-0">
-                        <GripVertical size={16} className="me-2 text-muted" />
-                        {t('taskList')} <small className="text-muted">({t('dragToReorder')})</small>
-                    </h3>
-                </div>
-                <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleDragEnd}
-                >
-                    <SortableContext items={filteredTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
-                        <div className="list-group list-group-flush">
-                            {filteredTasks.map((task, index) => (
-                                <SortableTaskItem
-                                    key={task.id}
-                                    task={task}
-                                    index={index}
-                                    expandedTasks={expandedTasks}
-                                    toggleExpand={toggleExpand}
-                                    toggleSubtask={toggleSubtask}
-                                    getStatusIcon={getStatusIcon}
-                                    getPriorityBadge={getPriorityBadge}
-                                    getCategoryIcon={getCategoryIcon}
-                                    getTaskTitle={getTaskTitle}
-                                    getTaskDescription={getTaskDescription}
-                                    getTaskNotes={getTaskNotes}
-                                    getTaskCategory={getTaskCategory}
-                                />
-                            ))}
+            {/* 프로세스 카테고리별 작업 목록 */}
+            {categoryList.map(cat => {
+                const catTasks = filteredTasks.filter(t => t.processCategory === cat)
+                if (catTasks.length === 0) return null
+
+                const catInfo = processCategories[cat]
+                const color = getCategoryColor(cat)
+                const isExpanded = expandedCategories.has(cat)
+
+                return (
+                    <div key={cat} className="card mb-4">
+                        <div
+                            className={`card-header bg-${color}-lt cursor-pointer`}
+                            onClick={() => toggleCategory(cat)}
+                            style={{ cursor: 'pointer' }}
+                        >
+                            <div className="d-flex align-items-center w-100">
+                                <div className="d-flex align-items-center flex-grow-1">
+                                    {isExpanded ? <ChevronDown size={20} className="me-2" /> : <ChevronRight size={20} className="me-2" />}
+                                    {getCategoryIcon(cat)}
+                                    <h3 className={`card-title mb-0 ms-2 text-${color}`}>
+                                        {getCategoryLabel(cat)}
+                                    </h3>
+                                    <span className="badge bg-white text-dark ms-2">{catTasks.length}</span>
+                                </div>
+                                <div className="text-muted small d-none d-md-block">
+                                    <span className="me-3">
+                                        <i className="ti ti-users me-1"></i>
+                                        {getCategoryStakeholders(cat)}
+                                    </span>
+                                    {catInfo.integrations.length > 0 && (
+                                        <span>
+                                            <i className="ti ti-plug me-1"></i>
+                                            {catInfo.integrations.join(', ')}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
                         </div>
-                    </SortableContext>
-                </DndContext>
-            </div>
+                        {isExpanded && (
+                            <>
+                                <div className="card-body py-2 bg-light border-bottom">
+                                    <small className="text-muted">{getCategoryDescription(cat)}</small>
+                                </div>
+                                <div className="list-group list-group-flush">
+                                    {catTasks.map((task) => (
+                                        <div key={task.id} className="list-group-item">
+                                            <div className="row align-items-center">
+                                                <div className="col-auto">
+                                                    {getStatusIcon(task.status)}
+                                                </div>
+                                                <div className="col">
+                                                    <div className="d-flex align-items-center gap-2 mb-1">
+                                                        <button
+                                                            className="btn btn-link p-0 text-decoration-none fw-bold text-start"
+                                                            onClick={() => toggleExpand(task.id)}
+                                                        >
+                                                            {expandedTasks.has(task.id) ? (
+                                                                <ChevronDown size={16} className="me-1" />
+                                                            ) : (
+                                                                <ChevronRight size={16} className="me-1" />
+                                                            )}
+                                                            {getTaskTitle(task)}
+                                                        </button>
+                                                        {getPriorityBadge(task.priority)}
+                                                    </div>
+                                                    <div className="text-muted small">{getTaskDescription(task)}</div>
+                                                    {getTaskNotes(task) && (
+                                                        <div className="text-info small mt-1">
+                                                            <MessageSquare size={12} className="me-1" />
+                                                            {getTaskNotes(task)}
+                                                        </div>
+                                                    )}
+                                                    {/* 관련 메뉴 표시 */}
+                                                    {task.relatedMenus && task.relatedMenus.length > 0 && (
+                                                        <div className="d-flex flex-wrap gap-1 mt-2">
+                                                            <Link size={12} className="text-muted me-1" />
+                                                            {task.relatedMenus.map(menuKey => {
+                                                                const progress = menuProgress[menuKey] ?? 0
+                                                                return (
+                                                                    <Link2
+                                                                        key={menuKey}
+                                                                        href={getMenuHref(menuKey)}
+                                                                        className={`badge ${progress === 100 ? 'bg-success-lt text-success' : progress > 0 ? 'bg-primary-lt text-primary' : 'bg-secondary-lt text-secondary'} text-decoration-none`}
+                                                                        style={{ fontSize: '0.7rem' }}
+                                                                    >
+                                                                        {getMenuName(menuKey)} ({progress}%)
+                                                                    </Link2>
+                                                                )
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="col-auto">
+                                                    <div className="d-flex align-items-center gap-2">
+                                                        <div style={{ width: '100px' }}>
+                                                            <div className="progress" style={{ height: '8px' }}>
+                                                                <div
+                                                                    className={`progress-bar ${task.progress === 100 ? 'bg-success' : task.progress > 0 ? `bg-${color}` : 'bg-secondary'}`}
+                                                                    style={{ width: `${task.progress}%` }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <span className="text-muted small" style={{ minWidth: '40px' }}>
+                                                            {task.progress}%
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* 서브태스크 */}
+                                            {expandedTasks.has(task.id) && task.subtasks && (
+                                                <div className="mt-2 ms-4 d-flex flex-wrap gap-2">
+                                                    {task.subtasks.map(subtask => (
+                                                        <label
+                                                            key={subtask.id}
+                                                            className={`d-inline-flex align-items-center gap-1 px-2 py-1 rounded border ${subtask.completed ? 'bg-success-lt border-success' : 'bg-light border-secondary'}`}
+                                                            style={{ cursor: 'pointer', fontSize: '0.8rem' }}
+                                                        >
+                                                            <input
+                                                                type="checkbox"
+                                                                className="form-check-input m-0"
+                                                                checked={subtask.completed}
+                                                                onChange={() => toggleSubtask(task.id, subtask.id)}
+                                                                style={{ width: '14px', height: '14px' }}
+                                                            />
+                                                            <span className={subtask.completed ? 'text-muted text-decoration-line-through' : ''}>
+                                                                {subtask.title}
+                                                            </span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+                    </div>
+                )
+            })}
 
             {/* 권장 작업 순서 */}
             <div className="card mt-4">
