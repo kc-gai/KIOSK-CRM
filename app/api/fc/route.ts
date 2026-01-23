@@ -15,6 +15,10 @@ export async function GET() {
                         address: true,
                         isActive: true,
                         fcId: true,
+                        contractDate: true,
+                        erpFeeRate: true,
+                        kioskMaintenanceCost: true,
+                        kioskSaleCost: true,
                         createdAt: true,
                         updatedAt: true,
                         branches: {

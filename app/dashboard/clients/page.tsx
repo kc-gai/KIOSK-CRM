@@ -526,7 +526,17 @@ export default function ClientsPage() {
 
             if (res.ok) {
                 // FC에 속한 모든 Corporation에 계약정보 전파
-                for (const corp of selectedFc.corporations) {
+                // selectedFc.corporations가 없으면 직접 API로 FC 데이터를 가져와서 처리
+                let corporations = selectedFc.corporations || []
+                if (corporations.length === 0) {
+                    const fcRes = await fetch(`/api/fc/${selectedFc.id}`)
+                    if (fcRes.ok) {
+                        const fcData = await fcRes.json()
+                        corporations = fcData.corporations || []
+                    }
+                }
+
+                for (const corp of corporations) {
                     await fetch(`/api/corporations/${corp.id}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
@@ -539,7 +549,14 @@ export default function ClientsPage() {
                     })
                 }
                 alert(tc('settingsSaved'))
-                fetchData()
+                // 데이터 새로고침 후 selectedFc도 업데이트
+                await fetchData()
+                // selectedFc 갱신을 위해 FC 데이터 다시 로드
+                const updatedFcRes = await fetch(`/api/fc/${selectedFc.id}`)
+                if (updatedFcRes.ok) {
+                    const updatedFc = await updatedFcRes.json()
+                    setSelectedFc(updatedFc)
+                }
             } else {
                 const err = await res.json()
                 alert(err.error || tc('savingError'))
@@ -1574,10 +1591,10 @@ export default function ClientsPage() {
                             <span style={{ fontSize: '1rem', fontWeight: 700, color: '#059669' }}>{kioskCount}</span>
                             {(freeCount > 0 || leaseFreeCount > 0 || paidCount > 0 || rentalCount > 0) && (
                                 <span className="d-flex gap-1 ms-1">
-                                    {freeCount > 0 && <span className="badge bg-green-lt text-green" style={{ fontSize: '0.55rem', padding: '1px 3px' }}>무상{freeCount}</span>}
-                                    {leaseFreeCount > 0 && <span className="badge bg-purple-lt text-purple" style={{ fontSize: '0.55rem', padding: '1px 3px' }}>리스{leaseFreeCount}</span>}
-                                    {paidCount > 0 && <span className="badge bg-cyan-lt text-cyan" style={{ fontSize: '0.55rem', padding: '1px 3px' }}>유상{paidCount}</span>}
-                                    {rentalCount > 0 && <span className="badge bg-orange-lt text-orange" style={{ fontSize: '0.55rem', padding: '1px 3px' }}>렌탈{rentalCount}</span>}
+                                    {freeCount > 0 && <span className="badge bg-green-lt text-green" style={{ fontSize: '0.55rem', padding: '1px 3px' }}>{t('stats.free')}{freeCount}</span>}
+                                    {leaseFreeCount > 0 && <span className="badge bg-purple-lt text-purple" style={{ fontSize: '0.55rem', padding: '1px 3px' }}>{t('stats.leaseFree')}{leaseFreeCount}</span>}
+                                    {paidCount > 0 && <span className="badge bg-cyan-lt text-cyan" style={{ fontSize: '0.55rem', padding: '1px 3px' }}>{t('stats.paid')}{paidCount}</span>}
+                                    {rentalCount > 0 && <span className="badge bg-orange-lt text-orange" style={{ fontSize: '0.55rem', padding: '1px 3px' }}>{t('stats.rental')}{rentalCount}</span>}
                                 </span>
                             )}
                         </div>

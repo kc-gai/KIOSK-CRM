@@ -52,6 +52,7 @@ type DeliveryItem = {
     plateCount: number
     acquisition: string  // PAID(유상), FREE(무상), LEASE_FREE(리스무상), RENTAL(렌탈)
     leaseCompanyId: string
+    desiredDeliveryDate: string  // 납기희망일 (항목별)
 }
 
 type OrderItem = {
@@ -139,12 +140,11 @@ export default function OrderPage() {
     const [corpSearchTexts, setCorpSearchTexts] = useState<Record<number, string>>({})
     const [branchSearchTexts, setBranchSearchTexts] = useState<Record<number, string>>({})
 
-    // 기본 정보
+    // 기본 정보 (납기희망일은 납품항목으로 이동)
     const [formData, setFormData] = useState({
         title: 'キオスク端末＆決済端末の鉄板・金具',
         requesterName: '',
         orderRequestDate: new Date().toISOString().slice(0, 10).replace(/-/g, ''),
-        desiredDeliveryDate: '',
         kioskUnitPrice: 240000,
         plateUnitPrice: 5000,
         notes: ''
@@ -159,7 +159,7 @@ export default function OrderPage() {
 
     // 납품 항목 리스트
     const [deliveryItems, setDeliveryItems] = useState<DeliveryItem[]>([
-        { id: 1, corporationId: '', branchId: '', brandName: '', postalCode: '', address: '', contact: '', kioskCount: 1, plateCount: 1, acquisition: 'FREE', leaseCompanyId: '' }
+        { id: 1, corporationId: '', branchId: '', brandName: '', postalCode: '', address: '', contact: '', kioskCount: 1, plateCount: 1, acquisition: 'FREE', leaseCompanyId: '', desiredDeliveryDate: '' }
     ])
 
     // 클릭 외부 감지
@@ -225,7 +225,8 @@ export default function OrderPage() {
             kioskCount: 1,
             plateCount: 1,
             acquisition: 'FREE',
-            leaseCompanyId: ''
+            leaseCompanyId: '',
+            desiredDeliveryDate: ''
         }])
     }
 
@@ -978,18 +979,6 @@ export default function OrderPage() {
                                     />
                                 </div>
 
-                                {/* 납기희망일 (텍스트 자유 입력) */}
-                                <div className="col-md-4">
-                                    <label className="form-label">{ta('deliveryDueDate')}</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={formData.desiredDeliveryDate}
-                                        onChange={e => setFormData({ ...formData, desiredDeliveryDate: e.target.value })}
-                                        placeholder={locale === 'ja' ? '例: 3/24(月)の週, 2025-03-24' : '예: 3/24(월)의 주, 2025-03-24'}
-                                    />
-                                </div>
-
                                 {/* 키오스크 단가 */}
                                 <div className="col-md-3">
                                     <label className="form-label">
@@ -1071,6 +1060,7 @@ export default function OrderPage() {
                                         <th style={{ width: '120px' }}>{locale === 'ja' ? '連絡先' : '연락처'}</th>
                                         <th style={{ width: '110px' }}>{ta('acquisition')}</th>
                                         <th style={{ width: '140px' }}>{locale === 'ja' ? 'リース会社' : '리스회사'}</th>
+                                        <th style={{ width: '120px' }}>{locale === 'ja' ? '納期希望日' : '납기희망일'}</th>
                                         <th style={{ width: '70px' }}>{locale === 'ja' ? 'キオスク' : '키오스크'}</th>
                                         <th style={{ width: '70px' }}>{locale === 'ja' ? '金具' : '철판'}</th>
                                         <th style={{ width: '100px' }}>{locale === 'ja' ? '単価合計' : '단가합계'}</th>
@@ -1192,6 +1182,16 @@ export default function OrderPage() {
                                                     <span className="text-muted">-</span>
                                                 )}
                                             </td>
+                                            {/* 납기희망일 (텍스트 자유입력) */}
+                                            <td>
+                                                <input
+                                                    type="text"
+                                                    className="form-control form-control-sm"
+                                                    value={item.desiredDeliveryDate}
+                                                    onChange={e => updateDeliveryItem(item.id, 'desiredDeliveryDate', e.target.value)}
+                                                    placeholder={locale === 'ja' ? '例: 3/24(月)の週' : '예: 3/24(월)의 주'}
+                                                />
+                                            </td>
                                             <td>
                                                 <input
                                                     type="number"
@@ -1228,7 +1228,7 @@ export default function OrderPage() {
                                 </tbody>
                                 <tfoot>
                                     <tr className="bg-light">
-                                        <td colSpan={9} className="text-end fw-bold">
+                                        <td colSpan={10} className="text-end fw-bold">
                                             {locale === 'ja' ? '合計' : '합계'}
                                         </td>
                                         <td className="text-center fw-bold">{totalKioskCount}</td>
