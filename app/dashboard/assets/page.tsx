@@ -1187,20 +1187,22 @@ export default function AssetsPage() {
         return k.latestBranch?.areaCode || k.branch?.areaCode || k.areaCode || null
     }
 
-    // 지역코드로 지역명 가져오기
+    // 지역코드로 지역명 가져오기 (형식: "沖縄 (Okinawa)")
     const getRegionName = (regionCode: string | null) => {
         if (!regionCode) return null
         const region = regions.find(r => r.code === regionCode)
         if (!region) return regionCode
-        return locale === 'ja' ? (region.nameJa || region.name) : region.name
+        const displayName = locale === 'ja' ? (region.nameJa || region.name) : region.name
+        return `${displayName} (${region.code})`
     }
 
-    // 관할코드로 관할지역명 가져오기
+    // 관할코드로 관할지역명 가져오기 (형식: "九州 (Kyushu)")
     const getAreaName = (areaCode: string | null) => {
         if (!areaCode) return null
         const area = areas.find(a => a.code === areaCode)
         if (!area) return areaCode
-        return locale === 'ja' ? (area.nameJa || area.name) : area.name
+        const displayName = locale === 'ja' ? (area.nameJa || area.name) : area.name
+        return `${displayName} (${area.code})`
     }
 
     // 이력 description 다국어 번역 (API에서 키 형식으로 저장된 값을 번역)
@@ -1446,6 +1448,29 @@ export default function AssetsPage() {
                         <div className="col">
                             <div className="page-pretitle">Management</div>
                             <h2 className="page-title">{t('title')}</h2>
+                        </div>
+                        {/* 통합검색창 */}
+                        <div className="col-12 col-md-4 mt-2 mt-md-0">
+                            <div className="input-icon">
+                                <span className="input-icon-addon">
+                                    <i className="ti ti-search"></i>
+                                </span>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder={locale === 'ja' ? 'シリアル番号、KIOSK番号、支店名、法人名などで検索...' : '시리얼번호, KIOSK번호, 지점명, 법인명 등으로 검색...'}
+                                    value={searchQuery}
+                                    onChange={(e) => {
+                                        setSearchQuery(e.target.value)
+                                        setCurrentPage(1)
+                                    }}
+                                />
+                                {searchQuery && (
+                                    <span className="input-icon-addon" style={{ cursor: 'pointer', right: '0.5rem', left: 'auto' }} onClick={() => { setSearchQuery(''); setCurrentPage(1) }}>
+                                        <i className="ti ti-x"></i>
+                                    </span>
+                                )}
+                            </div>
                         </div>
                         <div className="col-auto ms-auto d-print-none">
                             <div className="btn-list">

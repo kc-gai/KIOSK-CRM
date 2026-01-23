@@ -331,7 +331,7 @@ export default function DevTasksPage() {
                 </div>
             </div>
 
-            {/* 프로세스별 진척도 카드 */}
+            {/* 프로세스별 진척도 카드 - 프로세스 순서대로 배치 (발주→납품→설치→자산→통계→거래처→공통) */}
             <div className="row row-deck row-cards mb-4">
                 {categoryList.map(cat => {
                     const catTasks = tasks.filter(t => t.processCategory === cat)
@@ -339,29 +339,31 @@ export default function DevTasksPage() {
                     const catProgress = catTasks.length > 0
                         ? Math.round(catTasks.reduce((sum, t) => sum + t.progress, 0) / catTasks.length)
                         : 0
-                    const color = getCategoryColor(cat)
-                    return (
-                        <div key={cat} className="col-sm-6 col-lg">
-                            <div className={`card border-${color}`}>
-                                <div className="card-body p-3">
-                                    <div className="d-flex align-items-center mb-2">
-                                        <div className={`rounded-circle bg-${color}-lt p-2 me-2`}>
-                                            {getCategoryIcon(cat)}
+                    return { cat, catTasks, catCompleted, catProgress }
+                }).map(({ cat, catTasks, catCompleted, catProgress }) => {
+                        const color = getCategoryColor(cat)
+                        return (
+                            <div key={cat} className="col-6 col-lg">
+                                <div className={`card border-${color}`}>
+                                    <div className="card-body p-3">
+                                        <div className="d-flex align-items-center mb-2">
+                                            <div className={`rounded-circle bg-${color}-lt p-2 me-2`}>
+                                                {getCategoryIcon(cat)}
+                                            </div>
+                                            <div>
+                                                <div className="fw-bold">{getCategoryLabel(cat)}</div>
+                                                <div className="small text-muted">{catCompleted}/{catTasks.length} {t('completed')}</div>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <div className="fw-bold">{getCategoryLabel(cat)}</div>
-                                            <div className="small text-muted">{catCompleted}/{catTasks.length} {t('completed')}</div>
+                                        <div className="progress" style={{ height: '8px' }}>
+                                            <div className={`progress-bar bg-${color}`} style={{ width: `${catProgress}%` }} />
                                         </div>
+                                        <div className="text-end small text-muted mt-1">{catProgress}%</div>
                                     </div>
-                                    <div className="progress" style={{ height: '8px' }}>
-                                        <div className={`progress-bar bg-${color}`} style={{ width: `${catProgress}%` }} />
-                                    </div>
-                                    <div className="text-end small text-muted mt-1">{catProgress}%</div>
                                 </div>
                             </div>
-                        </div>
-                    )
-                })}
+                        )
+                    })}
             </div>
 
             {/* 필터 */}
@@ -412,147 +414,177 @@ export default function DevTasksPage() {
                 </div>
             </div>
 
-            {/* 프로세스 카테고리별 작업 목록 */}
-            {categoryList.map(cat => {
-                const catTasks = filteredTasks.filter(t => t.processCategory === cat)
-                if (catTasks.length === 0) return null
+            {/* 프로세스 카테고리별 작업 목록 - 2열 배열 */}
+            <div className="row" style={{ alignItems: 'flex-start' }}>
+                {categoryList.map(cat => {
+                    const catTasks = filteredTasks.filter(t => t.processCategory === cat)
+                    if (catTasks.length === 0) return null
 
-                const catInfo = processCategories[cat]
-                const color = getCategoryColor(cat)
-                const isExpanded = expandedCategories.has(cat)
+                    const catInfo = processCategories[cat]
+                    const color = getCategoryColor(cat)
+                    const isExpanded = expandedCategories.has(cat)
 
-                return (
-                    <div key={cat} className="card mb-4">
-                        <div
-                            className={`card-header bg-${color}-lt cursor-pointer`}
-                            onClick={() => toggleCategory(cat)}
-                            style={{ cursor: 'pointer' }}
-                        >
-                            <div className="d-flex align-items-center w-100">
-                                <div className="d-flex align-items-center flex-grow-1">
-                                    {isExpanded ? <ChevronDown size={20} className="me-2" /> : <ChevronRight size={20} className="me-2" />}
-                                    {getCategoryIcon(cat)}
-                                    <h3 className={`card-title mb-0 ms-2 text-${color}`}>
-                                        {getCategoryLabel(cat)}
-                                    </h3>
-                                    <span className="badge bg-white text-dark ms-2">{catTasks.length}</span>
-                                </div>
-                                <div className="text-muted small d-none d-md-block">
-                                    <span className="me-3">
-                                        <i className="ti ti-users me-1"></i>
-                                        {getCategoryStakeholders(cat)}
-                                    </span>
-                                    {catInfo.integrations.length > 0 && (
-                                        <span>
-                                            <i className="ti ti-plug me-1"></i>
-                                            {catInfo.integrations.join(', ')}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                        {isExpanded && (
-                            <>
-                                <div className="card-body py-2 bg-light border-bottom">
-                                    <small className="text-muted">{getCategoryDescription(cat)}</small>
-                                </div>
-                                <div className="list-group list-group-flush">
-                                    {catTasks.map((task) => (
-                                        <div key={task.id} className="list-group-item">
-                                            <div className="row align-items-center">
-                                                <div className="col-auto">
-                                                    {getStatusIcon(task.status)}
-                                                </div>
-                                                <div className="col">
-                                                    <div className="d-flex align-items-center gap-2 mb-1">
-                                                        <button
-                                                            className="btn btn-link p-0 text-decoration-none fw-bold text-start"
-                                                            onClick={() => toggleExpand(task.id)}
-                                                        >
-                                                            {expandedTasks.has(task.id) ? (
-                                                                <ChevronDown size={16} className="me-1" />
-                                                            ) : (
-                                                                <ChevronRight size={16} className="me-1" />
-                                                            )}
-                                                            {getTaskTitle(task)}
-                                                        </button>
-                                                        {getPriorityBadge(task.priority)}
-                                                    </div>
-                                                    <div className="text-muted small">{getTaskDescription(task)}</div>
-                                                    {getTaskNotes(task) && (
-                                                        <div className="text-info small mt-1">
-                                                            <MessageSquare size={12} className="me-1" />
-                                                            {getTaskNotes(task)}
-                                                        </div>
-                                                    )}
-                                                    {/* 관련 메뉴 표시 */}
-                                                    {task.relatedMenus && task.relatedMenus.length > 0 && (
-                                                        <div className="d-flex flex-wrap gap-1 mt-2">
-                                                            <Link size={12} className="text-muted me-1" />
-                                                            {task.relatedMenus.map(menuKey => {
-                                                                const progress = menuProgress[menuKey] ?? 0
-                                                                return (
-                                                                    <Link2
-                                                                        key={menuKey}
-                                                                        href={getMenuHref(menuKey)}
-                                                                        className={`badge ${progress === 100 ? 'bg-success-lt text-success' : progress > 0 ? 'bg-primary-lt text-primary' : 'bg-secondary-lt text-secondary'} text-decoration-none`}
-                                                                        style={{ fontSize: '0.7rem' }}
-                                                                    >
-                                                                        {getMenuName(menuKey)} ({progress}%)
-                                                                    </Link2>
-                                                                )
-                                                            })}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className="col-auto">
-                                                    <div className="d-flex align-items-center gap-2">
-                                                        <div style={{ width: '100px' }}>
-                                                            <div className="progress" style={{ height: '8px' }}>
-                                                                <div
-                                                                    className={`progress-bar ${task.progress === 100 ? 'bg-success' : task.progress > 0 ? `bg-${color}` : 'bg-secondary'}`}
-                                                                    style={{ width: `${task.progress}%` }}
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                        <span className="text-muted small" style={{ minWidth: '40px' }}>
-                                                            {task.progress}%
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
+                    // 진행중/대기 태스크와 완료된 태스크 분리
+                    const pendingTasks = catTasks.filter(t => t.status !== 'completed')
+                    const completedTasks = catTasks.filter(t => t.status === 'completed')
 
-                                            {/* 서브태스크 */}
-                                            {expandedTasks.has(task.id) && task.subtasks && (
-                                                <div className="mt-2 ms-4 d-flex flex-wrap gap-2">
-                                                    {task.subtasks.map(subtask => (
-                                                        <label
-                                                            key={subtask.id}
-                                                            className={`d-inline-flex align-items-center gap-1 px-2 py-1 rounded border ${subtask.completed ? 'bg-success-lt border-success' : 'bg-light border-secondary'}`}
-                                                            style={{ cursor: 'pointer', fontSize: '0.8rem' }}
-                                                        >
-                                                            <input
-                                                                type="checkbox"
-                                                                className="form-check-input m-0"
-                                                                checked={subtask.completed}
-                                                                onChange={() => toggleSubtask(task.id, subtask.id)}
-                                                                style={{ width: '14px', height: '14px' }}
-                                                            />
-                                                            <span className={subtask.completed ? 'text-muted text-decoration-line-through' : ''}>
-                                                                {subtask.title}
-                                                            </span>
-                                                        </label>
-                                                    ))}
+                    // 태스크 렌더링 함수
+                    const renderTask = (task: typeof catTasks[0], isCompleted: boolean) => (
+                        <div key={task.id} className={`list-group-item py-2 ${isCompleted ? 'bg-light' : ''}`} style={isCompleted ? { opacity: 0.7 } : {}}>
+                            <div className="row align-items-center g-2">
+                                <div className="col-auto">
+                                    {getStatusIcon(task.status)}
+                                </div>
+                                <div className="col">
+                                    <div className="d-flex align-items-center gap-2 mb-1">
+                                        <button
+                                            className={`btn btn-link p-0 fw-bold text-start ${isCompleted ? 'text-decoration-line-through text-muted' : 'text-decoration-none'}`}
+                                            onClick={() => toggleExpand(task.id)}
+                                            style={{ fontSize: '0.85rem' }}
+                                        >
+                                            {expandedTasks.has(task.id) ? (
+                                                <ChevronDown size={14} className="me-1" />
+                                            ) : (
+                                                <ChevronRight size={14} className="me-1" />
+                                            )}
+                                            {getTaskTitle(task)}
+                                        </button>
+                                        {!isCompleted && getPriorityBadge(task.priority)}
+                                    </div>
+                                    {!isCompleted && (
+                                        <>
+                                            <div className="text-muted" style={{ fontSize: '0.75rem' }}>{getTaskDescription(task)}</div>
+                                            {getTaskNotes(task) && (
+                                                <div className="text-info mt-1" style={{ fontSize: '0.7rem' }}>
+                                                    <MessageSquare size={10} className="me-1" />
+                                                    {getTaskNotes(task)}
                                                 </div>
                                             )}
+                                            {/* 관련 메뉴 표시 */}
+                                            {task.relatedMenus && task.relatedMenus.length > 0 && (
+                                                <div className="d-flex flex-wrap gap-1 mt-1">
+                                                    <Link size={10} className="text-muted me-1" />
+                                                    {task.relatedMenus.map(menuKey => {
+                                                        const progress = menuProgress[menuKey] ?? 0
+                                                        return (
+                                                            <Link2
+                                                                key={menuKey}
+                                                                href={getMenuHref(menuKey)}
+                                                                className={`badge ${progress === 100 ? 'bg-success-lt text-success' : progress > 0 ? 'bg-primary-lt text-primary' : 'bg-secondary-lt text-secondary'} text-decoration-none`}
+                                                                style={{ fontSize: '0.65rem' }}
+                                                            >
+                                                                {getMenuName(menuKey)} ({progress}%)
+                                                            </Link2>
+                                                        )
+                                                    })}
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
+                                <div className="col-auto">
+                                    <div className="d-flex align-items-center gap-1">
+                                        <div style={{ width: '60px' }}>
+                                            <div className="progress" style={{ height: '6px' }}>
+                                                <div
+                                                    className={`progress-bar ${task.progress === 100 ? 'bg-success' : task.progress > 0 ? `bg-${color}` : 'bg-secondary'}`}
+                                                    style={{ width: `${task.progress}%` }}
+                                                />
+                                            </div>
                                         </div>
+                                        <span className="text-muted" style={{ minWidth: '35px', fontSize: '0.75rem' }}>
+                                            {task.progress}%
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 서브태스크 */}
+                            {expandedTasks.has(task.id) && task.subtasks && (
+                                <div className="mt-2 ms-4 d-flex flex-wrap gap-1">
+                                    {task.subtasks.map(subtask => (
+                                        <label
+                                            key={subtask.id}
+                                            className={`d-inline-flex align-items-center gap-1 px-2 py-1 rounded border ${subtask.completed ? 'bg-success-lt border-success' : 'bg-light border-secondary'}`}
+                                            style={{ cursor: 'pointer', fontSize: '0.7rem' }}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                className="form-check-input m-0"
+                                                checked={subtask.completed}
+                                                onChange={() => toggleSubtask(task.id, subtask.id)}
+                                                style={{ width: '12px', height: '12px' }}
+                                            />
+                                            <span className={subtask.completed ? 'text-muted text-decoration-line-through' : ''}>
+                                                {subtask.title}
+                                            </span>
+                                        </label>
                                     ))}
                                 </div>
-                            </>
-                        )}
-                    </div>
-                )
-            })}
+                            )}
+                        </div>
+                    )
+
+                    return (
+                        <div key={cat} className="col-12 col-xl-6 mb-3">
+                            <div className="card">
+                                <div
+                                    className={`card-header bg-${color}-lt cursor-pointer py-2`}
+                                    onClick={() => toggleCategory(cat)}
+                                    style={{ cursor: 'pointer' }}
+                                >
+                                    <div className="d-flex align-items-center w-100">
+                                        <div className="d-flex align-items-center flex-grow-1">
+                                            {isExpanded ? <ChevronDown size={18} className="me-2" /> : <ChevronRight size={18} className="me-2" />}
+                                            {getCategoryIcon(cat)}
+                                            <h4 className={`card-title mb-0 ms-2 text-${color}`} style={{ fontSize: '0.95rem' }}>
+                                                {getCategoryLabel(cat)}
+                                            </h4>
+                                            <span className="badge bg-white text-dark ms-2">{catTasks.length}</span>
+                                        </div>
+                                        <div className="text-muted small d-none d-md-block" style={{ fontSize: '0.75rem' }}>
+                                            <span className="me-2">
+                                                <i className="ti ti-users me-1"></i>
+                                                {getCategoryStakeholders(cat)}
+                                            </span>
+                                            {catInfo.integrations.length > 0 && (
+                                                <span>
+                                                    <i className="ti ti-plug me-1"></i>
+                                                    {catInfo.integrations.join(', ')}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                                {isExpanded && (
+                                    <>
+                                        <div className="card-body py-1 bg-light border-bottom">
+                                            <small className="text-muted" style={{ fontSize: '0.75rem' }}>{getCategoryDescription(cat)}</small>
+                                        </div>
+                                        <div className="list-group list-group-flush">
+                                            {/* 진행중/대기 태스크 */}
+                                            {pendingTasks.map((task) => renderTask(task, false))}
+
+                                            {/* 완료된 태스크 - 구분선과 함께 표시 */}
+                                            {completedTasks.length > 0 && (
+                                                <>
+                                                    <div className="list-group-item py-1 bg-success-lt border-top border-success" style={{ borderTopWidth: '2px' }}>
+                                                        <small className="text-success fw-bold">
+                                                            <CheckCircle2 size={12} className="me-1" />
+                                                            {t('completed')} ({completedTasks.length})
+                                                        </small>
+                                                    </div>
+                                                    {completedTasks.map((task) => renderTask(task, true))}
+                                                </>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    )
+                })}
+            </div>
 
             {/* 권장 작업 순서 */}
             <div className="card mt-4">

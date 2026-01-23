@@ -264,12 +264,11 @@ export async function POST(request: Request) {
                 const itemLeaseCompanyId = itemAcquisition === 'LEASE_FREE' ? item.leaseCompanyId : null
 
                 for (let i = 0; i < (item.kioskCount || 1); i++) {
-                    const kioskNumber = `${orderNumber}-${String(kioskIndex).padStart(2, '0')}`
                     kioskPromises.push(
                         prisma.kiosk.create({
                             data: {
-                                serialNumber: `TEMP-${kioskNumber}`,
-                                kioskNumber: kioskNumber,
+                                serialNumber: '',  // 시리얼 번호는 납품 시 입력
+                                kioskNumber: null,  // 키오스크 번호는 별도 개념 (발주번호 아님)
                                 branchId: item.branchId || undefined,
                                 brandName: corporation?.fc?.name || corporation?.name || '',
                                 acquisition: itemAcquisition,
@@ -358,12 +357,11 @@ export async function POST(request: Request) {
 
         const kioskPromises = []
         for (let i = 0; i < (quantity || 1); i++) {
-            const kioskNumber = `${orderNumber}-${String(i + 1).padStart(2, '0')}`
             kioskPromises.push(
                 prisma.kiosk.create({
                     data: {
-                        serialNumber: `TEMP-${kioskNumber}`,
-                        kioskNumber: kioskNumber,
+                        serialNumber: '',  // 시리얼 번호는 납품 시 입력
+                        kioskNumber: null,  // 키오스크 번호는 별도 개념 (발주번호 아님)
                         branchId: branchId || undefined,
                         brandName: corporation.fc?.name || corporation.name,
                         acquisition: acquisition || 'FREE',

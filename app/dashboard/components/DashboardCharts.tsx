@@ -12,7 +12,8 @@ import {
     Tooltip,
     Legend,
     ResponsiveContainer,
-    Cell
+    Cell,
+    LabelList
 } from "recharts"
 import { useTranslations, useLocale } from 'next-intl'
 
@@ -213,6 +214,7 @@ export function DashboardCharts({ monthlyData, partnerData, regionData, areaData
                                                 {localizedRegionData.map((entry, index) => (
                                                     <Cell key={`cell-${index}`} fill={AREA_COLORS[index % AREA_COLORS.length]} />
                                                 ))}
+                                                <LabelList dataKey="value" position="right" style={{ fill: '#666', fontSize: 12, fontWeight: 500 }} />
                                             </Bar>
                                         </BarChart>
                                     </ResponsiveContainer>
@@ -240,6 +242,7 @@ export function DashboardCharts({ monthlyData, partnerData, regionData, areaData
                                                 {localizedAreaData.map((entry, index) => (
                                                     <Cell key={`cell-${index}`} fill={AREA_COLORS[index % AREA_COLORS.length]} />
                                                 ))}
+                                                <LabelList dataKey="value" position="right" style={{ fill: '#666', fontSize: 12, fontWeight: 500 }} />
                                             </Bar>
                                         </BarChart>
                                     </ResponsiveContainer>
