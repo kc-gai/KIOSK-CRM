@@ -101,12 +101,12 @@ function LoginForm() {
                 <form onSubmit={handleLogin}>
                     <CardContent className="space-y-4 pt-0">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Email</label>
+                            <label className="text-sm font-medium">ID</label>
                             <Input
-                                type="email"
+                                type="text"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                placeholder="admin@example.com"
+                                placeholder="ID 또는 이메일"
                                 required
                             />
                         </div>
