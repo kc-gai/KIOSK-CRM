@@ -1,0 +1,8 @@
+{
+  "extends": "../../.claude/settings.json",
+  "project": {
+    "name": "Kiosk CRM",
+    "type": "nextjs",
+    "database": "postgresql"
+  }
+}

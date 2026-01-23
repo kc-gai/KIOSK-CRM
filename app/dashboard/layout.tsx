@@ -31,53 +31,63 @@ export default async function DashboardLayout({ children }: { children: React.Re
     }
     const t = await getTranslations('nav')
 
-    // 카테고리별로 메뉴 구성
+    // 카테고리별로 메뉴 구성 (프로세스 흐름: 발주 → 납품 → 설치 → 통계)
     const categories = [
         {
             id: 'home',
             label: t('categoryHome'),
             icon: 'ti-home',
             items: [
-                { href: '/dashboard', icon: 'ti-dashboard', label: t('dashboard'), progress: menuProgress['dashboard'] },
-                { href: '/dashboard/ai-search', icon: 'ti-sparkles', label: t('aiSearch'), progress: menuProgress['ai-search'] },
+                { href: '/dashboard', icon: 'ti-dashboard', label: t('dashboard'), progress: menuProgress['dashboard'], tooltip: t('tooltipDashboard') },
+                { href: '/dashboard/ai-search', icon: 'ti-sparkles', label: t('aiSearch'), progress: menuProgress['ai-search'], tooltip: t('tooltipAiSearch') },
             ]
         },
         {
             id: 'order',
             label: t('categoryOrder'),
-            icon: 'ti-file-plus',
+            icon: 'ti-file-invoice',
+            tooltip: t('tooltipCategoryOrder'),
             items: [
-                { href: '/dashboard/order', icon: 'ti-file-plus', label: t('orderProcess'), progress: menuProgress['order-process'] },
-                { href: '/dashboard/delivery-status', icon: 'ti-list-check', label: t('deliveryStatus'), progress: menuProgress['delivery-status'] },
-                { href: '/dashboard/order-process', icon: 'ti-archive', label: t('orderProcessOld'), progress: menuProgress['order-process'] },
+                { href: '/dashboard/order', icon: 'ti-file-plus', label: t('orderProcess'), progress: menuProgress['order-process'], tooltip: t('tooltipOrderProcess') },
+                { href: '/dashboard/delivery-status', icon: 'ti-list-check', label: t('deliveryStatus'), progress: menuProgress['delivery-status'], tooltip: t('tooltipDeliveryStatus') },
             ]
         },
         {
             id: 'delivery',
             label: t('categoryDelivery'),
-            icon: 'ti-truck',
+            icon: 'ti-truck-delivery',
+            tooltip: t('tooltipCategoryDelivery'),
             items: [
-                { href: '/dashboard/delivery-process', icon: 'ti-truck', label: t('deliveryProcess'), progress: menuProgress['delivery-process'] },
-                { href: '/dashboard/delivery-request', icon: 'ti-mail', label: t('deliveryRequest'), progress: menuProgress['delivery-request'] },
+                { href: '/dashboard/delivery-process', icon: 'ti-truck', label: t('deliveryProcess'), progress: menuProgress['delivery-process'], tooltip: t('tooltipDeliveryProcess') },
+            ]
+        },
+        {
+            id: 'installation',
+            label: t('categoryInstallation'),
+            icon: 'ti-tool',
+            tooltip: t('tooltipCategoryInstallation'),
+            items: [
+                { href: '/dashboard/installation', icon: 'ti-check', label: t('installation'), progress: menuProgress['installation'], tooltip: t('tooltipInstallation') },
             ]
         },
         {
             id: 'assets',
             label: t('categoryAssets'),
             icon: 'ti-device-desktop',
+            tooltip: t('tooltipCategoryAssets'),
             items: [
-                { href: '/dashboard/assets', icon: 'ti-device-desktop', label: t('assets'), progress: menuProgress['assets'] },
-                { href: '/dashboard/repairs', icon: 'ti-tool', label: t('repairs'), progress: menuProgress['repairs'] },
-                { href: '/dashboard/sample-loans', icon: 'ti-package', label: t('sampleLoans'), progress: menuProgress['sample-loans'] },
+                { href: '/dashboard/assets', icon: 'ti-device-desktop', label: t('assets'), progress: menuProgress['assets'], tooltip: t('tooltipAssets') },
+                { href: '/dashboard/history', icon: 'ti-history', label: t('history'), progress: menuProgress['history'], tooltip: t('tooltipHistory') },
             ]
         },
         {
             id: 'statistics',
             label: t('categoryStatistics'),
             icon: 'ti-chart-bar',
+            tooltip: t('tooltipCategoryStatistics'),
             items: [
-                { href: '/dashboard/statistics', icon: 'ti-chart-bar', label: t('statistics'), progress: menuProgress['statistics'] },
-                { href: '/dashboard/pricing', icon: 'ti-currency-dollar', label: t('pricing'), progress: menuProgress['pricing'] },
+                { href: '/dashboard/statistics', icon: 'ti-chart-bar', label: t('statistics'), progress: menuProgress['statistics'], tooltip: t('tooltipStatistics') },
+                { href: '/dashboard/pricing', icon: 'ti-currency-dollar', label: t('pricing'), progress: menuProgress['pricing'], tooltip: t('tooltipPricing') },
             ]
         },
         {
@@ -85,21 +95,23 @@ export default async function DashboardLayout({ children }: { children: React.Re
             label: t('categoryPartners'),
             icon: 'ti-building-store',
             items: [
-                { href: '/dashboard/clients', icon: 'ti-building-store', label: t('clients'), progress: menuProgress['clients'] },
-                { href: '/dashboard/lease-companies', icon: 'ti-file-certificate', label: t('leaseCompanies'), progress: menuProgress['lease-companies'] },
+                { href: '/dashboard/clients', icon: 'ti-building-store', label: t('clients'), progress: menuProgress['clients'], tooltip: t('tooltipClients') },
+                { href: '/dashboard/lease-companies', icon: 'ti-file-certificate', label: t('leaseCompanies'), progress: menuProgress['lease-companies'], tooltip: t('tooltipLeaseCompanies') },
             ]
         },
     ]
 
     // Admin 드롭다운에 표시할 설정 메뉴 (내부서비스 + 설정)
     const settingsItems = [
-        { href: '/dashboard/regions', icon: 'ti-map-pin', label: t('regions'), adminOnly: true, progress: menuProgress['regions'] },
-        { href: '/dashboard/assembly-manual', icon: 'ti-tool', label: t('assemblyManual'), progress: menuProgress['assembly-manual'] },
-        { href: '/dashboard/manuals', icon: 'ti-book', label: t('manuals'), progress: menuProgress['manuals'] },
-        { href: '/dashboard/accounts', icon: 'ti-users', label: t('accounts'), adminOnly: true, progress: menuProgress['accounts'] },
-        { href: '/dashboard/api-settings', icon: 'ti-plug', label: t('apiSettings'), adminOnly: true, progress: menuProgress['api-settings'] },
-        { href: '/dashboard/dev-tasks', icon: 'ti-list-check', label: t('devTasks'), adminOnly: true, progress: menuProgress['dev-tasks'] },
-        { href: '/dashboard/work-logs', icon: 'ti-clock-record', label: t('workLogs'), adminOnly: true },
+        { href: '/dashboard/regions', icon: 'ti-map-pin', label: t('regions'), adminOnly: true, progress: menuProgress['regions'], tooltip: t('tooltipRegions') },
+        { href: '/dashboard/repairs', icon: 'ti-tools', label: t('repairs'), progress: menuProgress['repairs'], tooltip: t('tooltipRepairs') },
+        { href: '/dashboard/sample-loans', icon: 'ti-package', label: t('sampleLoans'), progress: menuProgress['sample-loans'], tooltip: t('tooltipSampleLoans') },
+        { href: '/dashboard/assembly-manual', icon: 'ti-hammer', label: t('assemblyManual'), progress: menuProgress['assembly-manual'], tooltip: t('tooltipAssemblyManual') },
+        { href: '/dashboard/manuals', icon: 'ti-book', label: t('manuals'), progress: menuProgress['manuals'], tooltip: t('tooltipManuals') },
+        { href: '/dashboard/accounts', icon: 'ti-users', label: t('accounts'), adminOnly: true, progress: menuProgress['accounts'], tooltip: t('tooltipAccounts') },
+        { href: '/dashboard/api-settings', icon: 'ti-plug', label: t('apiSettings'), adminOnly: true, progress: menuProgress['api-settings'], tooltip: t('tooltipApiSettings') },
+        { href: '/dashboard/dev-tasks', icon: 'ti-list-check', label: t('devTasks'), adminOnly: true, progress: menuProgress['dev-tasks'], tooltip: t('tooltipDevTasks') },
+        { href: '/dashboard/work-logs', icon: 'ti-clock-record', label: t('workLogs'), adminOnly: true, tooltip: t('tooltipWorkLogs') },
     ]
 
     const isAdmin = session?.user?.role === "ADMIN"
