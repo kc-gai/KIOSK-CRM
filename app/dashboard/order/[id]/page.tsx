@@ -320,7 +320,7 @@ export default function OrderDetailPage() {
                                                 <td style={{ fontSize: '0.75rem' }}>{item.contact || '-'}</td>
                                                 <td style={{ fontSize: '0.75rem' }}>{item.acquisition ? getAcquisitionLabel(item.acquisition) : '-'}</td>
                                                 <td style={{ fontSize: '0.7rem' }}>{item.leaseCompanyName || '-'}</td>
-                                                <td style={{ fontSize: '0.75rem' }}>{formatDateJa(item.desiredDeliveryDate)}</td>
+                                                <td style={{ fontSize: '0.75rem' }}>{formatDateJa(item.desiredDeliveryDate ?? null)}</td>
                                                 <td className="text-center">{item.kioskCount}</td>
                                                 <td className="text-center">{item.plateCount}</td>
                                                 <td className="text-end">{itemTotal.toLocaleString()}</td>

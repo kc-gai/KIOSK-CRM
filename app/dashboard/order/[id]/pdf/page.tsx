@@ -357,7 +357,7 @@ export default function OrderPdfPage() {
                                         <td style={{ fontSize: '8px' }}>{item.contact || '-'}</td>
                                         <td style={{ fontSize: '8px' }}>{item.acquisition ? getAcquisitionLabel(item.acquisition) : '-'}</td>
                                         <td style={{ fontSize: '7px', wordBreak: 'break-all' }}>{item.leaseCompanyName || '-'}</td>
-                                        <td style={{ fontSize: '8px' }}>{formatDateJa(item.desiredDeliveryDate)}</td>
+                                        <td style={{ fontSize: '8px' }}>{formatDateJa(item.desiredDeliveryDate ?? null)}</td>
                                         <td style={{ textAlign: 'center' }}>{item.kioskCount}</td>
                                         <td style={{ textAlign: 'center' }}>{item.plateCount}</td>
                                         <td style={{ textAlign: 'right' }}>{itemTotal.toLocaleString()}</td>
