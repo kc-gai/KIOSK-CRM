@@ -1,39 +1,33 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { signOut } from 'next-auth/react'
+
+interface MenuItem {
+    id: string
+    href: string
+    icon: string
+    label: string
+    adminOnly?: boolean
+}
 
 interface NavItem {
     href?: string
     icon?: string
     label: string
-    type?: string
     adminOnly?: boolean
-    progress?: number
-}
-
-interface Category {
-    id: string
-    label: string
-    icon: string
-    items: NavItem[]
-}
-
-interface Tab {
-    href: string
 }
 
 interface TopNavigationProps {
-    categories: Category[]
+    menuItems: MenuItem[]
     isAdmin: boolean
     userName: string
     userEmail: string
     userRole?: string
     allowedMenus?: string[]
-    tabHomeLabel?: string
     settingsItems?: NavItem[]
     logoutLabel?: string
 }
@@ -44,142 +38,42 @@ const getMenuKey = (href: string): string => {
 }
 
 export function TopNavigation({
-    categories,
+    menuItems,
     isAdmin,
     userName,
     userEmail,
     userRole = 'ADMIN',
     allowedMenus = [],
-    tabHomeLabel = '홈',
     settingsItems = [],
     logoutLabel = '로그아웃'
 }: TopNavigationProps) {
-    const [openTabs, setOpenTabs] = useState<Tab[]>([])
-    const [activeCategory, setActiveCategory] = useState<string | null>(null)
+    const [adminMenuOpen, setAdminMenuOpen] = useState(false)
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const pathname = usePathname()
-    const router = useRouter()
-
-    // 새 브라우저 세션마다 탭 초기화
-    // sessionStorage는 브라우저/탭 닫으면 삭제됨 -> 새 세션 감지용
-    useEffect(() => {
-        const sessionMarker = sessionStorage.getItem('kiosk-session-active')
-
-        if (!sessionMarker) {
-            // 새 세션 시작 - 탭 초기화하고 홈(대시보드)으로
-            localStorage.removeItem('nav-open-tabs')
-            sessionStorage.setItem('kiosk-session-active', Date.now().toString())
-            setOpenTabs([])
-        } else {
-            // 기존 세션 - 탭 복원
-            const savedTabs = localStorage.getItem('nav-open-tabs')
-            if (savedTabs) {
-                try {
-                    const parsed = JSON.parse(savedTabs)
-                    setOpenTabs(parsed)
-                } catch {
-                    setOpenTabs([])
-                }
-            }
-        }
-    }, [])
-
-    // 탭 상태 저장
-    useEffect(() => {
-        localStorage.setItem('nav-open-tabs', JSON.stringify(openTabs))
-    }, [openTabs])
-
-    // 현재 경로에 해당하는 탭이 없으면 자동으로 추가
-    useEffect(() => {
-        if (pathname && pathname !== '/dashboard') {
-            const existingTab = openTabs.find(tab => tab.href === pathname)
-            if (!existingTab) {
-                // 현재 경로에 해당하는 메뉴 아이템 찾기 (카테고리)
-                let found = false
-                for (const category of categories) {
-                    const item = category.items.find(i => i.href === pathname)
-                    if (item && item.href) {
-                        addTab({ href: item.href })
-                        found = true
-                        break
-                    }
-                }
-                // settingsItems에서 찾기
-                if (!found) {
-                    const settingsItem = settingsItems.find(i => i.href === pathname)
-                    if (settingsItem && settingsItem.href) {
-                        addTab({ href: settingsItem.href })
-                    }
-                }
-            }
-        }
-    }, [pathname, categories, settingsItems])
-
-    // href로 메뉴 아이템 정보 찾기 (다국어 지원)
-    const getMenuItemByHref = (href: string): NavItem | null => {
-        // 카테고리에서 찾기
-        for (const category of categories) {
-            const item = category.items.find(i => i.href === href)
-            if (item) return item
-        }
-        // settingsItems에서 찾기
-        const settingsItem = settingsItems.find(i => i.href === href)
-        if (settingsItem) return settingsItem
-        return null
-    }
 
     // 메뉴 접근 권한 체크
-    const canAccessMenu = (item: NavItem): boolean => {
-        if (item.type === 'section') return true
+    const canAccessMenu = (item: MenuItem | NavItem): boolean => {
         if (userRole === 'ADMIN') return true
         if (item.adminOnly) return false
         if (userRole === 'EXTERNAL') {
-            if (!item.href) return false
+            if (!('href' in item) || !item.href) return false
             const menuKey = getMenuKey(item.href)
             return allowedMenus.includes(menuKey)
         }
         return true
     }
 
-    // 탭 추가 (href만 저장)
-    const addTab = (tab: Tab) => {
-        setOpenTabs(prev => {
-            const exists = prev.find(t => t.href === tab.href)
-            if (exists) return prev
-            return [...prev, { href: tab.href }]
-        })
-    }
-
-    // 탭 제거
-    const removeTab = (href: string, e: React.MouseEvent) => {
-        e.preventDefault()
-        e.stopPropagation()
-        setOpenTabs(prev => prev.filter(t => t.href !== href))
-        // 현재 탭을 닫으면 다른 탭으로 이동
-        if (pathname === href) {
-            const remaining = openTabs.filter(t => t.href !== href)
-            if (remaining.length > 0) {
-                router.push(remaining[remaining.length - 1].href)
-            } else {
-                router.push('/dashboard')
-            }
+    // 현재 경로가 메뉴와 일치하는지 확인
+    const isActive = (href: string): boolean => {
+        if (href === '/dashboard') {
+            return pathname === '/dashboard'
         }
+        return pathname.startsWith(href)
     }
 
-    // 메뉴 아이템 클릭
-    const handleMenuClick = (item: NavItem) => {
-        if (item.href) {
-            addTab({ href: item.href })
-            router.push(item.href)
-            setActiveCategory(null)
-            setMobileMenuOpen(false)
-        }
-    }
-
-    // 카테고리별 필터링된 메뉴
-    const getFilteredItems = (items: NavItem[]): NavItem[] => {
-        return items.filter(item => canAccessMenu(item))
-    }
+    // 필터링된 메뉴
+    const filteredMenuItems = menuItems.filter(item => canAccessMenu(item))
+    const filteredSettingsItems = settingsItems.filter(item => canAccessMenu(item))
 
     return (
         <>
@@ -213,58 +107,22 @@ export function TopNavigation({
                         <span className="fw-bold d-none d-sm-inline">Kiosk CRM</span>
                     </Link>
 
-                    {/* Categories - Desktop Only */}
+                    {/* Menu Items - Desktop Only */}
                     <nav className="d-none d-lg-flex align-items-center gap-1 flex-grow-1">
-                        {categories.map(category => (
-                            <div
-                                key={category.id}
-                                className="position-relative"
-                                onMouseEnter={() => setActiveCategory(category.id)}
-                                onMouseLeave={() => setActiveCategory(null)}
+                        {filteredMenuItems.map(item => (
+                            <Link
+                                key={item.id}
+                                href={item.href}
+                                className={`btn btn-ghost-light text-white px-3 py-2 d-flex align-items-center gap-2 text-decoration-none ${isActive(item.href) ? 'bg-primary' : ''}`}
+                                style={{
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    fontSize: '0.9rem'
+                                }}
                             >
-                                <button
-                                    className={`btn btn-ghost-light text-white px-3 py-2 d-flex align-items-center gap-2 ${activeCategory === category.id ? 'bg-primary' : ''}`}
-                                    style={{
-                                        border: 'none',
-                                        borderRadius: '4px 4px 0 0',
-                                        fontSize: '0.9rem'
-                                    }}
-                                >
-                                    <i className={`ti ${category.icon}`}></i>
-                                    <span>{category.label}</span>
-                                </button>
-
-                                {/* Dropdown Menu */}
-                                {activeCategory === category.id && (
-                                    <div
-                                        className="position-absolute bg-white shadow-lg rounded-bottom"
-                                        style={{
-                                            top: '100%',
-                                            left: 0,
-                                            minWidth: '220px',
-                                            zIndex: 1002,
-                                            border: '1px solid #e6e8eb'
-                                        }}
-                                    >
-                                        {getFilteredItems(category.items).map((item, idx) => (
-                                            <button
-                                                key={idx}
-                                                className="btn btn-ghost-secondary w-100 text-start d-flex align-items-center py-2"
-                                                onClick={() => handleMenuClick(item)}
-                                                style={{
-                                                    borderRadius: 0,
-                                                    borderBottom: idx < category.items.length - 1 ? '1px solid #f0f0f0' : 'none',
-                                                    paddingLeft: '12px',
-                                                    paddingRight: '12px'
-                                                }}
-                                            >
-                                                <i className={`ti ${item.icon} text-muted me-2`} style={{ width: '16px', textAlign: 'center' }}></i>
-                                                <span className="flex-grow-1">{item.label}</span>
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
+                                <i className={`ti ${item.icon}`}></i>
+                                <span>{item.label}</span>
+                            </Link>
                         ))}
                     </nav>
 
@@ -277,22 +135,22 @@ export function TopNavigation({
                         {/* Admin Dropdown with Settings */}
                         <div
                             className="position-relative"
-                            onMouseEnter={() => setActiveCategory('admin-menu')}
-                            onMouseLeave={() => setActiveCategory(null)}
+                            onMouseEnter={() => setAdminMenuOpen(true)}
+                            onMouseLeave={() => setAdminMenuOpen(false)}
                         >
                             <button
-                                className={`btn btn-ghost-light text-white d-flex align-items-center gap-2 px-2 py-1 ${activeCategory === 'admin-menu' ? 'bg-primary' : ''}`}
+                                className={`btn btn-ghost-light text-white d-flex align-items-center gap-2 px-2 py-1 ${adminMenuOpen ? 'bg-primary' : ''}`}
                                 style={{ border: 'none', borderRadius: '4px' }}
                             >
                                 <span className="avatar avatar-sm bg-blue rounded d-flex align-items-center justify-content-center" style={{ width: '28px', height: '28px', fontSize: '0.8rem' }}>
                                     {userName?.charAt(0) || 'A'}
                                 </span>
-                                <span className="small">{userName || 'Admin'}</span>
+                                <span className="small d-none d-sm-inline">{userName || 'Admin'}</span>
                                 <i className="ti ti-chevron-down" style={{ fontSize: '0.7rem' }}></i>
                             </button>
 
                             {/* Admin Dropdown Menu */}
-                            {activeCategory === 'admin-menu' && (
+                            {adminMenuOpen && (
                                 <div
                                     className="position-absolute bg-white shadow-lg rounded"
                                     style={{
@@ -309,29 +167,27 @@ export function TopNavigation({
                                         <div className="small fw-medium">{userName}</div>
                                         <div className="small text-muted">{userEmail}</div>
                                     </div>
-                                    {settingsItems.map((item, idx) => (
-                                        <button
+                                    {filteredSettingsItems.map((item, idx) => (
+                                        <Link
                                             key={idx}
-                                            className="btn btn-ghost-secondary w-100 text-start d-flex align-items-center py-2"
-                                            onClick={() => handleMenuClick(item)}
+                                            href={item.href || '#'}
+                                            className="btn btn-ghost-secondary w-100 text-start d-flex align-items-center py-2 text-decoration-none"
                                             style={{
                                                 borderRadius: 0,
                                                 borderBottom: '1px solid #f0f0f0',
                                                 paddingLeft: '12px',
                                                 paddingRight: '12px'
                                             }}
+                                            onClick={() => setAdminMenuOpen(false)}
                                         >
                                             <i className={`ti ${item.icon} text-muted me-2`} style={{ width: '16px', textAlign: 'center' }}></i>
                                             <span className="flex-grow-1">{item.label}</span>
-                                        </button>
+                                        </Link>
                                     ))}
                                     {/* 로그아웃 버튼 */}
                                     <button
                                         className="btn btn-ghost-danger w-100 text-start d-flex align-items-center py-2"
                                         onClick={() => {
-                                            // 탭 상태 초기화
-                                            localStorage.removeItem('nav-open-tabs')
-                                            // 로그아웃
                                             signOut({ callbackUrl: '/login' })
                                         }}
                                         style={{
@@ -392,41 +248,37 @@ export function TopNavigation({
                             </div>
                         </div>
 
-                        {/* Categories */}
-                        {categories.map(category => (
-                            <div key={category.id} className="border-bottom">
-                                <div className="px-3 py-2 bg-light fw-medium small text-muted d-flex align-items-center gap-2">
-                                    <i className={`ti ${category.icon}`}></i>
-                                    {category.label}
-                                </div>
-                                {getFilteredItems(category.items).map((item, idx) => (
-                                    <button
-                                        key={idx}
-                                        className="btn btn-ghost-secondary w-100 text-start d-flex align-items-center py-2 px-3"
-                                        onClick={() => handleMenuClick(item)}
-                                        style={{ borderRadius: 0 }}
-                                    >
-                                        <i className={`ti ${item.icon} text-muted me-2`} style={{ width: '20px' }}></i>
-                                        <span className="flex-grow-1">{item.label}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        ))}
+                        {/* Menu Items */}
+                        <div className="border-bottom">
+                            {filteredMenuItems.map(item => (
+                                <Link
+                                    key={item.id}
+                                    href={item.href}
+                                    className={`btn w-100 text-start d-flex align-items-center py-2 px-3 text-decoration-none ${isActive(item.href) ? 'btn-primary' : 'btn-ghost-secondary'}`}
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    style={{ borderRadius: 0 }}
+                                >
+                                    <i className={`ti ${item.icon} me-2`} style={{ width: '20px' }}></i>
+                                    <span className="flex-grow-1">{item.label}</span>
+                                </Link>
+                            ))}
+                        </div>
 
                         {/* Settings */}
-                        {settingsItems.length > 0 && (
+                        {filteredSettingsItems.length > 0 && (
                             <div className="border-bottom">
                                 <div className="px-3 py-2 bg-light fw-medium small text-muted">설정</div>
-                                {settingsItems.map((item, idx) => (
-                                    <button
+                                {filteredSettingsItems.map((item, idx) => (
+                                    <Link
                                         key={idx}
-                                        className="btn btn-ghost-secondary w-100 text-start d-flex align-items-center py-2 px-3"
-                                        onClick={() => handleMenuClick(item)}
+                                        href={item.href || '#'}
+                                        className="btn btn-ghost-secondary w-100 text-start d-flex align-items-center py-2 px-3 text-decoration-none"
+                                        onClick={() => setMobileMenuOpen(false)}
                                         style={{ borderRadius: 0 }}
                                     >
                                         <i className={`ti ${item.icon} text-muted me-2`} style={{ width: '20px' }}></i>
                                         <span className="flex-grow-1">{item.label}</span>
-                                    </button>
+                                    </Link>
                                 ))}
                             </div>
                         )}
@@ -435,7 +287,6 @@ export function TopNavigation({
                         <button
                             className="btn btn-ghost-danger w-100 text-start d-flex align-items-center py-2 px-3"
                             onClick={() => {
-                                localStorage.removeItem('nav-open-tabs')
                                 signOut({ callbackUrl: '/login' })
                             }}
                             style={{ borderRadius: 0 }}
@@ -447,131 +298,18 @@ export function TopNavigation({
                 </>
             )}
 
-            {/* Tab Bar - 메뉴바와 연결된 느낌의 탭 */}
-            <div
-                className="tab-bar-container"
-                style={{
-                    position: 'fixed',
-                    top: '48px',
-                    left: 0,
-                    right: 0,
-                    zIndex: 1000,
-                    height: '40px',
-                    display: 'flex',
-                    alignItems: 'end',
-                    paddingLeft: '12px',
-                    paddingRight: '12px',
-                    background: 'linear-gradient(to bottom, #343a40 0%, #495057 100%)',
-                    borderBottom: '3px solid #206bc4',
-                    overflowX: 'auto',
-                    overflowY: 'hidden',
-                    WebkitOverflowScrolling: 'touch',
-                    scrollbarWidth: 'none',
-                    msOverflowStyle: 'none',
-                    gap: '2px'
-                }}
-            >
-                {/* Home Tab - Always visible */}
-                <Link
-                    href="/dashboard"
-                    className="d-flex align-items-center gap-2 px-3 text-decoration-none"
-                    style={{
-                        fontSize: '0.85rem',
-                        height: '34px',
-                        marginBottom: '-3px',
-                        borderRadius: '6px 6px 0 0',
-                        backgroundColor: pathname === '/dashboard' ? '#fff' : 'transparent',
-                        color: pathname === '/dashboard' ? '#206bc4' : 'rgba(255,255,255,0.8)',
-                        fontWeight: pathname === '/dashboard' ? 600 : 400,
-                        borderBottom: pathname === '/dashboard' ? '3px solid #fff' : 'none',
-                        transition: 'all 0.15s ease'
-                    }}
-                >
-                    <i className="ti ti-home" style={{ fontSize: '1rem' }}></i>
-                    <span>{tabHomeLabel}</span>
-                </Link>
-
-                {/* Dynamic Tabs */}
-                {openTabs.map(tab => {
-                    const menuItem = getMenuItemByHref(tab.href)
-                    if (!menuItem) return null
-                    const isActive = pathname === tab.href
-                    return (
-                        <div
-                            key={tab.href}
-                            className="d-flex align-items-center gap-2 px-3"
-                            style={{
-                                fontSize: '0.85rem',
-                                height: '34px',
-                                marginBottom: '-3px',
-                                borderRadius: '6px 6px 0 0',
-                                backgroundColor: isActive ? '#fff' : 'transparent',
-                                color: isActive ? '#206bc4' : 'rgba(255,255,255,0.8)',
-                                fontWeight: isActive ? 600 : 400,
-                                borderBottom: isActive ? '3px solid #fff' : 'none',
-                                cursor: 'pointer',
-                                maxWidth: '200px',
-                                transition: 'all 0.15s ease'
-                            }}
-                            onClick={() => router.push(tab.href)}
-                        >
-                            <i className={`ti ${menuItem.icon || 'ti-file'}`} style={{ fontSize: '0.95rem', flexShrink: 0 }}></i>
-                            <span className="text-truncate">{menuItem.label}</span>
-                            <button
-                                className="d-flex align-items-center justify-content-center p-0 ms-1"
-                                style={{
-                                    width: '18px',
-                                    height: '18px',
-                                    borderRadius: '50%',
-                                    flexShrink: 0,
-                                    border: 'none',
-                                    backgroundColor: isActive ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.2)',
-                                    color: isActive ? '#666' : 'rgba(255,255,255,0.8)',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.15s ease'
-                                }}
-                                onClick={(e) => removeTab(tab.href, e)}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.backgroundColor = isActive ? 'rgba(220,53,69,0.2)' : 'rgba(220,53,69,0.5)'
-                                    e.currentTarget.style.color = isActive ? '#dc3545' : '#fff'
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.backgroundColor = isActive ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.2)'
-                                    e.currentTarget.style.color = isActive ? '#666' : 'rgba(255,255,255,0.8)'
-                                }}
-                            >
-                                <i className="ti ti-x" style={{ fontSize: '0.65rem' }}></i>
-                            </button>
-                        </div>
-                    )
-                })}
-            </div>
-
-            {/* Spacer for content */}
+            {/* Spacer for content - 탭바 없이 48px만 */}
             <style jsx global>{`
                 .main-content-tabs {
-                    padding-top: 91px !important;
+                    padding-top: 48px !important;
                     min-height: 100vh;
                     background-color: #f4f6fa;
-                }
-                /* Hide scrollbar for tab bar */
-                .tab-bar-container::-webkit-scrollbar {
-                    display: none;
-                }
-                /* Tab hover effect */
-                .tab-bar-container > a:hover,
-                .tab-bar-container > div:hover {
-                    background-color: rgba(255,255,255,0.15) !important;
-                }
-                .tab-bar-container > a[style*="background-color: rgb(255, 255, 255)"]:hover,
-                .tab-bar-container > div[style*="background-color: rgb(255, 255, 255)"]:hover {
-                    background-color: #fff !important;
                 }
                 @media print {
                     .main-content-tabs {
                         padding-top: 0 !important;
                     }
-                    header, .tab-bar-container {
+                    header {
                         display: none !important;
                     }
                 }

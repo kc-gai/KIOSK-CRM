@@ -342,16 +342,18 @@ export async function POST(request: Request) {
                 const itemLeaseCompanyId = itemAcquisition === 'LEASE_FREE' ? item.leaseCompanyId : null
 
                 for (let i = 0; i < (item.kioskCount || 1); i++) {
+                    // 임시 시리얼 번호 생성 (발주번호-항목인덱스-키오스크인덱스)
+                    const tempSerialNumber = `TEMP-${orderNumber}-${itemIndex}-${i}-${Date.now()}`
                     kioskPromises.push(
                         prisma.kiosk.create({
                             data: {
-                                serialNumber: '',  // 시리얼 번호는 납품 시 입력
+                                serialNumber: tempSerialNumber,  // 시리얼 번호는 납품 시 실제 값으로 수정
                                 kioskNumber: null,  // 키오스크 번호는 별도 개념 (발주번호 아님)
                                 branchId: item.branchId || undefined,
                                 brandName: corporation?.fc?.name || corporation?.name || '',
                                 acquisition: itemAcquisition,
                                 leaseCompanyId: itemLeaseCompanyId,
-                                orderRequestDate: orderRequestDate ? new Date(orderRequestDate) : null,
+                                orderRequestDate: orderRequestDate && !isNaN(new Date(orderRequestDate).getTime()) ? new Date(orderRequestDate) : null,
                                 deliveryDueDate: desiredDeliveryDate || undefined,
                                 deliveryStatus: 'PENDING',
                                 status: 'ORDERED',
