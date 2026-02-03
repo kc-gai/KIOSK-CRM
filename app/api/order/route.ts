@@ -35,30 +35,62 @@ export async function GET() {
             const firstKiosk = kiosks[0]
 
             // step1Notes에서 의뢰자, 단가, 세금포함 여부, 발주의뢰일 파싱
-            let requesterName = null
-            let kioskUnitPrice = null
-            let plateUnitPrice = null
+            let requesterName: string | null = op.requesterName || null
+            let kioskUnitPrice: number | null = null
+            let plateUnitPrice: number | null = null
             let taxIncluded = false
-            let orderRequestDate = null
+            let orderRequestDate: string | null = null
             let plateCount = 0
+            let savedItems: Array<{
+                corporationId?: string
+                corporationName?: string
+                branchId?: string
+                branchName?: string
+                brandName?: string
+                postalCode?: string
+                address?: string
+                contact?: string
+                acquisition?: string
+                leaseCompanyId?: string
+                kioskCount?: number
+                plateCount?: number
+                desiredDeliveryDate?: string
+            }> | null = null
 
             if (op.step1Notes) {
-                const requesterMatch = op.step1Notes.match(/의뢰자:\s*(.+?)(?:\n|$)/)
-                if (requesterMatch) requesterName = requesterMatch[1].trim()
+                // 먼저 JSON 형식인지 확인
+                try {
+                    const parsed = JSON.parse(op.step1Notes)
+                    if (parsed && typeof parsed === 'object') {
+                        // JSON 형식으로 저장된 경우
+                        kioskUnitPrice = parsed.kioskUnitPrice || null
+                        plateUnitPrice = parsed.plateUnitPrice || null
+                        plateCount = parsed.totalPlateCount || 0
+                        orderRequestDate = parsed.orderRequestDate || null
+                        savedItems = parsed.items || null
+                        if (parsed.notes && typeof parsed.notes === 'string') {
+                            taxIncluded = parsed.notes.includes('세금포함')
+                        }
+                    }
+                } catch {
+                    // JSON 파싱 실패 시 기존 텍스트 형식으로 파싱
+                    const requesterMatch = op.step1Notes.match(/의뢰자:\s*(.+?)(?:\n|$)/)
+                    if (requesterMatch) requesterName = requesterMatch[1].trim()
 
-                const kioskPriceMatch = op.step1Notes.match(/키오스크단가:\s*([\d,]+)/)
-                if (kioskPriceMatch) kioskUnitPrice = parseInt(kioskPriceMatch[1].replace(/,/g, ''))
+                    const kioskPriceMatch = op.step1Notes.match(/키오스크단가:\s*([\d,]+)/)
+                    if (kioskPriceMatch) kioskUnitPrice = parseInt(kioskPriceMatch[1].replace(/,/g, ''))
 
-                const platePriceMatch = op.step1Notes.match(/철판단가:\s*([\d,]+)/)
-                if (platePriceMatch) plateUnitPrice = parseInt(platePriceMatch[1].replace(/,/g, ''))
+                    const platePriceMatch = op.step1Notes.match(/철판단가:\s*([\d,]+)/)
+                    if (platePriceMatch) plateUnitPrice = parseInt(platePriceMatch[1].replace(/,/g, ''))
 
-                const plateCountMatch = op.step1Notes.match(/철판수량:\s*(\d+)/)
-                if (plateCountMatch) plateCount = parseInt(plateCountMatch[1])
+                    const plateCountMatch = op.step1Notes.match(/철판수량:\s*(\d+)/)
+                    if (plateCountMatch) plateCount = parseInt(plateCountMatch[1])
 
-                const orderDateMatch = op.step1Notes.match(/발주의뢰일:\s*(.+?)(?:\n|$)/)
-                if (orderDateMatch) orderRequestDate = orderDateMatch[1].trim()
+                    const orderDateMatch = op.step1Notes.match(/발주의뢰일:\s*(.+?)(?:\n|$)/)
+                    if (orderDateMatch) orderRequestDate = orderDateMatch[1].trim()
 
-                taxIncluded = op.step1Notes.includes('세금포함')
+                    taxIncluded = op.step1Notes.includes('세금포함')
+                }
             }
 
             // 총 금액 계산
@@ -66,8 +98,8 @@ export async function GET() {
             const plateTotal = (plateUnitPrice || 0) * plateCount
             const totalAmount = kioskTotal + plateTotal || null
 
-            // 복수 업체 정보를 위해 지점별로 그룹핑
-            const itemsMap = new Map<string, {
+            // items 결정: 저장된 items가 있으면 사용, 없으면 Kiosk에서 추출
+            let items: Array<{
                 corporationId: string | null
                 corporationName: string | null
                 corporationNameJa: string | null
@@ -75,33 +107,76 @@ export async function GET() {
                 branchName: string | null
                 branchNameJa: string | null
                 brandName: string | null
+                postalCode?: string | null
+                address?: string | null
+                contact?: string | null
                 acquisition: string
+                leaseCompanyId?: string | null
+                desiredDeliveryDate?: string | null
                 kioskCount: number
                 plateCount: number
-            }>()
+            }>
 
-            kiosks.forEach(kiosk => {
-                const branchId = kiosk.branchId || 'unknown'
-                const existing = itemsMap.get(branchId)
-                if (existing) {
-                    existing.kioskCount += 1
-                } else {
-                    itemsMap.set(branchId, {
-                        corporationId: kiosk.branch?.corporationId || null,
-                        corporationName: kiosk.branch?.corporation?.name || null,
-                        corporationNameJa: kiosk.branch?.corporation?.nameJa || null,
-                        branchId: kiosk.branchId,
-                        branchName: kiosk.branch?.name || null,
-                        branchNameJa: kiosk.branch?.nameJa || null,
-                        brandName: kiosk.brandName || kiosk.branch?.corporation?.fc?.name || null,
-                        acquisition: kiosk.acquisition || 'FREE',
-                        kioskCount: 1,
-                        plateCount: 0  // 철판은 전체 합계로만 관리
-                    })
-                }
-            })
+            if (savedItems && savedItems.length > 0) {
+                // JSON에서 저장된 items 사용
+                items = savedItems.map(item => ({
+                    corporationId: item.corporationId || null,
+                    corporationName: item.corporationName || null,
+                    corporationNameJa: null,
+                    branchId: item.branchId || null,
+                    branchName: item.branchName || null,
+                    branchNameJa: null,
+                    brandName: item.brandName || null,
+                    postalCode: item.postalCode || null,
+                    address: item.address || null,
+                    contact: item.contact || null,
+                    acquisition: item.acquisition || 'FREE',
+                    leaseCompanyId: item.leaseCompanyId || null,
+                    desiredDeliveryDate: item.desiredDeliveryDate || null,
+                    kioskCount: item.kioskCount || 1,
+                    plateCount: item.plateCount || 0
+                }))
+            } else {
+                // 기존 방식: Kiosk에서 지점별로 그룹핑
+                const itemsMap = new Map<string, {
+                    corporationId: string | null
+                    corporationName: string | null
+                    corporationNameJa: string | null
+                    branchId: string | null
+                    branchName: string | null
+                    branchNameJa: string | null
+                    brandName: string | null
+                    acquisition: string
+                    kioskCount: number
+                    plateCount: number
+                }>()
 
-            const items = Array.from(itemsMap.values())
+                kiosks.forEach(kiosk => {
+                    const branchId = kiosk.branchId || 'unknown'
+                    const existing = itemsMap.get(branchId)
+                    if (existing) {
+                        existing.kioskCount += 1
+                    } else {
+                        itemsMap.set(branchId, {
+                            corporationId: kiosk.branch?.corporationId || null,
+                            corporationName: kiosk.branch?.corporation?.name || null,
+                            corporationNameJa: kiosk.branch?.corporation?.nameJa || null,
+                            branchId: kiosk.branchId,
+                            branchName: kiosk.branch?.name || null,
+                            branchNameJa: kiosk.branch?.nameJa || null,
+                            brandName: kiosk.brandName || kiosk.branch?.corporation?.fc?.name || null,
+                            acquisition: kiosk.acquisition || 'FREE',
+                            kioskCount: 1,
+                            plateCount: 0
+                        })
+                    }
+                })
+
+                items = Array.from(itemsMap.values())
+            }
+
+            // 첫 번째 항목 정보 (items에서 가져오거나 kiosk에서 가져옴)
+            const firstItem = items[0] || null
 
             return {
                 id: op.id,
@@ -113,26 +188,29 @@ export async function GET() {
                 taxIncluded,
                 totalAmount,
                 orderRequestDate: orderRequestDate || op.createdAt,
-                // 납품항목 정보 (첫 번째 항목 - 기존 호환)
-                corporationId: firstKiosk?.branch?.corporationId || null,
-                corporationName: firstKiosk?.branch?.corporation?.name || null,
-                corporationNameJa: firstKiosk?.branch?.corporation?.nameJa || null,
-                branchId: firstKiosk?.branchId || null,
-                branchName: firstKiosk?.branch?.name || null,
-                branchNameJa: firstKiosk?.branch?.nameJa || null,
-                brandName: firstKiosk?.brandName || firstKiosk?.branch?.corporation?.fc?.name || null,
+                // 납품항목 정보 (첫 번째 항목) - items에서 우선 가져옴
+                corporationId: firstItem?.corporationId || firstKiosk?.branch?.corporationId || null,
+                corporationName: firstItem?.corporationName || firstKiosk?.branch?.corporation?.name || null,
+                corporationNameJa: firstItem?.corporationNameJa || firstKiosk?.branch?.corporation?.nameJa || null,
+                branchId: firstItem?.branchId || firstKiosk?.branchId || null,
+                branchName: firstItem?.branchName || firstKiosk?.branch?.name || null,
+                branchNameJa: firstItem?.branchNameJa || firstKiosk?.branch?.nameJa || null,
+                brandName: firstItem?.brandName || firstKiosk?.brandName || firstKiosk?.branch?.corporation?.fc?.name || null,
+                postalCode: firstItem?.postalCode || null,
+                address: firstItem?.address || null,
+                contact: firstItem?.contact || null,
                 quantity: op.quantity || kiosks.length,
                 kioskCount: op.quantity || kiosks.length,
                 plateCount,
-                acquisition: firstKiosk?.acquisition || op.acquisition || 'FREE',
-                leaseCompanyId: op.leaseCompanyId,
-                desiredDeliveryDate: op.desiredDeliveryDate,
+                acquisition: firstItem?.acquisition || firstKiosk?.acquisition || op.acquisition || 'FREE',
+                leaseCompanyId: firstItem?.leaseCompanyId || op.leaseCompanyId,
+                desiredDeliveryDate: firstItem?.desiredDeliveryDate || op.desiredDeliveryDate,
                 status: op.status,
                 memo: op.step1Notes,
                 createdAt: op.createdAt,
                 updatedAt: op.updatedAt,
-                // 복수 업체 정보
-                items: items.length > 1 ? items : null,
+                // 복수 업체 정보 (항상 items 반환)
+                items: items.length > 0 ? items : null,
                 itemCount: items.length
             }
         }))

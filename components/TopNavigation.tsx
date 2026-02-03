@@ -60,15 +60,26 @@ export function TopNavigation({
     const pathname = usePathname()
     const router = useRouter()
 
-    // localStorage에서 탭 상태 복원
+    // 새 브라우저 세션마다 탭 초기화
+    // sessionStorage는 브라우저/탭 닫으면 삭제됨 -> 새 세션 감지용
     useEffect(() => {
-        const savedTabs = localStorage.getItem('nav-open-tabs')
-        if (savedTabs) {
-            try {
-                const parsed = JSON.parse(savedTabs)
-                setOpenTabs(parsed)
-            } catch {
-                setOpenTabs([])
+        const sessionMarker = sessionStorage.getItem('kiosk-session-active')
+
+        if (!sessionMarker) {
+            // 새 세션 시작 - 탭 초기화하고 홈(대시보드)으로
+            localStorage.removeItem('nav-open-tabs')
+            sessionStorage.setItem('kiosk-session-active', Date.now().toString())
+            setOpenTabs([])
+        } else {
+            // 기존 세션 - 탭 복원
+            const savedTabs = localStorage.getItem('nav-open-tabs')
+            if (savedTabs) {
+                try {
+                    const parsed = JSON.parse(savedTabs)
+                    setOpenTabs(parsed)
+                } catch {
+                    setOpenTabs([])
+                }
             }
         }
     }, [])
@@ -436,39 +447,47 @@ export function TopNavigation({
                 </>
             )}
 
-            {/* Tab Bar */}
+            {/* Tab Bar - 메뉴바와 연결된 느낌의 탭 */}
             <div
-                className="bg-light border-bottom"
+                className="tab-bar-container"
                 style={{
                     position: 'fixed',
                     top: '48px',
                     left: 0,
                     right: 0,
                     zIndex: 1000,
-                    height: '38px',
+                    height: '40px',
                     display: 'flex',
                     alignItems: 'end',
-                    paddingLeft: '8px',
-                    backgroundColor: '#e9ecef',
+                    paddingLeft: '12px',
+                    paddingRight: '12px',
+                    background: 'linear-gradient(to bottom, #343a40 0%, #495057 100%)',
+                    borderBottom: '3px solid #206bc4',
                     overflowX: 'auto',
                     overflowY: 'hidden',
                     WebkitOverflowScrolling: 'touch',
                     scrollbarWidth: 'none',
-                    msOverflowStyle: 'none'
+                    msOverflowStyle: 'none',
+                    gap: '2px'
                 }}
             >
                 {/* Home Tab - Always visible */}
                 <Link
                     href="/dashboard"
-                    className={`d-flex align-items-center gap-2 px-3 py-2 text-decoration-none border-top border-start border-end rounded-top ${pathname === '/dashboard' ? 'bg-white text-dark' : 'bg-light text-muted'}`}
+                    className="d-flex align-items-center gap-2 px-3 text-decoration-none"
                     style={{
                         fontSize: '0.85rem',
-                        marginRight: '2px',
-                        marginBottom: pathname === '/dashboard' ? '-1px' : '0',
-                        borderColor: pathname === '/dashboard' ? '#dee2e6' : 'transparent'
+                        height: '34px',
+                        marginBottom: '-3px',
+                        borderRadius: '6px 6px 0 0',
+                        backgroundColor: pathname === '/dashboard' ? '#fff' : 'transparent',
+                        color: pathname === '/dashboard' ? '#206bc4' : 'rgba(255,255,255,0.8)',
+                        fontWeight: pathname === '/dashboard' ? 600 : 400,
+                        borderBottom: pathname === '/dashboard' ? '3px solid #fff' : 'none',
+                        transition: 'all 0.15s ease'
                     }}
                 >
-                    <i className="ti ti-home" style={{ fontSize: '0.9rem' }}></i>
+                    <i className="ti ti-home" style={{ fontSize: '1rem' }}></i>
                     <span>{tabHomeLabel}</span>
                 </Link>
 
@@ -476,33 +495,52 @@ export function TopNavigation({
                 {openTabs.map(tab => {
                     const menuItem = getMenuItemByHref(tab.href)
                     if (!menuItem) return null
+                    const isActive = pathname === tab.href
                     return (
                         <div
                             key={tab.href}
-                            className={`d-flex align-items-center gap-2 px-3 py-2 text-decoration-none border-top border-start border-end rounded-top ${pathname === tab.href ? 'bg-white text-dark' : 'bg-light text-muted'}`}
+                            className="d-flex align-items-center gap-2 px-3"
                             style={{
                                 fontSize: '0.85rem',
-                                marginRight: '2px',
-                                marginBottom: pathname === tab.href ? '-1px' : '0',
-                                borderColor: pathname === tab.href ? '#dee2e6' : 'transparent',
+                                height: '34px',
+                                marginBottom: '-3px',
+                                borderRadius: '6px 6px 0 0',
+                                backgroundColor: isActive ? '#fff' : 'transparent',
+                                color: isActive ? '#206bc4' : 'rgba(255,255,255,0.8)',
+                                fontWeight: isActive ? 600 : 400,
+                                borderBottom: isActive ? '3px solid #fff' : 'none',
                                 cursor: 'pointer',
-                                maxWidth: '180px'
+                                maxWidth: '200px',
+                                transition: 'all 0.15s ease'
                             }}
                             onClick={() => router.push(tab.href)}
                         >
-                            <i className={`ti ${menuItem.icon || 'ti-file'}`} style={{ fontSize: '0.9rem', flexShrink: 0 }}></i>
+                            <i className={`ti ${menuItem.icon || 'ti-file'}`} style={{ fontSize: '0.95rem', flexShrink: 0 }}></i>
                             <span className="text-truncate">{menuItem.label}</span>
                             <button
-                                className="btn btn-ghost-secondary p-0 ms-1 d-flex align-items-center justify-content-center"
+                                className="d-flex align-items-center justify-content-center p-0 ms-1"
                                 style={{
                                     width: '18px',
                                     height: '18px',
                                     borderRadius: '50%',
-                                    flexShrink: 0
+                                    flexShrink: 0,
+                                    border: 'none',
+                                    backgroundColor: isActive ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.2)',
+                                    color: isActive ? '#666' : 'rgba(255,255,255,0.8)',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s ease'
                                 }}
                                 onClick={(e) => removeTab(tab.href, e)}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = isActive ? 'rgba(220,53,69,0.2)' : 'rgba(220,53,69,0.5)'
+                                    e.currentTarget.style.color = isActive ? '#dc3545' : '#fff'
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = isActive ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.2)'
+                                    e.currentTarget.style.color = isActive ? '#666' : 'rgba(255,255,255,0.8)'
+                                }}
                             >
-                                <i className="ti ti-x" style={{ fontSize: '0.7rem' }}></i>
+                                <i className="ti ti-x" style={{ fontSize: '0.65rem' }}></i>
                             </button>
                         </div>
                     )
@@ -512,19 +550,28 @@ export function TopNavigation({
             {/* Spacer for content */}
             <style jsx global>{`
                 .main-content-tabs {
-                    padding-top: 86px !important;
+                    padding-top: 91px !important;
                     min-height: 100vh;
                     background-color: #f4f6fa;
                 }
                 /* Hide scrollbar for tab bar */
-                .bg-light.border-bottom::-webkit-scrollbar {
+                .tab-bar-container::-webkit-scrollbar {
                     display: none;
+                }
+                /* Tab hover effect */
+                .tab-bar-container > a:hover,
+                .tab-bar-container > div:hover {
+                    background-color: rgba(255,255,255,0.15) !important;
+                }
+                .tab-bar-container > a[style*="background-color: rgb(255, 255, 255)"]:hover,
+                .tab-bar-container > div[style*="background-color: rgb(255, 255, 255)"]:hover {
+                    background-color: #fff !important;
                 }
                 @media print {
                     .main-content-tabs {
                         padding-top: 0 !important;
                     }
-                    header, .tab-bar {
+                    header, .tab-bar-container {
                         display: none !important;
                     }
                 }

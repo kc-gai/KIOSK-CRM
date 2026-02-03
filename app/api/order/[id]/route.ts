@@ -115,26 +115,52 @@ export async function GET(
             contact: string | null
             acquisition: string
             leaseCompanyId?: string | null
+            leaseCompanyName?: string | null
+            desiredDeliveryDate?: string | null
             kioskCount: number
             plateCount: number
         }>
 
+        // 리스회사 정보 조회
+        const leaseCompanies = await prisma.leaseCompany.findMany({
+            select: { id: true, name: true, nameJa: true }
+        })
+        const leaseCompanyMap = new Map(leaseCompanies.map(lc => [lc.id, lc.nameJa || lc.name]))
+
+        // 법인 정보 조회 (일본어 이름 포함)
+        const corporations = await prisma.corporation.findMany({
+            select: { id: true, name: true, nameJa: true }
+        })
+        const corporationMap = new Map(corporations.map(c => [c.id, { name: c.name, nameJa: c.nameJa }]))
+
+        // 지점 정보 조회 (일본어 이름 포함)
+        const branches = await prisma.branch.findMany({
+            select: { id: true, name: true, nameJa: true }
+        })
+        const branchMap = new Map(branches.map(b => [b.id, { name: b.name, nameJa: b.nameJa }]))
+
         if (savedItems && savedItems.length > 0) {
-            // JSON에서 저장된 items 사용
-            items = savedItems.map(item => ({
-                corporationId: item.corporationId || null,
-                corporationName: item.corporationName || null,
-                branchId: item.branchId || null,
-                branchName: item.branchName || null,
-                brandName: item.brandName || null,
-                postalCode: item.postalCode || null,
-                address: item.address || null,
-                contact: item.contact || null,
-                acquisition: item.acquisition || 'FREE',
-                leaseCompanyId: item.leaseCompanyId || null,
-                kioskCount: item.kioskCount || 1,
-                plateCount: item.plateCount || 0
-            }))
+            // JSON에서 저장된 items 사용 - DB에서 일본어 이름 조회
+            items = savedItems.map(item => {
+                const corpInfo = item.corporationId ? corporationMap.get(item.corporationId) : null
+                const branchInfo = item.branchId ? branchMap.get(item.branchId) : null
+                return {
+                    corporationId: item.corporationId || null,
+                    corporationName: corpInfo?.nameJa || corpInfo?.name || item.corporationName || null,
+                    branchId: item.branchId || null,
+                    branchName: branchInfo?.nameJa || branchInfo?.name || item.branchName || null,
+                    brandName: item.brandName || null,
+                    postalCode: item.postalCode || null,
+                    address: item.address || null,
+                    contact: item.contact || null,
+                    acquisition: item.acquisition || 'FREE',
+                    leaseCompanyId: item.leaseCompanyId || null,
+                    leaseCompanyName: item.leaseCompanyId ? leaseCompanyMap.get(item.leaseCompanyId) || null : null,
+                    desiredDeliveryDate: (item as { desiredDeliveryDate?: string }).desiredDeliveryDate || null,
+                    kioskCount: item.kioskCount || 1,
+                    plateCount: item.plateCount || 0
+                }
+            })
         } else {
             // 기존 방식: Kiosk에서 지점별로 그룹핑
             const itemsMap = new Map<string, {
@@ -157,11 +183,13 @@ export async function GET(
                 if (existing) {
                     existing.kioskCount += 1
                 } else {
+                    const corpInfo = kiosk.branch?.corporationId ? corporationMap.get(kiosk.branch.corporationId) : null
+                    const branchInfo = kiosk.branchId ? branchMap.get(kiosk.branchId) : null
                     itemsMap.set(branchId, {
                         corporationId: kiosk.branch?.corporationId || null,
-                        corporationName: kiosk.branch?.corporation?.name || null,
+                        corporationName: corpInfo?.nameJa || corpInfo?.name || kiosk.branch?.corporation?.name || null,
                         branchId: kiosk.branchId,
-                        branchName: kiosk.branch?.name || null,
+                        branchName: branchInfo?.nameJa || branchInfo?.name || kiosk.branch?.name || null,
                         brandName: kiosk.brandName || kiosk.branch?.corporation?.fc?.name || null,
                         postalCode: kiosk.branch?.postalCode || null,
                         address: kiosk.branch?.address || null,

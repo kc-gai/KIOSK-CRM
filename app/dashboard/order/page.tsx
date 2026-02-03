@@ -736,10 +736,16 @@ export default function OrderPage() {
         setEditingOrderId(order.id)
 
         // 기본 정보 로드
+        // orderRequestDate가 ISO 타임스탬프면 YYYYMMDD 형식으로 변환
+        let formattedOrderDate = order.orderRequestDate || ''
+        if (formattedOrderDate && formattedOrderDate.includes('T')) {
+            formattedOrderDate = formattedOrderDate.split('T')[0].replace(/-/g, '')
+        }
+
         setFormData({
             title: order.title || 'キオスク端末＆決済端末の鉄板・金具',
-            requesterName: order.requesterName || '',
-            orderRequestDate: order.orderRequestDate || '',
+            requesterName: order.requesterName || session?.user?.name || '',
+            orderRequestDate: formattedOrderDate,
             kioskUnitPrice: order.kioskUnitPrice || 240000,
             plateUnitPrice: order.plateUnitPrice || 5000,
             notes: order.notes || ''

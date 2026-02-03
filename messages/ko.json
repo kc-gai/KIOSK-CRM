@@ -613,7 +613,14 @@
         "managerPhone": "담당자 연락처",
         "autoDetected": "자동 감지됨",
         "noBranches": "등록된 지점이 없습니다",
-        "kioskCount": "키오스크 수"
+        "kioskCount": "키오스크 수",
+        "stats": {
+            "free": "무상",
+            "leaseFree": "리스",
+            "paid": "유상",
+            "rental": "렌탈",
+            "repair": "수리"
+        }
     },
     "sales": {
         "title": "키오스크 판매 현황",
@@ -906,7 +913,20 @@
         "csvLease": "리스",
         "csvTotalOrders": "총 발주",
         "csvTotalDeliveries": "총 납품",
-        "csvCompletedDeliveries": "완료 납품"
+        "csvCompletedDeliveries": "완료 납품",
+        "monthlyKioskSalesCount": "월별 키오스크 판매 현황 (대수)",
+        "monthlyKioskSalesAmount": "월별 키오스크 판매 현황 (매출, 만엔, 세금제외)",
+        "free": "무상",
+        "freeToPaid": "무상→유상",
+        "paid": "유상",
+        "lease": "리스",
+        "rental": "렌탈",
+        "total": "합계",
+        "totalSales": "총계",
+        "paidSales": "유상 매출",
+        "freeToPaidSales": "무상→유상 매출",
+        "cumulativeSales": "누적 매출",
+        "manYen": "만엔"
     },
     "pricing": {
         "title": "매출 관리",
@@ -1099,7 +1119,9 @@
         "selectBranch": "기존 거래처 선택",
         "directInput": "직접 입력",
         "independentCorp": "독립법인",
-        "locationName": "납품장소",
+        "corporationName": "법인명",
+        "locationName": "점포명",
+        "itemDeliveryDate": "납기희망일",
         "locationPlaceholder": "",
         "postalCode": "우편번호",
         "postalCodePlaceholder": "",

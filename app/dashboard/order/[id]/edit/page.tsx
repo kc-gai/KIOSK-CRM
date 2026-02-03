@@ -29,11 +29,35 @@ type OrderData = {
     updatedAt: string
 }
 
+// memo 필드에서 실제 비고 내용만 추출
+const parseNotes = (memo: string | null): string => {
+    if (!memo) return ''
+    try {
+        const parsed = JSON.parse(memo)
+        return parsed.notes || ''
+    } catch {
+        return memo
+    }
+}
+
+// 비고 내용을 업데이트한 memo JSON 생성
+const updateNotesInMemo = (originalMemo: string | null, newNotes: string): string => {
+    if (!originalMemo) return newNotes
+    try {
+        const parsed = JSON.parse(originalMemo)
+        parsed.notes = newNotes
+        return JSON.stringify(parsed)
+    } catch {
+        return newNotes
+    }
+}
+
 export default function OrderEditPage() {
     const params = useParams()
     const router = useRouter()
     const locale = useLocale()
     const [order, setOrder] = useState<OrderData | null>(null)
+    const [originalMemo, setOriginalMemo] = useState<string | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
 
@@ -42,7 +66,7 @@ export default function OrderEditPage() {
         title: '',
         status: '',
         desiredDeliveryDate: '',
-        memo: ''
+        memo: ''  // 실제 비고 텍스트만 저장
     })
 
     useEffect(() => {
@@ -52,11 +76,12 @@ export default function OrderEditPage() {
                 if (res.ok) {
                     const data = await res.json()
                     setOrder(data)
+                    setOriginalMemo(data.memo)  // 원본 memo JSON 저장
                     setFormData({
                         title: data.title || '',
                         status: data.status || 'PENDING',
                         desiredDeliveryDate: data.desiredDeliveryDate ? new Date(data.desiredDeliveryDate).toISOString().split('T')[0] : '',
-                        memo: data.memo || ''
+                        memo: parseNotes(data.memo)  // JSON에서 notes만 추출
                     })
                 } else {
                     console.error('Order not found')
@@ -82,7 +107,7 @@ export default function OrderEditPage() {
                     title: formData.title,
                     status: formData.status,
                     desiredDeliveryDate: formData.desiredDeliveryDate || null,
-                    memo: formData.memo
+                    memo: updateNotesInMemo(originalMemo, formData.memo)  // JSON에 notes 업데이트
                 })
             })
 

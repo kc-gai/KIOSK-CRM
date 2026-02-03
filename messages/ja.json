@@ -612,7 +612,14 @@
         "managerPhone": "担当者連絡先",
         "autoDetected": "自動検出",
         "noBranches": "登録された店舗がありません",
-        "kioskCount": "キオスク数"
+        "kioskCount": "キオスク数",
+        "stats": {
+            "free": "無償",
+            "leaseFree": "リース",
+            "paid": "有償",
+            "rental": "レンタル",
+            "repair": "修理"
+        }
     },
     "sales": {
         "title": "キオスク販売状況",
@@ -905,7 +912,20 @@
         "csvLease": "リース",
         "csvTotalOrders": "総発注",
         "csvTotalDeliveries": "総納品",
-        "csvCompletedDeliveries": "完了納品"
+        "csvCompletedDeliveries": "完了納品",
+        "monthlyKioskSalesCount": "月別キオスク販売状況（台数）",
+        "monthlyKioskSalesAmount": "月別キオスク販売状況（売上、万円、税抜）",
+        "free": "無償",
+        "freeToPaid": "無償→有償",
+        "paid": "有償",
+        "lease": "リース",
+        "rental": "レンタル",
+        "total": "合計",
+        "totalSales": "総計",
+        "paidSales": "有償売上",
+        "freeToPaidSales": "無償→有償売上",
+        "cumulativeSales": "累計売上",
+        "manYen": "万円"
     },
     "pricing": {
         "title": "売上管理",
@@ -1098,7 +1118,9 @@
         "selectBranch": "既存取引先選択",
         "directInput": "直接入力",
         "independentCorp": "独立法人",
-        "locationName": "納品場所",
+        "corporationName": "法人名",
+        "locationName": "店舗名",
+        "itemDeliveryDate": "納期希望日",
         "locationPlaceholder": "",
         "postalCode": "郵便番号",
         "postalCodePlaceholder": "",

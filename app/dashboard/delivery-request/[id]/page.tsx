@@ -15,6 +15,23 @@ interface DeliveryRequestItem {
     plateCount: number
     itemNotes: string | null
     sortOrder: number
+    branchId?: string | null
+}
+
+// notes에 저장된 JSON에서 파싱되는 아이템 타입
+interface ParsedItem {
+    id?: number
+    corporationId?: string
+    branchId?: string
+    brandName?: string
+    postalCode?: string
+    address?: string
+    contact?: string
+    kioskCount?: number
+    plateCount?: number
+    acquisition?: string
+    leaseCompanyId?: string
+    desiredDeliveryDate?: string
 }
 
 interface DeliveryRequest {
@@ -126,6 +143,29 @@ export default function DeliveryRequestDetailPage({ params }: { params: Promise<
         return new Intl.NumberFormat('ja-JP').format(amount)
     }
 
+    // notes 필드에서 JSON 파싱 시도
+    const parseNotesData = (notes: string | null): { actualNotes: string; parsedItems: ParsedItem[] } => {
+        if (!notes) return { actualNotes: '', parsedItems: [] }
+
+        try {
+            const parsed = JSON.parse(notes)
+            return {
+                actualNotes: parsed.notes || '',
+                parsedItems: parsed.items || []
+            }
+        } catch {
+            // JSON이 아닌 경우 일반 텍스트로 처리
+            return { actualNotes: notes, parsedItems: [] }
+        }
+    }
+
+    const { actualNotes, parsedItems } = request ? parseNotesData(request.notes) : { actualNotes: '', parsedItems: [] }
+
+    // 아이템별로 파싱된 데이터 매핑
+    const getItemExtras = (index: number): ParsedItem | null => {
+        return parsedItems[index] || null
+    }
+
     if (loading) {
         return (
             <div className="container-xl">
@@ -210,7 +250,7 @@ export default function DeliveryRequestDetailPage({ params }: { params: Promise<
                                 </tr>
                                 <tr>
                                     <th className="bg-light">{t('status')}</th>
-                                    <td>
+                                    <td colSpan={3}>
                                         {getStatusBadge(request.status)}
                                         <div className="dropdown d-inline-block ms-2 d-print-none">
                                             <button className="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
@@ -235,8 +275,6 @@ export default function DeliveryRequestDetailPage({ params }: { params: Promise<
                                             </div>
                                         </div>
                                     </td>
-                                    <th className="bg-light">{t('desiredDeliveryDate')}</th>
-                                    <td>{request.desiredDeliveryWeek || formatDate(request.desiredDeliveryDate)}</td>
                                     <th className="bg-light">{t('unitPrice')}</th>
                                     <td>
                                         {formatCurrency(request.unitPrice)} {t('yen')}
@@ -261,32 +299,40 @@ export default function DeliveryRequestDetailPage({ params }: { params: Promise<
                                 <thead className="bg-light">
                                     <tr>
                                         <th className="text-center" style={{ width: '40px' }}>No</th>
+                                        <th>{t('corporationName')}</th>
                                         <th>{t('locationName')}</th>
-                                        <th style={{ width: '120px' }}>{t('postalCode')}</th>
+                                        <th style={{ width: '100px' }}>{t('postalCode')}</th>
                                         <th>{t('address')}</th>
-                                        <th style={{ width: '120px' }}>{t('contactPhone')}</th>
-                                        <th className="text-center" style={{ width: '80px' }}>{t('kioskCount')}</th>
-                                        <th className="text-center" style={{ width: '80px' }}>{t('plateCount')}</th>
+                                        <th style={{ width: '100px' }}>{t('contactPhone')}</th>
+                                        <th className="text-center" style={{ width: '70px' }}>{t('kioskCount')}</th>
+                                        <th className="text-center" style={{ width: '70px' }}>{t('plateCount')}</th>
+                                        <th style={{ width: '100px' }}>{t('itemDeliveryDate')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {request.items.map((item, index) => (
-                                        <tr key={item.id}>
-                                            <td className="text-center">{index + 1}</td>
-                                            <td>{item.locationName}</td>
-                                            <td>{item.postalCode || '-'}</td>
-                                            <td>{item.address}</td>
-                                            <td>{item.contactPhone || '-'}</td>
-                                            <td className="text-center">{item.kioskCount}</td>
-                                            <td className="text-center">{item.plateCount}</td>
-                                        </tr>
-                                    ))}
+                                    {request.items.map((item, index) => {
+                                        const extras = getItemExtras(index)
+                                        return (
+                                            <tr key={item.id}>
+                                                <td className="text-center">{index + 1}</td>
+                                                <td>{extras?.brandName || '-'}</td>
+                                                <td>{item.locationName}</td>
+                                                <td>{item.postalCode || '-'}</td>
+                                                <td>{item.address}</td>
+                                                <td>{item.contactPhone || '-'}</td>
+                                                <td className="text-center">{item.kioskCount}</td>
+                                                <td className="text-center">{item.plateCount}</td>
+                                                <td>{extras?.desiredDeliveryDate || '-'}</td>
+                                            </tr>
+                                        )
+                                    })}
                                 </tbody>
                                 <tfoot className="bg-light">
                                     <tr>
-                                        <th colSpan={5} className="text-end">合計</th>
+                                        <th colSpan={6} className="text-end">合計</th>
                                         <th className="text-center">{request.totalKioskCount}</th>
                                         <th className="text-center">{request.totalPlateCount}</th>
+                                        <th></th>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -312,13 +358,13 @@ export default function DeliveryRequestDetailPage({ params }: { params: Promise<
                     </div>
 
                     {/* Notes */}
-                    {request.notes && (
+                    {actualNotes && (
                         <div className="mb-4">
                             <table className="table table-bordered mb-0">
                                 <tbody>
                                     <tr>
                                         <th className="bg-light" style={{ width: '120px' }}>{t('notes')}</th>
-                                        <td style={{ whiteSpace: 'pre-wrap' }}>{request.notes}</td>
+                                        <td style={{ whiteSpace: 'pre-wrap' }}>{actualNotes}</td>
                                     </tr>
                                 </tbody>
                             </table>

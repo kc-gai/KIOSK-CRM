@@ -17,6 +17,9 @@ type DeliveryItem = {
     acquisition: string
     kioskCount: number
     plateCount: number
+    desiredDeliveryDate?: string | null
+    leaseCompanyId?: string | null
+    leaseCompanyName?: string | null
 }
 
 type OrderData = {
@@ -50,6 +53,36 @@ type OrderData = {
     items: DeliveryItem[] | null
 }
 
+// memo 필드에서 실제 비고 내용만 추출
+const parseNotes = (memo: string | null): string => {
+    if (!memo) return ''
+    try {
+        const parsed = JSON.parse(memo)
+        return parsed.notes || ''
+    } catch {
+        // JSON이 아니면 그대로 반환
+        return memo
+    }
+}
+
+// 날짜 문자열을 일본어 형식으로 변환 (YYYYMMDD 또는 ISO 형식 지원)
+const formatDateJa = (dateStr: string | null): string => {
+    if (!dateStr) return '-'
+
+    // YYYYMMDD 형식 (예: "20260122")
+    if (/^\d{8}$/.test(dateStr)) {
+        const year = dateStr.substring(0, 4)
+        const month = dateStr.substring(4, 6)
+        const day = dateStr.substring(6, 8)
+        return `${year}/${parseInt(month)}/${parseInt(day)}`
+    }
+
+    // ISO 형식 또는 기타 형식
+    const date = new Date(dateStr)
+    if (isNaN(date.getTime())) return '-'
+    return date.toLocaleDateString('ja-JP')
+}
+
 export default function OrderDetailPage() {
     const params = useParams()
     const router = useRouter()
@@ -76,15 +109,17 @@ export default function OrderDetailPage() {
         fetchOrder()
     }, [params.id])
 
+    // 일본어 고정
     const getAcquisitionLabel = (acquisition: string) => {
-        const map: Record<string, { ko: string, ja: string }> = {
-            'PAID': { ko: '유상판매', ja: '有償販売' },
-            'FREE': { ko: '무상제공', ja: '無償提供' },
-            'LEASE_FREE': { ko: '무상제공(리스)', ja: '無償提供(リース)' },
-            'RENTAL': { ko: '렌탈', ja: 'レンタル' }
+        const map: Record<string, string> = {
+            'PAID': '有償販売',
+            'PURCHASE': '有償販売',
+            'FREE': '無償提供',
+            'LEASE': 'リース',
+            'LEASE_FREE': '無償提供(リース)',
+            'RENTAL': 'レンタル'
         }
-        const label = map[acquisition] || { ko: acquisition, ja: acquisition }
-        return locale === 'ja' ? label.ja : label.ko
+        return map[acquisition] || acquisition
     }
 
     const getStatusInfo = (status: string) => {
@@ -197,13 +232,6 @@ export default function OrderDetailPage() {
                                 PDF {locale === 'ja' ? '出力' : '출력'}
                             </button>
                             <button
-                                className="btn btn-warning"
-                                onClick={() => router.push(`/dashboard/order/${order.id}/edit`)}
-                            >
-                                <i className="ti ti-edit me-1"></i>
-                                {locale === 'ja' ? '編集' : '편집'}
-                            </button>
-                            <button
                                 className="btn btn-danger"
                                 onClick={handleDelete}
                             >
@@ -217,143 +245,146 @@ export default function OrderDetailPage() {
 
             <div className="page-body">
                 {/* 납품 의뢰서 카드 */}
-                <div className="card" style={{ maxWidth: '900px', margin: '0 auto' }}>
-                    {/* 문서 제목 */}
+                <div className="card" style={{ margin: '0 auto' }}>
+                    {/* 문서 제목 - 일본어 고정 */}
                     <div className="card-body text-center py-4" style={{ borderBottom: '2px solid #e9ecef' }}>
                         <h1 className="mb-0" style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>
-                            {locale === 'ja' ? '納品依頼書' : '납품의뢰서'}
+                            納品依頼書
                         </h1>
                     </div>
 
                     <div className="card-body">
-                        {/* 기본 정보 테이블 */}
+                        {/* 기본 정보 테이블 - 일본어 고정 */}
                         <table className="table table-bordered mb-4" style={{ fontSize: '0.9rem' }}>
                             <tbody>
                                 <tr>
                                     <td className="bg-light fw-bold" style={{ width: '15%' }}>No</td>
                                     <td style={{ width: '35%' }}>{order.orderNumber.replace('ORD-', '')}</td>
-                                    <td className="bg-light fw-bold" style={{ width: '15%' }}>{locale === 'ja' ? '発注日' : '발주일'}</td>
+                                    <td className="bg-light fw-bold" style={{ width: '15%' }}>発注日</td>
                                     <td style={{ width: '35%' }}>
-                                        {order.orderRequestDate ? new Date(order.orderRequestDate).toLocaleDateString() : '-'}
+                                        {formatDateJa(order.orderRequestDate)}
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td className="bg-light fw-bold">{locale === 'ja' ? '納品依頼者' : '납품의뢰자'}</td>
+                                    <td className="bg-light fw-bold">納品依頼者</td>
                                     <td>{order.requesterName || '-'}</td>
-                                    <td className="bg-light fw-bold">{locale === 'ja' ? '納期希望日' : '납기희망일'}</td>
+                                    <td className="bg-light fw-bold">キオスク単価</td>
                                     <td>
-                                        {order.desiredDeliveryDate ? new Date(order.desiredDeliveryDate).toLocaleDateString() : '-'}
+                                        {(order.kioskUnitPrice || 0).toLocaleString()} 円
+                                        <span className="text-muted ms-1">(税抜)</span>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td className="bg-light fw-bold">{locale === 'ja' ? '状態' : '상태'}</td>
-                                    <td>
-                                        <span
-                                            className="badge px-2 py-1"
-                                            style={{
-                                                backgroundColor: statusInfo.bgColor,
-                                                color: statusInfo.color,
-                                                border: `1px solid ${statusInfo.color}`
-                                            }}
-                                        >
-                                            {locale === 'ja' ? statusInfo.labelJa : statusInfo.label}
-                                        </span>
-                                    </td>
-                                    <td className="bg-light fw-bold">{locale === 'ja' ? '単価' : '단가'}</td>
-                                    <td>
-                                        {(order.kioskUnitPrice || 0).toLocaleString()} {locale === 'ja' ? '円' : '엔'}
-                                        <span className="text-muted ms-1">({locale === 'ja' ? '税別' : '세금별도'})</span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="bg-light fw-bold">{locale === 'ja' ? '件名' : '건명'}</td>
+                                    <td className="bg-light fw-bold">件名</td>
                                     <td colSpan={3}>{order.title || '-'}</td>
                                 </tr>
                             </tbody>
                         </table>
 
-                        {/* 납품 항목 */}
+                        {/* 납품 항목 - 일본어 고정 */}
                         <h5 className="fw-bold mb-3">
                             <i className="ti ti-package me-2"></i>
-                            {locale === 'ja' ? '納品項目' : '납품 항목'}
+                            納品項目
                         </h5>
-                        <table className="table table-bordered mb-4" style={{ fontSize: '0.9rem' }}>
-                            <thead className="bg-light">
-                                <tr>
-                                    <th style={{ width: '40px' }}>NO</th>
-                                    <th>{locale === 'ja' ? '納品店舗' : '납품점포'}</th>
-                                    <th style={{ width: '100px' }}>{locale === 'ja' ? '郵便番号' : '우편번호'}</th>
-                                    <th>{locale === 'ja' ? '住所' : '주소'}</th>
-                                    <th style={{ width: '100px' }}>{locale === 'ja' ? '取得形態' : '취득형태'}</th>
-                                    <th style={{ width: '60px', textAlign: 'center' }}>{locale === 'ja' ? '台数' : '대수'}</th>
-                                    <th style={{ width: '60px', textAlign: 'center' }}>{locale === 'ja' ? '金具' : '금구'}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {deliveryItems.map((item, idx) => (
-                                    <tr key={idx}>
-                                        <td className="text-center">{idx + 1}</td>
-                                        <td>{item.branchName || item.corporationName || '-'}</td>
-                                        <td>{item.postalCode || '-'}</td>
-                                        <td>{item.address || '-'}</td>
-                                        <td>{item.acquisition ? getAcquisitionLabel(item.acquisition) : '-'}</td>
-                                        <td className="text-center">{item.kioskCount}</td>
-                                        <td className="text-center">{item.plateCount}</td>
+                        <div className="table-responsive">
+                            <table className="table table-bordered mb-4" style={{ fontSize: '0.8rem', tableLayout: 'fixed', width: '100%' }}>
+                                <thead className="bg-light">
+                                    <tr>
+                                        <th style={{ width: '30px', textAlign: 'center' }}>NO</th>
+                                        <th style={{ width: '110px' }}>法人名</th>
+                                        <th style={{ width: '70px' }}>支店名</th>
+                                        <th style={{ width: '60px' }}>ブランド名</th>
+                                        <th style={{ width: '250px' }}>住所</th>
+                                        <th style={{ width: '90px' }}>連絡先</th>
+                                        <th style={{ width: '75px' }}>取得形態</th>
+                                        <th style={{ width: '110px' }}>リース会社</th>
+                                        <th style={{ width: '70px' }}>納期希望日</th>
+                                        <th style={{ width: '45px', textAlign: 'center' }}>キオスク</th>
+                                        <th style={{ width: '35px', textAlign: 'center' }}>金具</th>
+                                        <th style={{ width: '70px', textAlign: 'right' }}>単価合計</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                            <tfoot>
-                                <tr className="bg-light fw-bold">
-                                    <td colSpan={5} className="text-end">{locale === 'ja' ? '合計' : '합계'}</td>
-                                    <td className="text-center">{order.kioskCount}</td>
-                                    <td className="text-center">{order.plateCount}</td>
-                                </tr>
-                            </tfoot>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {deliveryItems.map((item, idx) => {
+                                        const itemTotal = (order.kioskUnitPrice || 0) * item.kioskCount + (order.plateUnitPrice || 0) * item.plateCount
+                                        return (
+                                            <tr key={idx}>
+                                                <td className="text-center">{idx + 1}</td>
+                                                <td style={{ fontSize: '0.75rem' }}>{item.corporationName || '-'}</td>
+                                                <td style={{ fontSize: '0.75rem' }}>{item.branchName || '-'}</td>
+                                                <td style={{ fontSize: '0.75rem' }}>{item.brandName || '-'}</td>
+                                                <td style={{ fontSize: '0.7rem', wordBreak: 'break-all' }}>
+                                                    {item.postalCode && <span>〒{item.postalCode} </span>}
+                                                    {item.address || '-'}
+                                                </td>
+                                                <td style={{ fontSize: '0.75rem' }}>{item.contact || '-'}</td>
+                                                <td style={{ fontSize: '0.75rem' }}>{item.acquisition ? getAcquisitionLabel(item.acquisition) : '-'}</td>
+                                                <td style={{ fontSize: '0.7rem' }}>{item.leaseCompanyName || '-'}</td>
+                                                <td style={{ fontSize: '0.75rem' }}>{formatDateJa(item.desiredDeliveryDate)}</td>
+                                                <td className="text-center">{item.kioskCount}</td>
+                                                <td className="text-center">{item.plateCount}</td>
+                                                <td className="text-end">{itemTotal.toLocaleString()}</td>
+                                            </tr>
+                                        )
+                                    })}
+                                </tbody>
+                                <tfoot>
+                                    <tr className="bg-light fw-bold">
+                                        <td colSpan={9} className="text-end">合計</td>
+                                        <td className="text-center">{order.kioskCount}</td>
+                                        <td className="text-center">{order.plateCount}</td>
+                                        <td className="text-end">{subtotal.toLocaleString()}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
 
-                        {/* 총 금액 */}
+                        {/* 총 금액 - 일본어 고정 */}
                         <div className="d-flex justify-content-end mb-4">
                             <table className="table table-bordered" style={{ width: 'auto', minWidth: '300px', fontSize: '0.9rem' }}>
                                 <tbody>
                                     <tr>
                                         <td className="bg-light fw-bold text-end" style={{ width: '150px' }}>
-                                            {locale === 'ja' ? '総金額' : '총 금액'}
+                                            総金額
                                         </td>
                                         <td className="text-end" style={{ width: '150px' }}>
                                             <span className="fs-4 fw-bold text-primary">
                                                 {subtotal.toLocaleString()}
                                             </span>
-                                            <span className="ms-1">{locale === 'ja' ? '円' : '엔'}</span>
+                                            <span className="ms-1">円</span>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
 
-                        {/* 비고 */}
-                        {order.memo && (
-                            <>
-                                <h5 className="fw-bold mb-3">
-                                    <i className="ti ti-note me-2"></i>
-                                    {locale === 'ja' ? '備考' : '비고'}
-                                </h5>
-                                <div
-                                    className="border rounded p-3 mb-4"
-                                    style={{ whiteSpace: 'pre-wrap', backgroundColor: '#f8f9fa', fontSize: '0.9rem' }}
-                                >
-                                    {order.memo}
-                                </div>
-                            </>
-                        )}
+                        {/* 비고 - 일본어 고정 */}
+                        {(() => {
+                            const actualNotes = parseNotes(order.memo)
+                            return actualNotes ? (
+                                <>
+                                    <h5 className="fw-bold mb-3">
+                                        <i className="ti ti-note me-2"></i>
+                                        備考
+                                    </h5>
+                                    <div
+                                        className="border rounded p-3 mb-4"
+                                        style={{ whiteSpace: 'pre-wrap', backgroundColor: '#f8f9fa', fontSize: '0.9rem' }}
+                                    >
+                                        {actualNotes}
+                                    </div>
+                                </>
+                            ) : null
+                        })()}
 
-                        {/* 메타 정보 */}
+                        {/* 메타 정보 - 일본어 고정 */}
                         <div className="text-muted small border-top pt-3">
                             <div className="row">
                                 <div className="col-auto">
-                                    {locale === 'ja' ? '作成日時' : '생성일시'}: {new Date(order.createdAt).toLocaleString()}
+                                    作成日時: {new Date(order.createdAt).toLocaleString('ja-JP')}
                                 </div>
                                 <div className="col-auto">
-                                    {locale === 'ja' ? '更新日時' : '수정일시'}: {new Date(order.updatedAt).toLocaleString()}
+                                    更新日時: {new Date(order.updatedAt).toLocaleString('ja-JP')}
                                 </div>
                             </div>
                         </div>

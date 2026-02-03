@@ -2,7 +2,11 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
-import { TrendingUp, MapPin, Building2, Truck, Monitor, Calendar, Download, RefreshCw } from 'lucide-react'
+import { TrendingUp, MapPin, Truck, Monitor, Calendar, Download, RefreshCw, BarChart2, Table } from 'lucide-react'
+import {
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+    ComposedChart, Line, LabelList
+} from 'recharts'
 
 type PartnerStat = {
     name: string
@@ -15,24 +19,49 @@ type MonthlyOrder = {
     count: number
 }
 
+type MonthlyKioskStat = {
+    month: string
+    freeCount: number
+    leaseCount: number
+    paidCount: number
+    rentalCount: number
+    totalCount: number
+    freeSales: number
+    leaseSales: number
+    paidSales: number
+    rentalSales: number
+    totalSales: number
+    // 하위호환용
+    freeToPayCount: number
+    freeToPaySales: number
+}
+
 type StatsData = {
     totalKiosks: number
     deployedKiosks: number
     inStockKiosks: number
     maintenanceKiosks: number
     retiredKiosks: number
+    // acquisition 필드 기준 (기존 호환용)
     purchaseKiosks: number
     leaseKiosks: number
     leaseFreeKiosks: number
     freeKiosks: number
     paidKiosks: number
     rentalKiosks: number
+    // Effective 취득형태별 (자산관리 페이지와 동일 로직)
+    effectiveFreeKiosks?: number      // 무상: FREE/PURCHASE with salePrice=0
+    effectiveLeaseKiosks?: number     // 리스: LEASE + LEASE_FREE
+    effectivePaidKiosks?: number      // 유상: salePrice > 0
+    effectivePaidRevenue?: number     // 유상 매출
+    effectiveRentalKiosks?: number    // 렌탈: RENTAL
     totalOrders: number
     totalDeliveries: number
     completedDeliveries: number
     topPartners?: PartnerStat[]
     regionCount?: number
     monthlyOrders?: MonthlyOrder[]
+    monthlyKioskStats?: MonthlyKioskStat[]
 }
 
 export default function StatisticsPage() {
@@ -42,6 +71,8 @@ export default function StatisticsPage() {
     const [loading, setLoading] = useState(true)
     const [dateFrom, setDateFrom] = useState('')
     const [dateTo, setDateTo] = useState('')
+    const [countViewMode, setCountViewMode] = useState<'chart' | 'table'>('chart')
+    const [salesViewMode, setSalesViewMode] = useState<'chart' | 'table'>('chart')
 
     const fetchStats = useCallback(async () => {
         setLoading(true)
@@ -289,7 +320,7 @@ export default function StatisticsPage() {
                     </div>
                 </div>
 
-                {/* 취득형태별 현황 */}
+                {/* 취득형태별 현황 (자산관리 페이지와 동일 로직) */}
                 <div className="col-lg-6">
                     <div className="card">
                         <div className="card-header">
@@ -297,27 +328,36 @@ export default function StatisticsPage() {
                         </div>
                         <div className="card-body">
                             <div className="row g-3">
-                                <div className="col-4">
+                                <div className="col-3">
                                     <div className="card bg-green-lt">
                                         <div className="card-body text-center py-3">
-                                            <div className="h2 mb-1 text-green">{(stats?.freeKiosks || 0) + (stats?.leaseFreeKiosks || 0)}</div>
+                                            <div className="h2 mb-1 text-green">{stats?.effectiveFreeKiosks || 0}</div>
                                             <div className="text-muted small">무상</div>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="col-4">
+                                <div className="col-3">
                                     <div className="card bg-purple-lt">
                                         <div className="card-body text-center py-3">
-                                            <div className="h2 mb-1 text-purple">{stats?.leaseKiosks || 0}</div>
+                                            <div className="h2 mb-1 text-purple">{stats?.effectiveLeaseKiosks || 0}</div>
                                             <div className="text-muted small">리스</div>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="col-4">
+                                <div className="col-3">
                                     <div className="card bg-orange-lt">
                                         <div className="card-body text-center py-3">
-                                            <div className="h2 mb-1 text-orange">{(stats?.paidKiosks || 0) + (stats?.purchaseKiosks || 0)}</div>
+                                            <div className="h2 mb-1 text-orange">{stats?.effectivePaidKiosks || 0}</div>
                                             <div className="text-muted small">유상</div>
+                                            <div className="text-success small fw-bold">{(stats?.effectivePaidRevenue || 0).toLocaleString()}万円</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="col-3">
+                                    <div className="card bg-cyan-lt">
+                                        <div className="card-body text-center py-3">
+                                            <div className="h2 mb-1 text-cyan">{stats?.effectiveRentalKiosks || 0}</div>
+                                            <div className="text-muted small">렌탈</div>
                                         </div>
                                     </div>
                                 </div>
@@ -326,54 +366,338 @@ export default function StatisticsPage() {
                                 <div className="d-flex justify-content-between mb-1">
                                     <span className="d-flex align-items-center gap-1">
                                         <span className="badge bg-green" style={{ width: '10px', height: '10px', padding: 0 }}></span>
-                                        무상 (FREE + LEASE_FREE)
+                                        무상
                                     </span>
-                                    <span>{Math.round((((stats?.freeKiosks || 0) + (stats?.leaseFreeKiosks || 0)) / (stats?.totalKiosks || 1)) * 100)}%</span>
+                                    <span>{Math.round(((stats?.effectiveFreeKiosks || 0) / (stats?.totalKiosks || 1)) * 100)}%</span>
                                 </div>
                                 <div className="d-flex justify-content-between mb-1">
                                     <span className="d-flex align-items-center gap-1">
                                         <span className="badge bg-purple" style={{ width: '10px', height: '10px', padding: 0 }}></span>
-                                        리스 (LEASE)
+                                        리스
                                     </span>
-                                    <span>{Math.round(((stats?.leaseKiosks || 0) / (stats?.totalKiosks || 1)) * 100)}%</span>
+                                    <span>{Math.round(((stats?.effectiveLeaseKiosks || 0) / (stats?.totalKiosks || 1)) * 100)}%</span>
                                 </div>
                                 <div className="d-flex justify-content-between mb-1">
                                     <span className="d-flex align-items-center gap-1">
                                         <span className="badge bg-orange" style={{ width: '10px', height: '10px', padding: 0 }}></span>
-                                        유상 (PAID + PURCHASE)
+                                        유상
                                     </span>
-                                    <span>{Math.round((((stats?.paidKiosks || 0) + (stats?.purchaseKiosks || 0)) / (stats?.totalKiosks || 1)) * 100)}%</span>
+                                    <span>{Math.round(((stats?.effectivePaidKiosks || 0) / (stats?.totalKiosks || 1)) * 100)}%</span>
                                 </div>
-                                {(stats?.rentalKiosks || 0) > 0 && (
-                                    <div className="d-flex justify-content-between mb-1">
-                                        <span className="d-flex align-items-center gap-1">
-                                            <span className="badge bg-cyan" style={{ width: '10px', height: '10px', padding: 0 }}></span>
-                                            렌탈 (RENTAL)
-                                        </span>
-                                        <span>{Math.round(((stats?.rentalKiosks || 0) / (stats?.totalKiosks || 1)) * 100)}%</span>
-                                    </div>
-                                )}
+                                <div className="d-flex justify-content-between mb-1">
+                                    <span className="d-flex align-items-center gap-1">
+                                        <span className="badge bg-cyan" style={{ width: '10px', height: '10px', padding: 0 }}></span>
+                                        렌탈
+                                    </span>
+                                    <span>{Math.round(((stats?.effectiveRentalKiosks || 0) / (stats?.totalKiosks || 1)) * 100)}%</span>
+                                </div>
                                 <div className="progress" style={{ height: '8px' }}>
                                     <div
                                         className="progress-bar bg-green"
-                                        style={{ width: `${(((stats?.freeKiosks || 0) + (stats?.leaseFreeKiosks || 0)) / (stats?.totalKiosks || 1)) * 100}%` }}
+                                        style={{ width: `${((stats?.effectiveFreeKiosks || 0) / (stats?.totalKiosks || 1)) * 100}%` }}
                                     />
                                     <div
                                         className="progress-bar bg-purple"
-                                        style={{ width: `${((stats?.leaseKiosks || 0) / (stats?.totalKiosks || 1)) * 100}%` }}
+                                        style={{ width: `${((stats?.effectiveLeaseKiosks || 0) / (stats?.totalKiosks || 1)) * 100}%` }}
                                     />
                                     <div
                                         className="progress-bar bg-orange"
-                                        style={{ width: `${(((stats?.paidKiosks || 0) + (stats?.purchaseKiosks || 0)) / (stats?.totalKiosks || 1)) * 100}%` }}
+                                        style={{ width: `${((stats?.effectivePaidKiosks || 0) / (stats?.totalKiosks || 1)) * 100}%` }}
                                     />
-                                    {(stats?.rentalKiosks || 0) > 0 && (
-                                        <div
-                                            className="progress-bar bg-cyan"
-                                            style={{ width: `${((stats?.rentalKiosks || 0) / (stats?.totalKiosks || 1)) * 100}%` }}
-                                        />
-                                    )}
+                                    <div
+                                        className="progress-bar bg-cyan"
+                                        style={{ width: `${((stats?.effectiveRentalKiosks || 0) / (stats?.totalKiosks || 1)) * 100}%` }}
+                                    />
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 월별 키오스크 판매 현황 (대수) - 스택 바 차트 */}
+                <div className="col-12">
+                    <div className="card">
+                        <div className="card-header d-flex justify-content-between align-items-center">
+                            <h3 className="card-title mb-0">{t('monthlyKioskSalesCount')}</h3>
+                            <div className="btn-group btn-group-sm">
+                                <button
+                                    className={`btn ${countViewMode === 'chart' ? 'btn-primary' : 'btn-outline-primary'}`}
+                                    onClick={() => setCountViewMode('chart')}
+                                >
+                                    <BarChart2 size={16} />
+                                </button>
+                                <button
+                                    className={`btn ${countViewMode === 'table' ? 'btn-primary' : 'btn-outline-primary'}`}
+                                    onClick={() => setCountViewMode('table')}
+                                >
+                                    <Table size={16} />
+                                </button>
+                            </div>
+                        </div>
+                        <div className="card-body">
+                            {stats?.monthlyKioskStats && stats.monthlyKioskStats.length > 0 ? (
+                                countViewMode === 'chart' ? (
+                                    <ResponsiveContainer width="100%" height={400}>
+                                        <BarChart
+                                            data={stats.monthlyKioskStats}
+                                            margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                                        >
+                                            <CartesianGrid strokeDasharray="3 3" />
+                                            <XAxis
+                                                dataKey="month"
+                                                angle={-45}
+                                                textAnchor="end"
+                                                height={80}
+                                                tick={{ fontSize: 12 }}
+                                            />
+                                            <YAxis />
+                                            <Tooltip
+                                                formatter={(value, name) => {
+                                                    const labels: Record<string, string> = {
+                                                        paidCount: t('paid'),
+                                                        leaseCount: t('lease'),
+                                                        freeCount: t('free'),
+                                                        rentalCount: t('rental')
+                                                    }
+                                                    return [value, labels[String(name)] || name]
+                                                }}
+                                                labelFormatter={(label) => `${label}`}
+                                            />
+                                            <Legend
+                                                formatter={(value) => {
+                                                    const labels: Record<string, string> = {
+                                                        paidCount: t('paid'),
+                                                        leaseCount: t('lease'),
+                                                        freeCount: t('free'),
+                                                        rentalCount: t('rental')
+                                                    }
+                                                    return labels[value] || value
+                                                }}
+                                            />
+                                            <Bar dataKey="freeCount" stackId="a" fill="#2fb344" name="freeCount">
+                                                <LabelList dataKey="freeCount" position="center" fill="#fff" fontSize={10} formatter={(value) => Number(value) > 0 ? value : ''} />
+                                            </Bar>
+                                            <Bar dataKey="leaseCount" stackId="a" fill="#ae3ec9" name="leaseCount">
+                                                <LabelList dataKey="leaseCount" position="center" fill="#fff" fontSize={10} formatter={(value) => Number(value) > 0 ? value : ''} />
+                                            </Bar>
+                                            <Bar dataKey="paidCount" stackId="a" fill="#f59f00" name="paidCount">
+                                                <LabelList dataKey="paidCount" position="center" fill="#fff" fontSize={10} formatter={(value) => Number(value) > 0 ? value : ''} />
+                                            </Bar>
+                                            <Bar dataKey="rentalCount" stackId="a" fill="#17a2b8" name="rentalCount">
+                                                <LabelList dataKey="rentalCount" position="center" fill="#fff" fontSize={10} formatter={(value) => Number(value) > 0 ? value : ''} />
+                                                <LabelList dataKey="totalCount" position="top" fill="#333" fontSize={11} fontWeight="bold" />
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div className="table-responsive" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                                        <table className="table table-sm table-bordered table-hover">
+                                            <thead className="table-light sticky-top">
+                                                <tr>
+                                                    <th className="text-center">{t('month')}</th>
+                                                    <th className="text-end bg-success-lt">{t('free')}</th>
+                                                    <th className="text-end bg-purple-lt">{t('lease')}</th>
+                                                    <th className="text-end bg-warning-lt">{t('paid')}</th>
+                                                    <th className="text-end bg-info-lt">{t('rental')}</th>
+                                                    <th className="text-end bg-dark text-white">{t('total')}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {stats.monthlyKioskStats.map((item, idx) => (
+                                                    <tr key={idx}>
+                                                        <td className="text-center">{item.month}</td>
+                                                        <td className="text-end">{item.freeCount || '-'}</td>
+                                                        <td className="text-end">{item.leaseCount || '-'}</td>
+                                                        <td className="text-end">{item.paidCount || '-'}</td>
+                                                        <td className="text-end">{item.rentalCount || '-'}</td>
+                                                        <td className="text-end fw-bold">{item.totalCount}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                            <tfoot>
+                                                {/* 납품일 없는 키오스크 (월별 합계와 전체 합계의 차이) */}
+                                                {(() => {
+                                                    const monthlyFree = stats.monthlyKioskStats.reduce((sum, i) => sum + i.freeCount, 0)
+                                                    const monthlyLease = stats.monthlyKioskStats.reduce((sum, i) => sum + (i.leaseCount || 0), 0)
+                                                    const monthlyPaid = stats.monthlyKioskStats.reduce((sum, i) => sum + i.paidCount, 0)
+                                                    const monthlyRental = stats.monthlyKioskStats.reduce((sum, i) => sum + (i.rentalCount || 0), 0)
+                                                    const monthlyTotal = stats.monthlyKioskStats.reduce((sum, i) => sum + i.totalCount, 0)
+
+                                                    const missingFree = (stats.effectiveFreeKiosks || 0) - monthlyFree
+                                                    const missingLease = (stats.effectiveLeaseKiosks || 0) - monthlyLease
+                                                    const missingPaid = (stats.effectivePaidKiosks || 0) - monthlyPaid
+                                                    const missingRental = (stats.effectiveRentalKiosks || 0) - monthlyRental
+                                                    const missingTotal = stats.totalKiosks - monthlyTotal
+
+                                                    if (missingTotal > 0) {
+                                                        return (
+                                                            <tr className="table-warning">
+                                                                <td className="text-center text-muted">(납품일 없음)</td>
+                                                                <td className="text-end">{missingFree > 0 ? missingFree : '-'}</td>
+                                                                <td className="text-end">{missingLease > 0 ? missingLease : '-'}</td>
+                                                                <td className="text-end">{missingPaid > 0 ? missingPaid : '-'}</td>
+                                                                <td className="text-end">{missingRental > 0 ? missingRental : '-'}</td>
+                                                                <td className="text-end fw-bold">{missingTotal}</td>
+                                                            </tr>
+                                                        )
+                                                    }
+                                                    return null
+                                                })()}
+                                                <tr className="table-dark">
+                                                    <th className="text-center">{t('total')}</th>
+                                                    <th className="text-end">{stats.effectiveFreeKiosks || 0}</th>
+                                                    <th className="text-end">{stats.effectiveLeaseKiosks || 0}</th>
+                                                    <th className="text-end">{stats.effectivePaidKiosks || 0}</th>
+                                                    <th className="text-end">{stats.effectiveRentalKiosks || 0}</th>
+                                                    <th className="text-end">{stats.totalKiosks}</th>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                )
+                            ) : (
+                                <div className="text-center text-muted py-5">
+                                    <TrendingUp size={48} className="mb-3 opacity-50" />
+                                    <div>{t('noData')}</div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* 월별 키오스크 판매 현황 (매출) - 스택 바 + 라인 차트 */}
+                <div className="col-12">
+                    <div className="card">
+                        <div className="card-header d-flex justify-content-between align-items-center">
+                            <h3 className="card-title mb-0">{t('monthlyKioskSalesAmount')}</h3>
+                            <div className="btn-group btn-group-sm">
+                                <button
+                                    className={`btn ${salesViewMode === 'chart' ? 'btn-primary' : 'btn-outline-primary'}`}
+                                    onClick={() => setSalesViewMode('chart')}
+                                >
+                                    <BarChart2 size={16} />
+                                </button>
+                                <button
+                                    className={`btn ${salesViewMode === 'table' ? 'btn-primary' : 'btn-outline-primary'}`}
+                                    onClick={() => setSalesViewMode('table')}
+                                >
+                                    <Table size={16} />
+                                </button>
+                            </div>
+                        </div>
+                        <div className="card-body">
+                            {stats?.monthlyKioskStats && stats.monthlyKioskStats.length > 0 ? (
+                                salesViewMode === 'chart' ? (
+                                    <ResponsiveContainer width="100%" height={400}>
+                                        <ComposedChart
+                                            data={stats.monthlyKioskStats.map((item, idx, arr) => ({
+                                                ...item,
+                                                // salePrice가 이미 만엔 단위로 저장되어 있음
+                                                paidSalesMan: item.paidSales,
+                                                totalSalesMan: item.totalSales,
+                                                // 누적 매출
+                                                cumulativeSales: arr.slice(0, idx + 1).reduce((sum, i) => sum + i.totalSales, 0)
+                                            }))}
+                                            margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                                        >
+                                            <CartesianGrid strokeDasharray="3 3" />
+                                            <XAxis
+                                                dataKey="month"
+                                                angle={-45}
+                                                textAnchor="end"
+                                                height={80}
+                                                tick={{ fontSize: 12 }}
+                                            />
+                                            <YAxis yAxisId="left" />
+                                            <YAxis yAxisId="right" orientation="right" />
+                                            <Tooltip
+                                                formatter={(value, name) => {
+                                                    const labels: Record<string, string> = {
+                                                        paidSalesMan: t('paidSales'),
+                                                        cumulativeSales: t('cumulativeSales')
+                                                    }
+                                                    return [`${Number(value).toLocaleString()}${t('manYen')}`, labels[String(name)] || name]
+                                                }}
+                                                labelFormatter={(label) => `${label}`}
+                                            />
+                                            <Legend
+                                                formatter={(value) => {
+                                                    const labels: Record<string, string> = {
+                                                        paidSalesMan: t('paidSales'),
+                                                        cumulativeSales: t('cumulativeSales')
+                                                    }
+                                                    return labels[value] || value
+                                                }}
+                                            />
+                                            <Bar yAxisId="left" dataKey="paidSalesMan" fill="#f59f00" name="paidSalesMan">
+                                                <LabelList dataKey="paidSalesMan" position="top" fill="#333" fontSize={10} formatter={(value) => Number(value) > 0 ? Number(value).toLocaleString() : ''} />
+                                            </Bar>
+                                            <Line
+                                                yAxisId="right"
+                                                type="monotone"
+                                                dataKey="cumulativeSales"
+                                                stroke="#d63939"
+                                                strokeWidth={2}
+                                                dot={{ fill: '#d63939' }}
+                                                name="cumulativeSales"
+                                            />
+                                        </ComposedChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div className="table-responsive" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                                        <table className="table table-sm table-bordered table-hover">
+                                            <thead className="table-light sticky-top">
+                                                <tr>
+                                                    <th className="text-center">{t('month')}</th>
+                                                    <th className="text-end bg-warning-lt">{t('paidSales')}</th>
+                                                    <th className="text-end bg-danger-lt">{t('cumulativeSales')}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {stats.monthlyKioskStats.map((item, idx, arr) => {
+                                                    const cumulative = arr.slice(0, idx + 1).reduce((sum, i) => sum + i.totalSales, 0)
+                                                    return (
+                                                        <tr key={idx}>
+                                                            <td className="text-center">{item.month}</td>
+                                                            <td className="text-end">{item.paidSales ? item.paidSales.toLocaleString() : '-'}</td>
+                                                            <td className="text-end fw-bold">{cumulative.toLocaleString()}</td>
+                                                        </tr>
+                                                    )
+                                                })}
+                                            </tbody>
+                                            <tfoot>
+                                                {/* 납품일 없는 유상 키오스크 매출 */}
+                                                {(() => {
+                                                    const monthlyPaidSales = stats.monthlyKioskStats.reduce((sum, i) => sum + i.paidSales, 0)
+                                                    const missingSales = (stats.effectivePaidRevenue || 0) - monthlyPaidSales
+                                                    if (missingSales > 0) {
+                                                        return (
+                                                            <tr className="table-warning">
+                                                                <td className="text-center text-muted">(납품일 없음)</td>
+                                                                <td className="text-end">{missingSales.toLocaleString()}</td>
+                                                                <td className="text-end">-</td>
+                                                            </tr>
+                                                        )
+                                                    }
+                                                    return null
+                                                })()}
+                                                <tr className="table-dark">
+                                                    <th className="text-center">{t('total')}</th>
+                                                    <th className="text-end">
+                                                        {(stats.effectivePaidRevenue || 0).toLocaleString()}万円
+                                                    </th>
+                                                    <th className="text-end">-</th>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                )
+                            ) : (
+                                <div className="text-center text-muted py-5">
+                                    <TrendingUp size={48} className="mb-3 opacity-50" />
+                                    <div>{t('noData')}</div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
