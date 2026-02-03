@@ -310,16 +310,37 @@ export async function POST(request: Request) {
             }
 
             // OrderProcess 생성 - 상태를 PENDING으로 설정 (대기)
+            // step1Notes를 JSON으로 저장 (items 포함)
+            const step1NotesData = {
+                requesterName,
+                orderRequestDate,
+                kioskUnitPrice,
+                plateUnitPrice,
+                totalPlateCount: totalPlates,
+                taxIncluded,
+                notes,
+                items: items.map((item: { corporationId?: string; branchId?: string; acquisition?: string; leaseCompanyId?: string; kioskCount?: number; plateCount?: number; desiredDeliveryDate?: string }) => ({
+                    corporationId: item.corporationId,
+                    branchId: item.branchId,
+                    acquisition: item.acquisition,
+                    leaseCompanyId: item.leaseCompanyId,
+                    kioskCount: item.kioskCount || 1,
+                    plateCount: item.plateCount || 0,
+                    desiredDeliveryDate: item.desiredDeliveryDate
+                }))
+            }
+
             const orderProcess = await prisma.orderProcess.create({
                 data: {
                     processNumber: orderNumber,
                     title: title || `발주의뢰 ${orderNumber}`,
                     clientId: partnerId,
+                    requesterName,
                     quantity: totalKioskCount || items.reduce((sum: number, item: { kioskCount: number }) => sum + (item.kioskCount || 0), 0),
                     acquisition: firstItem.acquisition || 'FREE',
                     leaseCompanyId: firstItem.acquisition === 'LEASE_FREE' ? firstItem.leaseCompanyId : null,
                     desiredDeliveryDate: desiredDeliveryDate ? new Date(desiredDeliveryDate) : null,
-                    step1Notes: `의뢰자: ${requesterName}\n발주의뢰일: ${orderRequestDate}\n키오스크단가: ${kioskUnitPrice}\n철판단가: ${plateUnitPrice}\n철판수량: ${totalPlates}\n${taxIncluded ? '세금포함' : '세금별도'}\n${notes || ''}`.trim(),
+                    step1Notes: JSON.stringify(step1NotesData),
                     status: 'PENDING',  // 대기 상태로 시작
                     currentStep: 1
                 }
@@ -329,7 +350,8 @@ export async function POST(request: Request) {
             const kioskPromises = []
             let kioskIndex = 1
 
-            for (const item of items) {
+            for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
+                const item = items[itemIndex]
                 if (!item.corporationId) continue
 
                 const corporation = await prisma.corporation.findUnique({

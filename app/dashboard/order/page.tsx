@@ -1042,10 +1042,13 @@ export default function OrderPage() {
                     </div>
 
                     {/* 납품 항목 */}
-                    <div className="card" style={{ overflow: 'visible', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+                    <div className="card" style={{ overflow: 'visible', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', border: editingOrderId ? '2px solid #fd7e14' : undefined }}>
                         <div className="card-header">
                             <div className="d-flex align-items-center gap-3">
                                 <h3 className="card-title mb-0">{locale === 'ja' ? '納品項目' : '납품 항목'}</h3>
+                                {editingOrderId && (
+                                    <span className="badge bg-warning">{locale === 'ja' ? '編集中' : '편집 중'}</span>
+                                )}
                                 <button className="btn btn-success btn-sm" onClick={addDeliveryItem}>
                                     <i className="ti ti-row-insert-bottom me-1"></i>
                                     {locale === 'ja' ? '行追加' : '행 추가'}
@@ -1356,7 +1359,7 @@ export default function OrderPage() {
                             <h3 className="card-title">
                                 <i className="ti ti-list me-2"></i>
                                 {locale === 'ja' ? '発注一覧' : '발주 목록'}
-                                <span className="badge bg-primary ms-2">{orders.length}</span>
+                                <span className="badge bg-primary text-white ms-2">{orders.length}</span>
                             </h3>
                         </div>
                         <div className="table-responsive">
