@@ -10,13 +10,18 @@ cd /d "%~dp0.."
 echo [단계 1] 로컬 데이터를 Supabase로 동기화할까요?
 set /p SYNC_DATA="데이터 동기화 (Y/N)? "
 if /i "%SYNC_DATA%"=="Y" (
+    if "%DATABASE_URL%"=="" (
+        echo [오류] DATABASE_URL 환경변수가 설정되지 않았습니다.
+        echo .env 파일에서 DATABASE_URL을 설정하거나 환경변수로 지정하세요.
+        pause
+        exit /b 1
+    )
     echo.
     echo 로컬 데이터 export 중...
     call npx tsx scripts/export-local-data.ts
 
     echo.
     echo Supabase로 데이터 import 중...
-    set DATABASE_URL=postgresql://***PROJECT_REF***:***REMOVED***@aws-1-ap-northeast-1.pooler.supabase.com:5432/postgres
     call npx tsx scripts/import-to-supabase.ts
     echo.
 )
