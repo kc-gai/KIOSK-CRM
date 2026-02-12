@@ -105,7 +105,19 @@
         "tooltipAccounts": "ユーザーアカウント管理（管理者専用）",
         "tooltipApiSettings": "外部API連携設定（Jobcan、Google、GitHub）",
         "tooltipDevTasks": "開発タスク進捗管理",
-        "tooltipWorkLogs": "AI作業日誌照会"
+        "tooltipWorkLogs": "AI作業日誌照会",
+        "marketingHome": "ダッシュボード",
+        "marketingInbound": "インバウンド",
+        "marketingOutbound": "アウトバウンド",
+        "marketingAnalytics": "アナリティクス",
+        "marketingStrategy": "コンテンツ戦略",
+        "marketingPublishing": "コンテンツ制作",
+        "marketingOptimization": "コンテンツ最適化",
+        "marketingSeoReport": "SEO分析",
+        "marketingSalesTracking": "営業追跡",
+        "marketingColdEmail": "コールドメール",
+        "marketingPerformance": "パフォーマンス現況",
+        "marketingKpi": "KPIトラッキング"
     },
     "login": {
         "title": "ログイン",
