@@ -31,12 +31,7 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
-.env
-.env.local
-.env.production
-
-# keep example file
-!.env.example
+.env*
 
 # vercel
 .vercel
@@ -44,21 +39,3 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-/app/generated/prisma
-
-# SQLite database (local dev)
-*.db
-*.db-journal
-nul
-
-# Presentation editor sub-project
-presentation-editor/node_modules
-presentation-editor/.next
-presentation-editor/.env*
-
-# Security: prevent accidental commit of sensitive local scripts
-*-local.bat
-*-local.sh
-*.credentials
-*.secret
