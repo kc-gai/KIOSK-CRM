@@ -60,15 +60,38 @@ async function tryPaddleOcr(imageBase64: string): Promise<OcrTextElement[] | nul
 
 // ============================================================
 // Engine 2: Vertex AI Gemini (Google Cloud, high limits)
+// Supports: ADC (local gcloud) or service account JSON (Vercel)
 // ============================================================
+function getVertexAuthOptions() {
+  // 1) Service account JSON from env var (for Vercel deployment)
+  const credJson = process.env.GOOGLE_CREDENTIALS_JSON;
+  if (credJson) {
+    try {
+      const credentials = JSON.parse(credJson);
+      return { credentials };
+    } catch {
+      console.warn("[OCR] Failed to parse GOOGLE_CREDENTIALS_JSON");
+    }
+  }
+  // 2) Fall back to ADC (local gcloud auth)
+  return undefined;
+}
+
 async function tryVertexAi(imageBase64: string): Promise<OcrTextElement[] | null> {
+  const projectId = process.env.VERTEX_PROJECT_ID || "gemini-vertex-470601";
+  const location = process.env.VERTEX_LOCATION || "us-central1";
+
+  // Skip if no credentials available and not local
+  const authOptions = getVertexAuthOptions();
+
   try {
     const { VertexAI } = await import("@google-cloud/vertexai");
 
-    const projectId = process.env.VERTEX_PROJECT_ID || "gemini-vertex-470601";
-    const location = process.env.VERTEX_LOCATION || "us-central1";
-
-    const vertexAI = new VertexAI({ project: projectId, location });
+    const vertexAI = new VertexAI({
+      project: projectId,
+      location,
+      googleAuthOptions: authOptions,
+    });
     const model = vertexAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const result = await model.generateContent({
@@ -94,10 +117,10 @@ async function tryVertexAi(imageBase64: string): Promise<OcrTextElement[] | null
     return parseGeminiResponse(responseText);
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    // ADC not available on Vercel / credentials not set up
     if (msg.includes("Could not load the default credentials") ||
         msg.includes("GOOGLE_APPLICATION_CREDENTIALS") ||
-        msg.includes("not found")) {
+        msg.includes("not found") ||
+        msg.includes("Unable to detect")) {
       console.log("[OCR] Vertex AI not available (no credentials), skipping");
     } else {
       console.warn("[OCR] Vertex AI failed:", msg);
