@@ -194,6 +194,8 @@ export default function FileUploader() {
             {processingStatus.stage === "ocr-processing" && (
               <p className="text-xs text-muted text-center mt-1 max-w-xs">
                 OCR 엔진이 Gemini에 연동되어 있습니다. Claude 등 고성능 AI 연동 시 더 빠른 추출이 가능합니다.
+                <br />
+                발표자료는 Google NotebookLM에서 작성된 슬라이드 PDF를 권장합니다.
               </p>
             )}
           </>
