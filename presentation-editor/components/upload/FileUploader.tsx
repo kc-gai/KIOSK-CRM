@@ -191,6 +191,11 @@ export default function FileUploader() {
                 />
               </div>
             )}
+            {processingStatus.stage === "ocr-processing" && (
+              <p className="text-xs text-muted text-center mt-1 max-w-xs">
+                OCR 엔진이 Gemini에 연동되어 있습니다. Claude 등 고성능 AI 연동 시 더 빠른 추출이 가능합니다.
+              </p>
+            )}
           </>
         ) : (
           <>
