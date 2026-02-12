@@ -39,6 +39,7 @@ interface WorkLog {
   endTime?: string | null
   workHours: number
   category: string
+  module?: string
   tools?: string | null
   completedTasks?: string | null
   modifiedFiles?: string | null
@@ -577,6 +578,13 @@ function WorkLogCard({
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${catStyle.bg} ${catStyle.text}`}>
                 {log.author}
               </span>
+              {log.module && log.module !== 'general' && (
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                  log.module === 'kiosk' ? 'bg-indigo-100 text-indigo-700' : 'bg-cyan-100 text-cyan-700'
+                }`}>
+                  {log.module === 'kiosk' ? 'Kiosk' : 'Marketing'}
+                </span>
+              )}
               {log.startTime && log.endTime && (
                 <span className="flex items-center gap-1">
                   <Clock className="w-3 h-3" />
@@ -800,13 +808,30 @@ export default function WorkLogsPage() {
             {isJa ? '開発作業レポート自動集計' : '개발 작업 리포트 자동 집계'}
           </p>
         </div>
-        <button
-          onClick={() => { setEditLog(null); setModalOpen(true) }}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-        >
-          <Plus className="w-4 h-4" />
-          {isJa ? '作業追加' : '작업 추가'}
-        </button>
+        <div className="flex items-center gap-2">
+          {stats.totalEntries === 0 && (
+            <button
+              onClick={async () => {
+                if (!confirm(isJa ? '過去の作業履歴をインポートしますか？' : '과거 작업 이력을 불러올까요?')) return
+                const res = await fetch('/api/work-logs?type=seed')
+                const data = await res.json()
+                alert(`${isJa ? 'インポート完了' : '불러오기 완료'}: ${data.migratedCount}${isJa ? '件 追加' : '건 추가'}, ${data.skippedCount}${isJa ? '件 スキップ' : '건 스킵'}`)
+                fetchLogs()
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white text-sm rounded-lg hover:bg-orange-600 transition-colors shadow-sm"
+            >
+              <TrendingUp className="w-4 h-4" />
+              {isJa ? '履歴インポート' : '이력 불러오기'}
+            </button>
+          )}
+          <button
+            onClick={() => { setEditLog(null); setModalOpen(true) }}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            {isJa ? '作業追加' : '작업 추가'}
+          </button>
+        </div>
       </div>
 
       {/* Summary Cards */}
