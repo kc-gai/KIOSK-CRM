@@ -87,7 +87,7 @@ export function GateClient({ userName, userEmail, kioskStats, marketingStats }: 
             title: 'PDF Original Maker',
             subtitle: t('pdfSubtitle'),
             description: t('pdfDesc'),
-            href: 'http://localhost:3002',
+            href: 'https://kc-presentation.vercel.app',
             icon: 'ti-file-type-pdf',
             color: 'red',
             status: 'external',

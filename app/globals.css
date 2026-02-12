@@ -1,4 +1,6 @@
-@import "tailwindcss";
+/* Tailwind v4: preflight(CSS리셋) 제외 → Tabler CSS가 base 스타일 담당 */
+@import "tailwindcss/theme" layer(theme);
+@import "tailwindcss/utilities" layer(utilities);
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
@@ -121,14 +123,7 @@ html[lang="ja"]:root {
   --sidebar-ring: oklch(0.556 0 0);
 }
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-}
+/* Tabler CSS가 base 스타일 담당 - Tailwind @layer base 제거 */
 
 /* 기본 폰트는 한국어 - 아이콘 폰트 제외 */
 *:not(.ti):not([class^="ti-"]):not([class*=" ti-"]):not(i) {
