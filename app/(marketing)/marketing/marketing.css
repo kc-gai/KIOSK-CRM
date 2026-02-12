@@ -1,0 +1,169 @@
+/* Marketing Module CSS Overrides
+   Override Tailwind v4 CSS variables for marketing-specific color palette */
+
+.marketing-module {
+  --primary: #206bc4;
+  --primary-foreground: #ffffff;
+  --secondary: #656d77;
+  --secondary-foreground: #ffffff;
+  --destructive: #d63939;
+  --muted: #f4f6fa;
+  --muted-foreground: #656d77;
+  --accent: #f4f6fa;
+  --accent-foreground: #206bc4;
+  --border: #e2e8f0;
+  --foreground-rgb: 55, 65, 81;
+  --background-rgb: 244, 246, 250;
+  background: rgb(244, 246, 250);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Marketing-specific utility colors */
+.marketing-module .text-primary { color: #206bc4 !important; }
+.marketing-module .bg-primary { background-color: #206bc4 !important; }
+.marketing-module .bg-primary\/10 { background-color: rgba(32, 107, 196, 0.1) !important; }
+.marketing-module .bg-primary\/5 { background-color: rgba(32, 107, 196, 0.05) !important; }
+.marketing-module .border-primary { border-color: #206bc4 !important; }
+
+.marketing-module .text-success { color: #2fb344 !important; }
+.marketing-module .bg-success { background-color: #2fb344 !important; }
+.marketing-module .text-danger { color: #d63939 !important; }
+.marketing-module .bg-danger { background-color: #d63939 !important; }
+.marketing-module .text-warning { color: #f59f00 !important; }
+.marketing-module .bg-warning { background-color: #f59f00 !important; }
+.marketing-module .text-info { color: #4299e1 !important; }
+.marketing-module .bg-info { background-color: #4299e1 !important; }
+.marketing-module .bg-bg-surface { background-color: #f4f6fa !important; }
+
+/* Card Styles */
+.marketing-module .card {
+  background: white;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.marketing-module .card-header {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.marketing-module .card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.marketing-module .card-body {
+  padding: 1rem;
+}
+
+/* Stat Card */
+.marketing-module .stat-card {
+  background: white;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  padding: 1rem;
+  transition: box-shadow 0.15s;
+}
+
+.marketing-module .stat-card:hover {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.marketing-module .stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.marketing-module .stat-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Badge */
+.marketing-module .badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.marketing-module .badge-success { background-color: #dcfce7; color: #166534; }
+.marketing-module .badge-warning { background-color: #fef9c3; color: #854d0e; }
+.marketing-module .badge-danger { background-color: #fee2e2; color: #991b1b; }
+.marketing-module .badge-info { background-color: #dbeafe; color: #1e40af; }
+
+/* Navigation */
+.marketing-module .nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  color: #4b5563;
+  border-radius: 0.5rem;
+  transition: all 0.15s;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.marketing-module .nav-item:hover {
+  background-color: #f3f4f6;
+}
+
+.marketing-module .nav-item.active {
+  background-color: rgba(32, 107, 196, 0.1);
+  color: #206bc4;
+  font-weight: 500;
+}
+
+/* Table */
+.marketing-module .table {
+  width: 100%;
+  font-size: 0.875rem;
+}
+
+.marketing-module .table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  background-color: #f9fafb;
+  font-weight: 500;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.marketing-module .table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.marketing-module .table tr:hover td {
+  background-color: #f9fafb;
+}
+
+/* Scrollbar */
+.marketing-module ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.marketing-module ::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 3px;
+}
+
+.marketing-module ::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.marketing-module ::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}

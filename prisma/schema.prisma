@@ -1,0 +1,976 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  name            String?
+  password        String
+  role            String    @default("USER")
+  isActive        Boolean   @default(true)
+  lastLoginAt     DateTime?
+  createdBy       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  allowedMenus    String?
+  linkedPartnerId String?
+}
+
+model Partner {
+  id                 String            @id @default(cuid())
+  name               String
+  type               String
+  contact            String?
+  address            String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  contractDate       DateTime?
+  commissionTerms    String?
+  saleTerms          String?
+  maintenanceTerms   String?
+  feeChangeTerms     String?
+  erpReflected       Boolean           @default(false)
+  contractStartDate  DateTime?
+  kioskFreeCondition String?
+  kioskSalePrice     Int?
+  kioskSaleType      String?
+  nameJa             String?
+  otaRate            Float?
+  pmsRate            Float?
+  storeCount         Int?
+  vehicleCount       Int?
+  code               String?           @unique
+  currentKiosks      Kiosk[]           @relation("CurrentKiosks")
+  kioskSales         KioskSale[]
+  historyTo          LocationHistory[] @relation("HistoryToPartner")
+  historyFrom        LocationHistory[] @relation("HistoryFromPartner")
+  ordersAsSupplier   Order[]           @relation("SupplierOrders")
+  ordersAsClient     Order[]           @relation("ClientOrders")
+  orderProcesses     OrderProcess[]    @relation("OrderProcessClient")
+  processes          Process[]
+}
+
+model Kiosk {
+  id               String            @id @default(cuid())
+  serialNumber     String?           @unique
+  kioskNumber      String?
+  anydeskId        String?
+  brandName        String?
+  currentPartnerId String?
+  branchName       String?
+  branchId         String?
+  regionCode       String?
+  areaCode         String?
+  acquisition      String            @default("FREE")
+  salePrice        Int?
+  leaseCompanyId   String?
+  leaseMonthlyFee  Int?
+  leasePeriod      Int?
+  leaseStartDate   DateTime?
+  leaseEndDate     DateTime?
+  leaseContractNo  String?
+  orderRequestDate DateTime?
+  deliveryDueDate  String?
+  deliveryDate     DateTime?
+  deliveryStatus   String            @default("PENDING")
+  status           String            @default("ORDERED")
+  memo             String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  code             String?           @unique
+  leaseCompany     LeaseCompany?     @relation("LeaseCompanyKiosks", fields: [leaseCompanyId], references: [id])
+  branch           Branch?           @relation("BranchKiosks", fields: [branchId], references: [id])
+  currentPartner   Partner?          @relation("CurrentKiosks", fields: [currentPartnerId], references: [id])
+  history          LocationHistory[]
+  orders           OrderKiosk[]
+}
+
+model Order {
+  id          String       @id @default(cuid())
+  orderNumber String       @unique
+  clientId    String
+  supplierId  String?
+  status      String       @default("REQUESTED")
+  orderDate   DateTime     @default(now())
+  shippedDate DateTime?
+  trackingNo  String?
+  logistics   String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  supplier    Partner?     @relation("SupplierOrders", fields: [supplierId], references: [id])
+  client      Partner      @relation("ClientOrders", fields: [clientId], references: [id])
+  items       OrderKiosk[]
+}
+
+model OrderKiosk {
+  id      String @id @default(cuid())
+  orderId String
+  kioskId String
+  kiosk   Kiosk  @relation(fields: [kioskId], references: [id])
+  order   Order  @relation(fields: [orderId], references: [id])
+
+  @@unique([orderId, kioskId])
+}
+
+model LocationHistory {
+  id                String       @id @default(cuid())
+  kioskId           String
+  moveType          String       @default("TRANSFER")
+  prevLocation      String?
+  newLocation       String?
+  prevPartnerId     String?
+  newPartnerId      String?
+  prevBranch        String?
+  newBranch         String?
+  prevBranchId      String?
+  newBranchId       String?
+  prevCorporationId String?
+  newCorporationId  String?
+  prevRegionCode    String?
+  newRegionCode     String?
+  prevAreaCode      String?
+  newAreaCode       String?
+  prevStatus        String?
+  newStatus         String?
+  prevSaleType      String?
+  newSaleType       String?
+  prevPrice         Float?
+  newPrice          Float?
+  prevAcquisition   String?
+  newAcquisition    String?
+  repairReason      String?
+  repairCost        Float?
+  repairVendor      String?
+  eventDate         DateTime     @default(now())
+  description       String?
+  attachmentUrl     String?
+  handledBy         String?
+  approvedBy        String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @default(now()) @updatedAt
+  newPartner        Partner?     @relation("HistoryToPartner", fields: [newPartnerId], references: [id])
+  prevPartner       Partner?     @relation("HistoryFromPartner", fields: [prevPartnerId], references: [id])
+  kiosk             Kiosk        @relation(fields: [kioskId], references: [id])
+  prevBranchRel     Branch?      @relation("HistoryFromBranch", fields: [prevBranchId], references: [id])
+  newBranchRel      Branch?      @relation("HistoryToBranch", fields: [newBranchId], references: [id])
+  prevCorporation   Corporation? @relation("HistoryFromCorporation", fields: [prevCorporationId], references: [id])
+  newCorporation    Corporation? @relation("HistoryToCorporation", fields: [newCorporationId], references: [id])
+}
+
+model Manual {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  version     String
+  isPublished Boolean  @default(false)
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+}
+
+model AssemblyManual {
+  id          String                  @id @default(cuid())
+  slug        String                  @unique
+  title       String
+  titleKo     String?
+  subtitle    String?
+  version     String
+  versionDate DateTime
+  changeLog   String?
+  docType     String                  @default("ASSEMBLY")
+  status      String                  @default("DRAFT")
+  isLatest    Boolean                 @default(false)
+  authorName  String?
+  authorId    String?
+  tags        String?
+  notes       String?
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+  sections    AssemblyManualSection[]
+}
+
+model AssemblyManualSection {
+  id            String         @id @default(cuid())
+  manualId      String
+  sectionNumber Int
+  title         String
+  titleKo       String?
+  content       String
+  contentKo     String?
+  imageUrl      String?
+  imageUrls     String?
+  layout        String         @default("TEXT_IMAGE")
+  sortOrder     Int            @default(0)
+  notes         String?
+  isVisible     Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  manual        AssemblyManual @relation(fields: [manualId], references: [id], onDelete: Cascade)
+}
+
+model Process {
+  id                     String    @id @default(cuid())
+  title                  String
+  clientId               String?
+  currentStage           String    @default("CONTRACT")
+  contractStatus         String?
+  contractManager        String?
+  contractDate           DateTime?
+  legalCheckCompleted    Boolean   @default(false)
+  contractSigned         Boolean   @default(false)
+  contractDocUpdated     Boolean   @default(false)
+  contractNotes          String?
+  deliveryRequestStatus  String?
+  deliveryManager        String?
+  deliveryDate           DateTime?
+  stockConfirmed         Boolean   @default(false)
+  manufacturingRequested Boolean   @default(false)
+  orderRequested         Boolean   @default(false)
+  leaseContacted         Boolean   @default(false)
+  externalPartsOrdered   Boolean   @default(false)
+  deliveryNotes          String?
+  deliveryCheckStatus    String?
+  kioskShipped           Boolean   @default(false)
+  deliveryConfirmed      Boolean   @default(false)
+  kioskInfoUpdated       Boolean   @default(false)
+  trackingNumber         String?
+  anydeskNo              String?
+  serialNo               String?
+  deliveryCheckNotes     String?
+  erpStatus              String?
+  erpManager             String?
+  operationInfoCollected Boolean   @default(false)
+  statsRequested         Boolean   @default(false)
+  dashboardUpdated       Boolean   @default(false)
+  statsReportCreated     Boolean   @default(false)
+  erpNotes               String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  client                 Partner?  @relation(fields: [clientId], references: [id])
+}
+
+model Delivery {
+  id                 String    @id @default(cuid())
+  deliveryDate       DateTime  @default(now())
+  invoiceNumber      String?
+  serialNumber       String
+  anydeskId          String?
+  modelName          String?
+  destination        String?
+  recipientName      String?
+  recipientPhone     String?
+  status             String    @default("SHIPPED")
+  supplierName       String?
+  supplierContact    String?
+  notes              String?
+  notificationSent   Boolean   @default(false)
+  notificationSentAt DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  type      String
+  targetId  String
+  channel   String
+  message   String
+  status    String    @default("PENDING")
+  sentAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model KioskSale {
+  id         String   @id @default(cuid())
+  partnerId  String
+  saleDate   DateTime
+  saleType   String
+  quantity   Int
+  unitPrice  Int?
+  totalPrice Int?
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  partner    Partner  @relation(fields: [partnerId], references: [id])
+}
+
+model Region {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  prefectures String
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  nameJa      String?
+  areas       Area[]
+}
+
+model Area {
+  id              String   @id @default(cuid())
+  code            String   @unique
+  name            String
+  regionId        String
+  addressKeywords String?
+  isActive        Boolean  @default(true)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  nameJa          String?
+  region          Region   @relation(fields: [regionId], references: [id])
+}
+
+model FC {
+  id             String        @id @default(cuid())
+  code           String        @unique
+  name           String
+  nameJa         String?
+  fcType         String        @default("RENTAL_CAR")
+  contact        String?
+  address        String?
+  contractDate   DateTime?
+  commissionRate Float?
+  memo           String?
+  isActive       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  corporations   Corporation[]
+}
+
+model Corporation {
+  id                   String            @id @default(cuid())
+  code                 String            @unique
+  name                 String
+  nameJa               String?
+  fcId                 String?
+  contact              String?
+  postalCode           String?
+  address              String?
+  contractDate         DateTime?
+  erpFeeRate           Float?
+  erpFeeNotes          String?
+  kioskMaintenanceCost Float?
+  kioskSaleCost        Float?
+  kioskSaleNotes       String?
+  isActive             Boolean           @default(true)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  branches             Branch[]
+  fc                   FC?               @relation(fields: [fcId], references: [id])
+  historyFrom          LocationHistory[] @relation("HistoryFromCorporation")
+  historyTo            LocationHistory[] @relation("HistoryToCorporation")
+}
+
+model Branch {
+  id            String            @id @default(cuid())
+  code          String?
+  name          String
+  nameJa        String?
+  corporationId String
+  address       String?
+  postalCode    String?
+  prefecture    String?
+  city          String?
+  regionCode    String?
+  areaCode      String?
+  managerName   String?
+  managerPhone  String?
+  isActive      Boolean           @default(true)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  corporation   Corporation       @relation(fields: [corporationId], references: [id])
+  kiosks        Kiosk[]           @relation("BranchKiosks")
+  historyFrom   LocationHistory[] @relation("HistoryFromBranch")
+  historyTo     LocationHistory[] @relation("HistoryToBranch")
+
+  @@unique([corporationId, code])
+}
+
+model KioskPricing {
+  id              String    @id @default(cuid())
+  kioskId         String    @unique
+  serialNumber    String
+  costPrice       Int?
+  costCurrency    String    @default("JPY")
+  purchaseDate    DateTime?
+  supplierId      String?
+  supplierName    String?
+  purchaseOrderNo String?
+  costNotes       String?
+  salePrice       Int?
+  saleCurrency    String    @default("JPY")
+  saleDate        DateTime?
+  clientId        String?
+  clientName      String?
+  saleType        String?
+  invoiceNo       String?
+  saleNotes       String?
+  margin          Int?
+  marginRate      Float?
+  leaseMonthlyFee Int?
+  leasePeriod     Int?
+  leaseStartDate  DateTime?
+  leaseEndDate    DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model SalesHistory {
+  id             String   @id @default(cuid())
+  kioskId        String
+  serialNumber   String
+  changeType     String
+  prevClientId   String?
+  prevClientName String?
+  prevSaleType   String?
+  prevPrice      Int?
+  newClientId    String?
+  newClientName  String?
+  newSaleType    String?
+  newPrice       Int?
+  reason         String?
+  changedBy      String?
+  changedAt      DateTime @default(now())
+  createdAt      DateTime @default(now())
+}
+
+model ApiConfig {
+  id             String    @id @default(cuid())
+  name           String
+  apiType        String
+  description    String?
+  baseUrl        String?
+  apiKey         String?
+  apiSecret      String?
+  webhookUrl     String?
+  authType       String    @default("API_KEY")
+  accessToken    String?
+  refreshToken   String?
+  tokenExpiry    DateTime?
+  smtpHost       String?
+  smtpPort       Int?
+  smtpUser       String?
+  smtpPassword   String?
+  smtpSecure     Boolean   @default(true)
+  isActive       Boolean   @default(true)
+  lastTestedAt   DateTime?
+  lastTestResult String?
+  configJson     String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model OrderProcess {
+  id                  String            @id @default(cuid())
+  processNumber       String            @unique
+  title               String
+  clientId            String
+  requesterId         String?
+  requesterName       String?
+  currentStep         Int               @default(1)
+  status              String            @default("IN_PROGRESS")
+  quantity            Int?
+  modelType           String?
+  desiredDeliveryDate DateTime?
+  acquisition         String            @default("FREE")
+  leaseCompanyId      String?
+  leaseMonthlyFee     Int?
+  leasePeriod         Int?
+  step1Notes          String?
+  step1CompletedAt    DateTime?
+  step1CompletedBy    String?
+  documentUrl         String?
+  documentNumber      String?
+  step2CompletedAt    DateTime?
+  step2CompletedBy    String?
+  approvalRequestId   String?
+  approvalTitle       String?
+  step3CompletedAt    DateTime?
+  step3CompletedBy    String?
+  approvalStatus      String?
+  approvalDate        DateTime?
+  approvalComment     String?
+  step4CompletedAt    DateTime?
+  step4CompletedBy    String?
+  vendorOrderSent     Boolean           @default(false)
+  vendorEmail         String?
+  slackNotified       Boolean           @default(false)
+  emailNotified       Boolean           @default(false)
+  step5CompletedAt    DateTime?
+  step5CompletedBy    String?
+  dueDate             DateTime?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  deliveryProcesses   DeliveryProcess[]
+  client              Partner           @relation("OrderProcessClient", fields: [clientId], references: [id])
+}
+
+model DeliveryProcess {
+  id               String        @id @default(cuid())
+  processNumber    String        @unique
+  orderProcessId   String?
+  currentStep      Int           @default(1)
+  status           String        @default("IN_PROGRESS")
+  serialNumber     String
+  modelName        String?
+  shippedDate      DateTime?
+  expectedArrival  DateTime?
+  trackingNumber   String?
+  logistics        String?
+  vendorName       String?
+  vendorContact    String?
+  vendorNotes      String?
+  step1CompletedAt DateTime?
+  step1CompletedBy String?
+  actualArrival    DateTime?
+  inspectionPassed Boolean?
+  inspectionNotes  String?
+  internalNotes    String?
+  step2CompletedAt DateTime?
+  step2CompletedBy String?
+  kioskId          String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  orderProcess     OrderProcess? @relation(fields: [orderProcessId], references: [id])
+}
+
+model DeliveryRequest {
+  id                  String                @id @default(cuid())
+  requestNumber       String                @unique
+  orderDate           DateTime              @default(now())
+  requesterName       String
+  requesterId         String?
+  title               String                @default("キオスク端末＆決済端末の鉄板・金具")
+  desiredDeliveryDate DateTime?
+  desiredDeliveryWeek String?
+  unitPrice           Int                   @default(240000)
+  taxIncluded         Boolean               @default(false)
+  status              String                @default("DRAFT")
+  notes               String?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  items               DeliveryRequestItem[]
+}
+
+model DeliveryRequestItem {
+  id                String          @id @default(cuid())
+  deliveryRequestId String
+  locationName      String
+  postalCode        String?
+  address           String
+  contactPhone      String?
+  quantity          Int             @default(1)
+  kioskCount        Int             @default(1)
+  plateCount        Int             @default(1)
+  branchId          String?
+  itemNotes         String?
+  sortOrder         Int             @default(0)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  deliveryRequest   DeliveryRequest @relation(fields: [deliveryRequestId], references: [id], onDelete: Cascade)
+}
+
+model KioskRepair {
+  id              String    @id @default(cuid())
+  kioskId         String
+  serialNumber    String
+  receiptDate     DateTime  @default(now())
+  receiptReason   String
+  symptom         String?
+  reportedBy      String?
+  repairStartDate DateTime?
+  repairEndDate   DateTime?
+  repairVendor    String?
+  repairCost      Int?
+  repairDetails   String?
+  partsReplaced   String?
+  releaseDate     DateTime?
+  releasedTo      String?
+  releaseNotes    String?
+  status          String    @default("RECEIVED")
+  beforeImageUrl  String?
+  afterImageUrl   String?
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model SampleLoan {
+  id                 String    @id @default(cuid())
+  sampleNumber       String    @unique
+  serialNumber       String?
+  modelName          String?
+  description        String?
+  lenderName         String
+  lenderContact      String?
+  lenderPhone        String?
+  lenderEmail        String?
+  loanDate           DateTime  @default(now())
+  expectedReturnDate DateTime?
+  actualReturnDate   DateTime?
+  purpose            String?
+  usageLocation      String?
+  status             String    @default("ON_LOAN")
+  responsiblePerson  String?
+  returnCondition    String?
+  returnNotes        String?
+  convertedToKioskId String?
+  notes              String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
+
+model CalendarEvent {
+  id          String    @id @default(cuid())
+  eventId     String?   @unique
+  calendarId  String?
+  title       String
+  description String?
+  eventDate   DateTime
+  startTime   String?
+  endTime     String?
+  allDay      Boolean   @default(true)
+  sourceType  String
+  sourceId    String
+  syncStatus  String    @default("PENDING")
+  syncedAt    DateTime?
+  syncError   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model LeaseCompany {
+  id                String   @id @default(cuid())
+  code              String   @unique
+  name              String
+  nameJa            String?
+  contact           String?
+  email             String?
+  address           String?
+  managerName       String?
+  managerPhone      String?
+  managerEmail      String?
+  defaultMonthlyFee Int?
+  defaultPeriod     Int?
+  contractTerms     String?
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  leasedKiosks      Kiosk[]  @relation("LeaseCompanyKiosks")
+}
+
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  encrypted Boolean  @default(false)
+  category  String   @default("GENERAL")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// =============================================
+// マーケティング SEO CRM モジュール
+// =============================================
+
+// アクションアイテム管理
+model ActionItem {
+  id        String    @id @default(cuid())
+  title     String
+  priority  String    // HIGH, MEDIUM, LOW, REVIEW
+  status    String    // PENDING, IN_PROGRESS, DONE, BLOCKED
+  dueDate   DateTime?
+  assignee  String?
+  category  String?
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+// KPI実績記録
+model KpiRecord {
+  id        String   @id @default(cuid())
+  month     String   // "2026-02"
+  metric    String   // "CTR", "clicks", "impressions", etc.
+  category  String   // "search", "keyword", "region", "conversion", "ai"
+  target    Float?
+  actual    Float?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([month, metric])
+}
+
+// AI引用モニタリング結果
+model AiCitation {
+  id        String   @id @default(cuid())
+  month     String   // "2026-02"
+  platform  String   // "perplexity", "bing", "chatgpt", "gemini"
+  keyword   String
+  scoreType String   // "A", "B", "C", "D", "E"
+  score     Int      // 10, 7, 3, 0, -2
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([month, platform, keyword])
+}
+
+// 月次サマリー（自動集計用）
+model MonthlySummary {
+  id             String   @id @default(cuid())
+  month          String   @unique // "2026-02"
+  impressions    Int?
+  clicks         Int?
+  ctr            Float?
+  avgPosition    Float?
+  users          Int?
+  pageviews      Int?
+  aiScore        Int?
+  aiCitationRate Float?
+  actionsDone    Int?
+  actionsTotal   Int?
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// コンテンツ制作計画
+model ContentPlan {
+  id          String    @id @default(cuid())
+  month       String    // "2026-02"
+  title       String
+  category    String    // "インバウンド", "マイナ免許証", "経営", etc.
+  productLink String?   // "REborn", "チェックイン機", "両方", null
+  targetKw    String?
+  status      String    // PLANNED, WRITING, REVIEW, PUBLISHED
+  publishedAt DateTime?
+  url         String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// マーケティング設定
+model Settings {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// =======================================
+// メール一括送信機能
+// =======================================
+
+// メールテンプレート（1回目〜5回目以上）
+model EmailTemplate {
+  id           String   @id @default(cuid())
+  name         String
+  contactRound Int
+  subject      String
+  bodyHtml     String
+  bodyText     String
+  variables    String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([contactRound])
+}
+
+// メール送信履歴
+model EmailLog {
+  id             String    @id @default(cuid())
+  companyId      String
+  companyName    String
+  recipientEmail String
+  senderEmail    String
+  subject        String
+  bodyPreview    String?
+  bodyText       String?
+  templateId     String?
+  contactRound   Int
+  status         String    // SENT, FAILED, QUEUED, BOUNCED
+  errorMessage   String?
+  sentAt         DateTime  @default(now())
+  sentBy         String?
+  region         String?
+  office         String?
+  openedAt       DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([companyId])
+  @@index([sentAt])
+  @@index([status])
+}
+
+// メール送信設定
+model EmailSettings {
+  id               String   @id @default(cuid())
+  senderEmail      String
+  senderName       String
+  dailyLimit       Int      @default(50)
+  intervalSeconds  Int      @default(30)
+  batchSize        Int      @default(10)
+  batchIntervalMin Int      @default(5)
+  followUpDays     Int      @default(7)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+// ブラックリスト（受信拒否企業）
+model EmailBlacklist {
+  id          String   @id @default(cuid())
+  companyId   String   @unique
+  companyName String
+  email       String
+  reason      String?
+  blockedAt   DateTime @default(now())
+  blockedBy   String?
+
+  @@index([email])
+}
+
+// =======================================
+// 営業進捗管理（会社・連絡・返信・問合せフォーム）
+// =======================================
+
+// レンタカー会社マスター（Google Sheets + 手動追加）
+model Company {
+  id           String   @id @default(cuid())
+  companyName  String
+  prefecture   String?
+  region       String?
+  office       String?
+  phone        String?
+  email        String?
+  contactUrl   String?
+  address      String?
+  status       String   @default("未交渉")
+  systemInUse  String?
+  fleetSize    String?
+  notes        String?
+  source       String   @default("manual")
+  sourceDetail String?
+  lineId       String?
+  instagram    String?
+  twitter      String?
+  facebook     String?
+  otherSns     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  contactRecords  ContactRecord[]
+  inquiryFormLogs InquiryFormLog[]
+  emailReplies    EmailReply[]
+
+  @@index([companyName])
+  @@index([region])
+  @@index([source])
+}
+
+// 連絡履歴（メール・電話・問合せフォーム・SNS統合）
+model ContactRecord {
+  id          String     @id @default(cuid())
+  companyId   String
+  company     Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contactDate DateTime
+  contactType String
+  channel     String?
+  summary     String?
+  sentBy      String?
+  createdAt   DateTime   @default(now())
+
+  @@index([companyId])
+  @@index([contactDate])
+}
+
+// メール返信（受信トラッキング）
+model EmailReply {
+  id            String      @id @default(cuid())
+  emailLogId    String?
+  companyId     String?
+  company       Company? @relation(fields: [companyId], references: [id])
+  fromEmail     String
+  fromName      String?
+  subject       String?
+  bodyPreview   String?
+  gmailMsgId    String      @unique
+  threadId      String?
+  receivedAt    DateTime
+  isRead        Boolean     @default(false)
+  slackNotified Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+
+  @@index([fromEmail])
+  @@index([receivedAt])
+}
+
+// 問合せフォーム自動入力履歴
+model InquiryFormLog {
+  id           String      @id @default(cuid())
+  companyId    String
+  company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  formUrl      String
+  status       String
+  filledFields String?
+  screenshot   String?
+  submittedBy  String?
+  submittedAt  DateTime?
+  createdAt    DateTime    @default(now())
+
+  @@index([companyId])
+}
+
+// 作業日誌
+model WorkLog {
+  id             String   @id @default(cuid())
+  date           String   // "2026-01-22"
+  title          String
+  description    String?
+  author         String   @default("Manual")
+  startTime      String?
+  endTime        String?
+  workHours      Float    @default(0)
+  category       String   @default("coding")
+  module         String   @default("general") // kiosk, marketing, general
+  tools          String?
+  completedTasks String?
+  modifiedFiles  String?
+  createdFiles   String?
+  nextTasks      String?
+  linesChanged   Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([date])
+  @@index([module])
+}
+
+// コンテンツ最適化（リライト管理）
+model ContentRewrite {
+  id          String    @id @default(cuid())
+  articleTitle String
+  articleUrl  String?
+  category    String?
+  initialCtr  Float?
+  initialImpr Int?
+  currentCtr  Float?
+  currentImpr Int?
+  status      String    // NOT_STARTED, IN_PROGRESS, COMPLETED
+  priority    String?
+  changes     String?
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}

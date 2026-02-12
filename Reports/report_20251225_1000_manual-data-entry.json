@@ -1,0 +1,35 @@
+{
+  "report_id": "RPT-20251225-MANUAL",
+  "order_id": null,
+  "created_at": "2025-12-25T10:49:00+09:00",
+  "status": "completed",
+  "task_summary": "수작업 데이터 입력 - FC/법인/지점 마스터 데이터",
+  "work_hours": 2.5,
+  "work_type": "manual_data_entry",
+  "session_info": {
+    "ai_assistant": null,
+    "session_start": "2025-12-25T19:49:00+09:00",
+    "session_end": "2025-12-25T23:15:00+09:00",
+    "data_source": "DB createdAt 분석"
+  },
+  "completed_tasks": [
+    "FC 마스터 데이터 23건 입력",
+    "법인 마스터 데이터 31건 입력",
+    "지점 마스터 데이터 100건 입력"
+  ],
+  "data_summary": {
+    "fc_count": 23,
+    "corporation_count": 31,
+    "branch_count": 100,
+    "total_records": 154
+  },
+  "modified_files": [],
+  "created_files": [],
+  "test_results": {
+    "passed": true,
+    "notes": "Supabase PostgreSQL에 직접 데이터 입력"
+  },
+  "next_steps": [],
+  "blockers": [],
+  "context_for_next_session": "FC/법인/지점 마스터 데이터 초기 입력 완료. 이후 자산 데이터 입력 필요."
+}

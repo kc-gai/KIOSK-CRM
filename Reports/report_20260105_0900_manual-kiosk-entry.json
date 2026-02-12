@@ -1,0 +1,39 @@
+{
+  "report_id": "RPT-20260105-MANUAL",
+  "order_id": null,
+  "created_at": "2026-01-05T08:55:00+09:00",
+  "status": "completed",
+  "task_summary": "수작업 데이터 입력 - 키오스크 자산 마스터 데이터",
+  "work_hours": 4.0,
+  "work_type": "manual_data_entry",
+  "session_info": {
+    "ai_assistant": null,
+    "session_start": "2026-01-05T17:55:00+09:00",
+    "session_end": "2026-01-05T21:55:00+09:00",
+    "data_source": "DB createdAt 분석"
+  },
+  "completed_tasks": [
+    "키오스크 자산 데이터 219건 입력",
+    "시리얼번호, 지점배정, 취득유형, 설치일 등 상세정보 입력",
+    "FC/법인 추가 데이터 5건 입력",
+    "지점 추가 데이터 4건 입력"
+  ],
+  "data_summary": {
+    "kiosk_count": 219,
+    "fc_additions": 5,
+    "branch_additions": 4,
+    "total_records": 228
+  },
+  "modified_files": [],
+  "created_files": [],
+  "test_results": {
+    "passed": true,
+    "notes": "Supabase PostgreSQL에 직접 데이터 입력. CSV import 또는 CRM UI 통해 입력."
+  },
+  "next_steps": [
+    "신규 자산 등록 시 CRM UI 활용",
+    "CSV 일괄 등록 기능 개선"
+  ],
+  "blockers": [],
+  "context_for_next_session": "키오스크 자산 마스터 데이터 219건 초기 입력 완료. 총 공급 키오스크 수 219대 (KC자산 177 / 판매 42)"
+}

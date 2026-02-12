@@ -1,0 +1,70 @@
+{
+  "report_id": "RPT-20241218-001",
+  "created_at": "2024-12-18T16:00:00+09:00",
+  "status": "completed",
+  "task_summary": "프로세스 기반 메뉴 재설계 및 새 데이터 모델 구현",
+  "work_hours": 4.0,
+  "session_info": {
+    "ai_assistant": "Claude (Anthropic)",
+    "session_start": "2024-12-18T14:00:00+09:00",
+    "session_end": "2024-12-18T18:00:00+09:00",
+    "conversation_turns": 45,
+    "tools_used": ["Prisma", "Next.js", "TypeScript", "Tabler UI"]
+  },
+  "completed_tasks": [
+    "Prisma 스키마에 OrderProcess (5단계 발주의뢰 프로세스) 모델 추가",
+    "Prisma 스키마에 DeliveryProcess (2단계 납품 프로세스) 모델 추가",
+    "Prisma 스키마에 KioskPricing (원가/판매가 관리) 모델 추가",
+    "Prisma 스키마에 SalesHistory (매출 이력) 모델 추가",
+    "Prisma 스키마에 ApiConfig (외부 API 연동 설정) 모델 추가",
+    "Partner 모델에 OrderProcessClient 관계 추가",
+    "메뉴 구조 재배치 (layout.tsx) - 프로세스/자산/통계/외부거래처/내부서비스/설정 섹션",
+    "메뉴에 개발 진척도(%) 표시 기능 추가",
+    "번역 키 추가 (ko.json, ja.json) - orderProcess, deliveryProcess, statistics, pricing, apiSettings, guide",
+    "매뉴얼 페이지에 사용 가이드 탭 추가 - 시스템 개요, 빠른 시작, 메뉴별 가이드, 사용 팁",
+    "발주의뢰 프로세스 목록 페이지 (/dashboard/order-process)",
+    "납품 프로세스 목록 페이지 (/dashboard/delivery-process)",
+    "통계/모니터링 페이지 (/dashboard/statistics)",
+    "매출 관리 페이지 (/dashboard/pricing)",
+    "API 관리 페이지 (/dashboard/api-settings)",
+    "거래처/지점 통합 관리 페이지 (/dashboard/clients) - FC/법인/지점 트리 구조",
+    "발주의뢰 프로세스 API (GET/POST /api/order-process, GET/PUT/DELETE /api/order-process/[id])",
+    "납품 프로세스 API (GET/POST /api/delivery-process, GET/PUT/DELETE /api/delivery-process/[id])"
+  ],
+  "created_files": [
+    "app/dashboard/order-process/page.tsx",
+    "app/dashboard/delivery-process/page.tsx",
+    "app/dashboard/statistics/page.tsx",
+    "app/dashboard/pricing/page.tsx",
+    "app/dashboard/api-settings/page.tsx",
+    "app/dashboard/clients/page.tsx",
+    "app/api/order-process/route.ts",
+    "app/api/order-process/[id]/route.ts",
+    "app/api/delivery-process/route.ts",
+    "app/api/delivery-process/[id]/route.ts"
+  ],
+  "modified_files": [
+    "prisma/schema.prisma",
+    "app/dashboard/layout.tsx",
+    "app/dashboard/manuals/page.tsx",
+    "messages/ko.json",
+    "messages/ja.json"
+  ],
+  "test_results": {
+    "passed": true,
+    "notes": "DB 스키마 푸시 완료 (prisma db push). Prisma generate는 개발 서버 실행 중 파일 잠금으로 별도 실행 필요."
+  },
+  "next_steps": [
+    "발주의뢰 프로세스 상세 페이지 구현 (/dashboard/order-process/[id] - 5단계 스텝퍼 UI)",
+    "납품 프로세스 상세 페이지 구현 (/dashboard/delivery-process/[id] - 2단계 스텝퍼 UI)",
+    "발주의뢰 신규 등록 페이지 구현 (/dashboard/order-process/new)",
+    "납품 프로세스 신규 등록 페이지 구현 (/dashboard/delivery-process/new)",
+    "통계/모니터링 API 구현 (/api/statistics)",
+    "대시보드 진척현황 개선 - 프로세스 현황 카드, 마감 임박 건 표시",
+    "이메일/슬랙 알림 연동 구현",
+    "PDF 생성 기능 구현 (발주 의뢰서)",
+    "그룹웨어 품의서 API 연동 (API 스펙 확인 후)"
+  ],
+  "blockers": [],
+  "context_for_next_session": "프로세스 기반 메뉴 재설계 완료. 데이터 모델(OrderProcess, DeliveryProcess, KioskPricing, ApiConfig)과 API 기본 구현 완료. 메뉴 구조가 '외부 거래처'(FC/법인/지점 통합)와 '내부 서비스'(관할지역)로 재분류됨. 매뉴얼 페이지에 사용 가이드 탭 추가됨. 다음 작업은 프로세스 상세 페이지(스텝퍼 UI)와 알림 연동 구현."
+}

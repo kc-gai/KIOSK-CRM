@@ -1,0 +1,46 @@
+{
+  "report_id": "RPT-20241219-001",
+  "order_id": null,
+  "created_at": "2024-12-19T09:00:00+09:00",
+  "status": "completed",
+  "task_summary": "자산 관리, 수리, 샘플 대여, 매뉴얼 페이지 개발",
+  "work_hours": 8.0,
+  "session_info": {
+    "ai_assistant": "Claude (Anthropic)",
+    "session_start": "2024-12-19T09:00:00+09:00",
+    "session_end": "2024-12-19T23:00:00+09:00",
+    "conversation_turns": 50,
+    "tools_used": ["VS Code", "Prisma Studio", "Next.js Dev Server"]
+  },
+  "completed_tasks": [
+    "조립 매뉴얼 편집 페이지 구현",
+    "수리 입고 관리 페이지 구현",
+    "샘플 대여 관리 페이지 구현",
+    "자산 관리 페이지 확장 (CSV 가져오기/내보내기)",
+    "납품 의뢰서 상세 페이지 구현",
+    "사용 매뉴얼 페이지 구현",
+    "Prisma 스키마 확장 (Repair, SampleLoan 모델 추가)"
+  ],
+  "created_files": [
+    { "path": "app/dashboard/assembly-manual/[slug]/edit/page.tsx", "description": "매뉴얼 편집" },
+    { "path": "app/dashboard/repairs/page.tsx", "description": "수리 입고 관리" },
+    { "path": "app/dashboard/sample-loans/page.tsx", "description": "샘플 대여" },
+    { "path": "app/dashboard/manuals/page.tsx", "description": "사용 매뉴얼" },
+    { "path": "app/dashboard/delivery-request/[id]/page.tsx", "description": "납품 의뢰서 상세" }
+  ],
+  "modified_files": [
+    { "path": "app/dashboard/assets/page.tsx", "changes": "CSV 가져오기/내보내기 기능 추가" },
+    { "path": "prisma/schema.prisma", "changes": "Repair, SampleLoan 모델 추가" }
+  ],
+  "test_results": {
+    "passed": true,
+    "notes": "자산 관리 CRUD 정상 동작, CSV 파싱 테스트 완료"
+  },
+  "next_steps": [
+    "통계 페이지 개발",
+    "API 설정 페이지 개발",
+    "대시보드 차트 구현"
+  ],
+  "blockers": [],
+  "context_for_next_session": "자산 관련 주요 기능 구현 완료. 수리 입고, 샘플 대여 관리 기능 추가됨."
+}
