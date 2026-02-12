@@ -20,6 +20,8 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^5.10.0",
+    "@tabler/core": "^1.0.0-beta20",
+    "@tabler/icons-webfont": "^2.44.0",
     "@types/papaparse": "^5.5.2",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",

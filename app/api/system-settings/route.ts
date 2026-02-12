@@ -22,11 +22,16 @@ const SETTING_KEYS = {
     JOBCAN: [
         'JOBCAN_BASE_URL',
         'JOBCAN_API_TOKEN',
+    ],
+    VERTEX: [
+        'VERTEX_API_KEY',
+        'VERTEX_PROJECT_ID',
+        'VERTEX_LOCATION',
     ]
 }
 
 // 암호화가 필요한 키들
-const ENCRYPTED_KEYS = ['GOOGLE_PRIVATE_KEY', 'SMTP_PASSWORD', 'JOBCAN_API_TOKEN']
+const ENCRYPTED_KEYS = ['GOOGLE_PRIVATE_KEY', 'SMTP_PASSWORD', 'JOBCAN_API_TOKEN', 'VERTEX_API_KEY']
 
 /**
  * GET /api/system-settings
@@ -82,6 +87,7 @@ export async function POST(request: NextRequest) {
             else if (SETTING_KEYS.EMAIL.includes(key)) category = 'EMAIL'
             else if (SETTING_KEYS.NOTIFICATION.includes(key)) category = 'NOTIFICATION'
             else if (SETTING_KEYS.JOBCAN.includes(key)) category = 'JOBCAN'
+            else if (SETTING_KEYS.VERTEX.includes(key)) category = 'VERTEX'
 
             const encrypted = ENCRYPTED_KEYS.includes(key)
 

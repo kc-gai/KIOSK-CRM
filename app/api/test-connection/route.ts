@@ -178,6 +178,55 @@ export async function POST(request: NextRequest) {
                 return NextResponse.json(jobcanResult)
             }
 
+            case 'VERTEX_AI': {
+                // DB에서 Vertex AI 설정 조회
+                const vertexSettings = await prisma.systemSetting.findMany({
+                    where: { category: 'VERTEX' }
+                })
+                const vertexApiKey = vertexSettings.find(s => s.key === 'VERTEX_API_KEY')?.value
+                const vertexProjectId = vertexSettings.find(s => s.key === 'VERTEX_PROJECT_ID')?.value
+                const vertexLocation = vertexSettings.find(s => s.key === 'VERTEX_LOCATION')?.value || 'asia-northeast1'
+
+                if (!vertexApiKey) {
+                    return NextResponse.json({
+                        success: false,
+                        message: 'Vertex AI API 키가 설정되지 않았습니다.'
+                    })
+                }
+
+                try {
+                    // Vertex AI Gemini API로 간단한 테스트
+                    const url = `https://${vertexLocation}-aiplatform.googleapis.com/v1/projects/${vertexProjectId}/locations/${vertexLocation}/publishers/google/models/gemini-2.0-flash:generateContent?key=${vertexApiKey}`
+
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: 'Hi' }] }],
+                            generationConfig: { maxOutputTokens: 10 }
+                        })
+                    })
+
+                    if (response.ok) {
+                        return NextResponse.json({
+                            success: true,
+                            message: `Vertex AI 연결 성공! (${vertexLocation}, Project: ${vertexProjectId})`
+                        })
+                    } else {
+                        const errorData = await response.json().catch(() => ({}))
+                        return NextResponse.json({
+                            success: false,
+                            message: `Vertex AI 오류: ${errorData.error?.message || response.status}`
+                        })
+                    }
+                } catch (error: any) {
+                    return NextResponse.json({
+                        success: false,
+                        message: `Vertex AI 연결 실패: ${error.message}`
+                    })
+                }
+            }
+
             default:
                 return NextResponse.json(
                     { success: false, message: '지원하지 않는 연결 타입입니다.' },

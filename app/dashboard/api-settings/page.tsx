@@ -61,6 +61,10 @@ type SystemSettings = {
     // Jobcan
     JOBCAN_BASE_URL: string
     JOBCAN_API_TOKEN: string
+    // Vertex AI
+    VERTEX_API_KEY: string
+    VERTEX_PROJECT_ID: string
+    VERTEX_LOCATION: string
 }
 
 const API_TYPES = ['GROUPWARE', 'SLACK', 'EMAIL', 'ERP', 'CUSTOM']
@@ -99,6 +103,9 @@ export default function ApiSettingsPage() {
         NEXTAUTH_SECRET: '',
         JOBCAN_BASE_URL: 'https://ssl.wf.jobcan.jp/wf_api',
         JOBCAN_API_TOKEN: '',
+        VERTEX_API_KEY: '',
+        VERTEX_PROJECT_ID: '',
+        VERTEX_LOCATION: 'asia-northeast1',
     })
     const [savingSettings, setSavingSettings] = useState(false)
     const [showPrivateKey, setShowPrivateKey] = useState(false)
@@ -111,6 +118,11 @@ export default function ApiSettingsPage() {
     const [showGeminiKey, setShowGeminiKey] = useState(false)
     const [testingAI, setTestingAI] = useState(false)
     const [aiTestResult, setAiTestResult] = useState<ConnectionTestResult | null>(null)
+
+    // Vertex AI 상태
+    const [showVertexKey, setShowVertexKey] = useState(false)
+    const [testingVertex, setTestingVertex] = useState(false)
+    const [vertexTestResult, setVertexTestResult] = useState<ConnectionTestResult | null>(null)
 
     // 배포 설정 관련 상태
     const [showGoogleClientSecret, setShowGoogleClientSecret] = useState(false)
@@ -177,7 +189,7 @@ export default function ApiSettingsPage() {
     }
 
     // 시스템 설정 저장
-    const saveSystemSettings = async (category: 'CALENDAR' | 'EMAIL' | 'AI' | 'OAUTH' | 'DATABASE' | 'NEXTAUTH' | 'JOBCAN') => {
+    const saveSystemSettings = async (category: 'CALENDAR' | 'EMAIL' | 'AI' | 'OAUTH' | 'DATABASE' | 'NEXTAUTH' | 'JOBCAN' | 'VERTEX') => {
         setSavingSettings(true)
         try {
             const settingsToSave: Record<string, string> = {}
@@ -211,6 +223,10 @@ export default function ApiSettingsPage() {
             } else if (category === 'JOBCAN') {
                 settingsToSave.JOBCAN_BASE_URL = systemSettings.JOBCAN_BASE_URL
                 settingsToSave.JOBCAN_API_TOKEN = systemSettings.JOBCAN_API_TOKEN
+            } else if (category === 'VERTEX') {
+                settingsToSave.VERTEX_API_KEY = systemSettings.VERTEX_API_KEY
+                settingsToSave.VERTEX_PROJECT_ID = systemSettings.VERTEX_PROJECT_ID
+                settingsToSave.VERTEX_LOCATION = systemSettings.VERTEX_LOCATION
             }
 
             const res = await fetch('/api/system-settings', {
@@ -322,6 +338,25 @@ export default function ApiSettingsPage() {
             setAiTestResult({ success: false, message: t('aiTestError') })
         } finally {
             setTestingAI(false)
+        }
+    }
+
+    // Vertex AI 연결 테스트
+    const handleTestVertex = async () => {
+        setTestingVertex(true)
+        setVertexTestResult(null)
+        try {
+            const res = await fetch('/api/test-connection', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'VERTEX_AI' })
+            })
+            const result = await res.json()
+            setVertexTestResult(result)
+        } catch {
+            setVertexTestResult({ success: false, message: t('testError') })
+        } finally {
+            setTestingVertex(false)
         }
     }
 
@@ -1412,7 +1447,7 @@ export default function ApiSettingsPage() {
                 </div>
             </div>
 
-            {/* Jobcan Workflow 설정 */}
+            {/* Jobcan Workflow / Vertex AI 설정 */}
             <div className="row row-deck row-cards mb-4">
                 <div className="col-12 col-lg-6">
                     <div className="card">
@@ -1482,6 +1517,144 @@ export default function ApiSettingsPage() {
                             >
                                 {savingSettings ? <span className="spinner-border spinner-border-sm me-1" /> : <i className="ti ti-device-floppy me-1"></i>}
                                 {locale === 'ja' ? '保存' : '저장'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Vertex AI */}
+                <div className="col-12 col-lg-6">
+                    <div className="card">
+                        <div className="card-header">
+                            <div className="d-flex align-items-center w-100">
+                                <div className="avatar avatar-sm bg-cyan-lt me-2">
+                                    <span className="text-cyan" style={{ fontSize: '0.85rem', fontWeight: 700 }}>V</span>
+                                </div>
+                                <h3 className="card-title mb-0">
+                                    Google Vertex AI
+                                </h3>
+                                {badgeCorp}
+                            </div>
+                        </div>
+                        <div className="card-body">
+                            <p className="text-muted small mb-3">
+                                {locale === 'ja'
+                                    ? 'Google Cloud Vertex AIのAPI設定です。Gemini Pro等のモデルを利用します。'
+                                    : 'Google Cloud Vertex AI API 설정입니다. Gemini Pro 등의 모델을 사용합니다.'}
+                            </p>
+
+                            <div className="mb-3">
+                                <label className="form-label">API Key</label>
+                                <div className="input-group input-group-sm">
+                                    <input
+                                        type={showVertexKey ? 'text' : 'password'}
+                                        className="form-control form-control-sm"
+                                        placeholder="AIzaSy..."
+                                        value={systemSettings.VERTEX_API_KEY}
+                                        onChange={(e) => {
+                                            if (e.target.value !== '••••••••') {
+                                                setSystemSettings(prev => ({
+                                                    ...prev,
+                                                    VERTEX_API_KEY: e.target.value
+                                                }))
+                                            }
+                                        }}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-secondary"
+                                        onClick={() => setShowVertexKey(!showVertexKey)}
+                                    >
+                                        {showVertexKey ? <EyeOff size={14} /> : <Eye size={14} />}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="mb-3">
+                                <label className="form-label">Project ID</label>
+                                <input
+                                    type="text"
+                                    className="form-control form-control-sm"
+                                    placeholder="my-gcp-project-id"
+                                    value={systemSettings.VERTEX_PROJECT_ID}
+                                    onChange={(e) => setSystemSettings(prev => ({
+                                        ...prev,
+                                        VERTEX_PROJECT_ID: e.target.value
+                                    }))}
+                                />
+                                <small className="text-muted">
+                                    {locale === 'ja' ? 'Google Cloudプロジェクト ID' : 'Google Cloud 프로젝트 ID'}
+                                </small>
+                            </div>
+
+                            <div className="mb-3">
+                                <label className="form-label">Location</label>
+                                <select
+                                    className="form-select form-select-sm"
+                                    value={systemSettings.VERTEX_LOCATION}
+                                    onChange={(e) => setSystemSettings(prev => ({
+                                        ...prev,
+                                        VERTEX_LOCATION: e.target.value
+                                    }))}
+                                >
+                                    <option value="asia-northeast1">asia-northeast1 (Tokyo)</option>
+                                    <option value="asia-northeast3">asia-northeast3 (Seoul)</option>
+                                    <option value="us-central1">us-central1 (Iowa)</option>
+                                    <option value="us-east4">us-east4 (Virginia)</option>
+                                    <option value="europe-west1">europe-west1 (Belgium)</option>
+                                </select>
+                            </div>
+
+                            <small className="text-muted">
+                                <a href="https://console.cloud.google.com/vertex-ai" target="_blank" rel="noopener noreferrer">
+                                    {locale === 'ja' ? 'Google Cloud Consoleで確認' : 'Google Cloud Console에서 확인'} <ExternalLink size={12} className="ms-1" />
+                                </a>
+                            </small>
+
+                            {vertexTestResult && (
+                                <div className={`alert ${vertexTestResult.success ? 'alert-success' : 'alert-danger'} py-2 mt-3 mb-0`}>
+                                    <div className="d-flex align-items-center">
+                                        {vertexTestResult.success ? (
+                                            <CheckCircle size={16} className="me-2" />
+                                        ) : (
+                                            <AlertCircle size={16} className="me-2" />
+                                        )}
+                                        <span className="small">{vertexTestResult.message}</span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        <div className="card-footer d-flex justify-content-between">
+                            <button
+                                className="btn btn-outline-primary btn-sm"
+                                onClick={handleTestVertex}
+                                disabled={testingVertex}
+                            >
+                                {testingVertex ? (
+                                    <>
+                                        <span className="spinner-border spinner-border-sm me-1"></span>
+                                        {t('testing')}
+                                    </>
+                                ) : (
+                                    <>
+                                        <TestTube size={14} className="me-1" />
+                                        {t('connectionTest')}
+                                    </>
+                                )}
+                            </button>
+                            <button
+                                className="btn btn-primary btn-sm"
+                                onClick={() => saveSystemSettings('VERTEX')}
+                                disabled={savingSettings}
+                            >
+                                {savingSettings ? (
+                                    <span className="spinner-border spinner-border-sm"></span>
+                                ) : (
+                                    <>
+                                        <Save size={14} className="me-1" />
+                                        {t('save')}
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>
