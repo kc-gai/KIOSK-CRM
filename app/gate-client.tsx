@@ -63,29 +63,16 @@ export function GateClient({ userName, userEmail, kioskStats, marketingStats }: 
             ]
         },
         {
-            id: 'hr',
-            title: 'HR Management',
-            titleJa: '人事管理',
-            titleKo: '인사관리',
-            description: '직원 관리·근태·평가 (예정)',
-            descriptionJa: '社員管理・勤怠・評価（予定）',
-            href: '#',
-            icon: 'ti-users-group',
-            color: 'purple',
-            status: 'planned' as const,
-            stats: []
-        },
-        {
-            id: 'finance',
-            title: 'Finance',
-            titleJa: '経理・財務',
-            titleKo: '경리·재무',
-            description: '매출·비용·청구서 관리 (예정)',
-            descriptionJa: '売上・費用・請求書管理（予定）',
-            href: '#',
-            icon: 'ti-report-money',
-            color: 'yellow',
-            status: 'planned' as const,
+            id: 'pdf-tool',
+            title: 'PDF Original Maker',
+            titleJa: 'PDF原本制作',
+            titleKo: 'PDF 원본 제작',
+            description: 'PDF에서 원본 문서 복원·제작',
+            descriptionJa: 'PDFから原本ドキュメント復元・制作',
+            href: 'http://localhost:3002',
+            icon: 'ti-file-type-pdf',
+            color: 'red',
+            status: 'external' as const,
             stats: []
         },
     ]
@@ -138,11 +125,11 @@ export function GateClient({ userName, userEmail, kioskStats, marketingStats }: 
                 {/* Module Cards */}
                 <div className="row g-4 justify-content-center">
                     {modules.map((mod) => (
-                        <div key={mod.id} className="col-12 col-md-6 col-lg-6 col-xl-3">
-                            {mod.status === 'active' ? (
-                                <Link href={mod.href} className="text-decoration-none">
+                        <div key={mod.id} className="col-12 col-md-6 col-lg-6 col-xl-4">
+                            {(mod.status === 'active' || mod.status === 'external') ? (
+                                <a href={mod.href} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
                                     <ModuleCard module={mod} />
-                                </Link>
+                                </a>
                             ) : (
                                 <ModuleCard module={mod} />
                             )}
@@ -172,24 +159,6 @@ export function GateClient({ userName, userEmail, kioskStats, marketingStats }: 
                                     <i className="ti ti-users text-primary mb-1" style={{ fontSize: '1.5rem' }}></i>
                                     <div className="small fw-medium">계정관리</div>
                                     <div className="small text-muted" style={{ fontSize: '0.7rem' }}>アカウント管理</div>
-                                </div>
-                            </Link>
-                        </div>
-                        <div className="col-6 col-sm-4 col-md-3 col-lg-2">
-                            <Link href="/dashboard/work-logs" className="text-decoration-none">
-                                <div className="card card-sm text-center py-3 h-100" style={{ cursor: 'pointer' }}>
-                                    <i className="ti ti-clock-record text-primary mb-1" style={{ fontSize: '1.5rem' }}></i>
-                                    <div className="small fw-medium">작업일지</div>
-                                    <div className="small text-muted" style={{ fontSize: '0.7rem' }}>作業日誌</div>
-                                </div>
-                            </Link>
-                        </div>
-                        <div className="col-6 col-sm-4 col-md-3 col-lg-2">
-                            <Link href="/dashboard/dev-tasks" className="text-decoration-none">
-                                <div className="card card-sm text-center py-3 h-100" style={{ cursor: 'pointer' }}>
-                                    <i className="ti ti-list-check text-primary mb-1" style={{ fontSize: '1.5rem' }}></i>
-                                    <div className="small fw-medium">개발현황</div>
-                                    <div className="small text-muted" style={{ fontSize: '0.7rem' }}>開発状況</div>
                                 </div>
                             </Link>
                         </div>
@@ -233,24 +202,22 @@ function ModuleCard({ module }: { module: {
     descriptionJa: string
     icon: string
     color: string
-    status: 'active' | 'planned'
+    status: 'active' | 'external' | 'planned'
     stats: { label: string; labelJa: string; value: number }[]
 }}) {
-    const isPlanned = module.status === 'planned'
+    const isClickable = module.status === 'active' || module.status === 'external'
 
     return (
         <div
-            className={`card h-100 ${isPlanned ? 'opacity-50' : ''}`}
+            className="card h-100"
             style={{
-                cursor: isPlanned ? 'default' : 'pointer',
+                cursor: isClickable ? 'pointer' : 'default',
                 transition: 'transform 0.2s, box-shadow 0.2s',
-                border: isPlanned ? '1px dashed #cbd5e1' : `2px solid var(--tblr-${module.color})`,
+                border: `2px solid var(--tblr-${module.color})`,
             }}
             onMouseEnter={(e) => {
-                if (!isPlanned) {
-                    e.currentTarget.style.transform = 'translateY(-4px)'
-                    e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)'
-                }
+                e.currentTarget.style.transform = 'translateY(-4px)'
+                e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)'
             }}
             onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0)'
@@ -263,14 +230,10 @@ function ModuleCard({ module }: { module: {
                     <span className={`avatar bg-${module.color} text-white`} style={{ width: '48px', height: '48px' }}>
                         <i className={`ti ${module.icon}`} style={{ fontSize: '1.5rem' }}></i>
                     </span>
-                    {isPlanned ? (
-                        <span className="badge bg-secondary-lt">Coming Soon</span>
-                    ) : (
-                        <span className={`badge bg-${module.color}-lt`}>
-                            <i className="ti ti-circle-filled me-1" style={{ fontSize: '0.5rem' }}></i>
-                            Active
-                        </span>
-                    )}
+                    <span className={`badge bg-${module.color}-lt`}>
+                        <i className="ti ti-circle-filled me-1" style={{ fontSize: '0.5rem' }}></i>
+                        {module.status === 'external' ? 'External' : 'Active'}
+                    </span>
                 </div>
 
                 {/* Title */}
@@ -291,25 +254,18 @@ function ModuleCard({ module }: { module: {
                         ))}
                     </div>
                 )}
-
-                {/* Planned placeholder */}
-                {isPlanned && (
-                    <div className="text-center py-3">
-                        <i className="ti ti-clock text-muted" style={{ fontSize: '2rem' }}></i>
-                        <p className="text-muted small mt-2 mb-0">{module.descriptionJa}</p>
-                    </div>
-                )}
             </div>
 
             {/* Footer */}
-            {!isPlanned && (
-                <div className={`card-footer bg-${module.color}-lt text-center py-2`}>
-                    <span className={`text-${module.color} fw-medium small`}>
-                        <i className="ti ti-arrow-right me-1"></i>
-                        모듈 열기 · モジュールを開く
-                    </span>
-                </div>
-            )}
+            <div className={`card-footer bg-${module.color}-lt text-center py-2`}>
+                <span className={`text-${module.color} fw-medium small`}>
+                    {module.status === 'planned' ? (
+                        <><i className="ti ti-clock me-1"></i>준비 중 · 準備中</>
+                    ) : (
+                        <><i className="ti ti-external-link me-1"></i>새 탭으로 열기 · 新しいタブで開く</>
+                    )}
+                </span>
+            </div>
         </div>
     )
 }
