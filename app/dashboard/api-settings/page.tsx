@@ -46,6 +46,8 @@ type SystemSettings = {
     ANTHROPIC_API_KEY: string
     OPENAI_API_KEY: string
     AI_MODEL: string
+    // Gemini
+    GEMINI_API_KEY: string
     // Google OAuth
     GOOGLE_CLIENT_ID: string
     GOOGLE_CLIENT_SECRET: string
@@ -87,6 +89,7 @@ export default function ApiSettingsPage() {
         ANTHROPIC_API_KEY: '',
         OPENAI_API_KEY: '',
         AI_MODEL: 'claude-sonnet-4-20250514',
+        GEMINI_API_KEY: '',
         GOOGLE_CLIENT_ID: '',
         GOOGLE_CLIENT_SECRET: '',
         ALLOWED_GOOGLE_EMAILS: 'gai@kaflixcloud.co.jp',
@@ -105,6 +108,7 @@ export default function ApiSettingsPage() {
     const [jobcanTestResult, setJobcanTestResult] = useState<ConnectionTestResult | null>(null)
     const [showAnthropicKey, setShowAnthropicKey] = useState(false)
     const [showOpenAIKey, setShowOpenAIKey] = useState(false)
+    const [showGeminiKey, setShowGeminiKey] = useState(false)
     const [testingAI, setTestingAI] = useState(false)
     const [aiTestResult, setAiTestResult] = useState<ConnectionTestResult | null>(null)
 
@@ -192,6 +196,7 @@ export default function ApiSettingsPage() {
             } else if (category === 'AI') {
                 settingsToSave.ANTHROPIC_API_KEY = systemSettings.ANTHROPIC_API_KEY
                 settingsToSave.OPENAI_API_KEY = systemSettings.OPENAI_API_KEY
+                settingsToSave.GEMINI_API_KEY = systemSettings.GEMINI_API_KEY
                 settingsToSave.AI_MODEL = systemSettings.AI_MODEL
             } else if (category === 'OAUTH') {
                 settingsToSave.GOOGLE_CLIENT_ID = systemSettings.GOOGLE_CLIENT_ID
@@ -465,14 +470,44 @@ export default function ApiSettingsPage() {
         setEditingConfig(null)
     }
 
+    const badgeCorp = (
+        <span className="badge bg-blue-lt text-blue ms-auto" style={{ fontSize: '0.65rem' }}>
+            <i className="ti ti-building me-1" style={{ fontSize: '0.6rem' }}></i>
+            {locale === 'ja' ? '公用' : '공용'}
+        </span>
+    )
+    const badgePersonal = (
+        <span className="badge bg-yellow-lt text-yellow ms-auto" style={{ fontSize: '0.65rem' }}>
+            <i className="ti ti-user me-1" style={{ fontSize: '0.6rem' }}></i>
+            {locale === 'ja' ? '個人' : '개인'}
+        </span>
+    )
+    const badgePersonalPaid = (
+        <span className="badge bg-red-lt text-red ms-auto" style={{ fontSize: '0.65rem' }}>
+            <i className="ti ti-credit-card me-1" style={{ fontSize: '0.6rem' }}></i>
+            {locale === 'ja' ? 'gai個人(有料)' : 'gai 개인(유료)'}
+        </span>
+    )
+
     return (
         <div className="container-xl">
             {/* 헤더 */}
             <div className="page-header d-print-none mb-4">
                 <div className="row align-items-center">
                     <div className="col-auto">
-                        <h2 className="page-title">{t('title')}</h2>
-                        <div className="text-muted mt-1">{t('subtitle')}</div>
+                        <div className="d-flex align-items-center gap-2">
+                            <h2 className="page-title mb-0">{t('title')}</h2>
+                            <span className="badge bg-yellow-lt text-yellow border border-yellow" style={{ fontSize: '0.7rem' }}>
+                                <i className="ti ti-user me-1" style={{ fontSize: '0.65rem' }}></i>
+                                {locale === 'ja' ? '個人アカウント' : '개인용 어카운트'}
+                            </span>
+                        </div>
+                        <div className="text-muted mt-1">
+                            {t('subtitle')}
+                            <span className="text-yellow ms-2" style={{ fontSize: '0.75rem' }}>
+                                — {locale === 'ja' ? '※ 追って法人アカウントへ切替予定' : '※ 추후 회사 어카운트로 전환 예정'}
+                            </span>
+                        </div>
                     </div>
                     <div className="col-auto ms-auto">
                         <button
@@ -495,9 +530,10 @@ export default function ApiSettingsPage() {
                 <div className="col-lg-6">
                     <div className="card">
                         <div className="card-header">
-                            <div className="d-flex align-items-center">
+                            <div className="d-flex align-items-center w-100">
                                 <Calendar size={20} className="me-2 text-primary" />
                                 <h3 className="card-title mb-0">Google Calendar</h3>
+                                {badgeCorp}
                             </div>
                         </div>
                         <div className="card-body">
@@ -615,9 +651,10 @@ export default function ApiSettingsPage() {
                 <div className="col-lg-6">
                     <div className="card">
                         <div className="card-header">
-                            <div className="d-flex align-items-center">
+                            <div className="d-flex align-items-center w-100">
                                 <Mail size={20} className="me-2 text-blue" />
                                 <h3 className="card-title mb-0">Email (SMTP)</h3>
+                                {badgeCorp}
                             </div>
                         </div>
                         <div className="card-body">
@@ -802,9 +839,10 @@ export default function ApiSettingsPage() {
                 <div className="col-12">
                     <div className="card">
                         <div className="card-header">
-                            <div className="d-flex align-items-center">
+                            <div className="d-flex align-items-center w-100">
                                 <Bot size={20} className="me-2 text-purple" />
                                 <h3 className="card-title mb-0">{t('aiChatbotTitle')}</h3>
+                                {badgePersonalPaid}
                             </div>
                         </div>
                         <div className="card-body">
@@ -814,8 +852,8 @@ export default function ApiSettingsPage() {
 
                             <div className="row g-3">
                                 {/* Anthropic Claude API */}
-                                <div className="col-lg-6">
-                                    <div className="card bg-light">
+                                <div className="col-lg-4">
+                                    <div className="card bg-light h-100">
                                         <div className="card-body">
                                             <div className="d-flex align-items-center mb-3">
                                                 <div className="avatar avatar-sm bg-orange-lt me-2">
@@ -877,8 +915,8 @@ export default function ApiSettingsPage() {
                                 </div>
 
                                 {/* OpenAI API */}
-                                <div className="col-lg-6">
-                                    <div className="card bg-light">
+                                <div className="col-lg-4">
+                                    <div className="card bg-light h-100">
                                         <div className="card-body">
                                             <div className="d-flex align-items-center mb-3">
                                                 <div className="avatar avatar-sm bg-green-lt me-2">
@@ -921,6 +959,57 @@ export default function ApiSettingsPage() {
                                             <div className="alert alert-info py-2 mb-0">
                                                 <small>
                                                     <strong>{t('note')}</strong> {t('openaiNote')}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Google Gemini API */}
+                                <div className="col-lg-4">
+                                    <div className="card bg-light h-100">
+                                        <div className="card-body">
+                                            <div className="d-flex align-items-center mb-3">
+                                                <div className="avatar avatar-sm bg-blue-lt me-2">
+                                                    <span className="text-blue">G</span>
+                                                </div>
+                                                <div>
+                                                    <h4 className="card-title mb-0">Google Gemini</h4>
+                                                    <small className="text-muted">{locale === 'ja' ? '代替・マルチモーダル対応' : '대안 · 멀티모달 지원'}</small>
+                                                </div>
+                                            </div>
+
+                                            <div className="mb-3">
+                                                <label className="form-label">{t('apiKeyLabel')}</label>
+                                                <div className="input-group input-group-sm">
+                                                    <input
+                                                        type={showGeminiKey ? 'text' : 'password'}
+                                                        className="form-control form-control-sm"
+                                                        placeholder="AIzaSy..."
+                                                        value={systemSettings.GEMINI_API_KEY}
+                                                        onChange={(e) => setSystemSettings(prev => ({
+                                                            ...prev,
+                                                            GEMINI_API_KEY: e.target.value
+                                                        }))}
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-outline-secondary"
+                                                        onClick={() => setShowGeminiKey(!showGeminiKey)}
+                                                    >
+                                                        {showGeminiKey ? <EyeOff size={14} /> : <Eye size={14} />}
+                                                    </button>
+                                                </div>
+                                                <small className="text-muted">
+                                                    <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer">
+                                                        {locale === 'ja' ? 'Google AI Studioで発行' : 'Google AI Studio에서 발급'}
+                                                    </a>
+                                                </small>
+                                            </div>
+
+                                            <div className="alert alert-info py-2 mb-0">
+                                                <small>
+                                                    <strong>{t('note')}</strong> {locale === 'ja' ? 'Gemini 2.5 Pro / Flash 対応。無料枠あり。' : 'Gemini 2.5 Pro / Flash 지원. 무료 할당량 있음.'}
                                                 </small>
                                             </div>
                                         </div>
@@ -990,9 +1079,10 @@ export default function ApiSettingsPage() {
                 <div className="col-lg-6">
                     <div className="card">
                         <div className="card-header">
-                            <div className="d-flex align-items-center">
+                            <div className="d-flex align-items-center w-100">
                                 <Key size={20} className="me-2 text-red" />
                                 <h3 className="card-title mb-0">{t('googleOAuthTitle')}</h3>
+                                {badgeCorp}
                             </div>
                         </div>
                         <div className="card-body">
@@ -1080,9 +1170,10 @@ export default function ApiSettingsPage() {
                 <div className="col-lg-6">
                     <div className="card">
                         <div className="card-header">
-                            <div className="d-flex align-items-center">
+                            <div className="d-flex align-items-center w-100">
                                 <Database size={20} className="me-2 text-green" />
                                 <h3 className="card-title mb-0">{t('supabaseTitle')}</h3>
+                                {badgePersonal}
                             </div>
                         </div>
                         <div className="card-body">
@@ -1199,9 +1290,10 @@ export default function ApiSettingsPage() {
                 <div className="col-lg-6">
                     <div className="card">
                         <div className="card-header">
-                            <div className="d-flex align-items-center">
+                            <div className="d-flex align-items-center w-100">
                                 <Shield size={20} className="me-2 text-indigo" />
                                 <h3 className="card-title mb-0">{t('nextAuthTitle')}</h3>
+                                {badgePersonal}
                             </div>
                         </div>
                         <div className="card-body">
@@ -1279,9 +1371,10 @@ export default function ApiSettingsPage() {
                 <div className="col-lg-6">
                     <div className="card">
                         <div className="card-header">
-                            <div className="d-flex align-items-center">
+                            <div className="d-flex align-items-center w-100">
                                 <Github size={20} className="me-2" />
                                 <h3 className="card-title mb-0">{t('vercelTitle')}</h3>
+                                {badgeCorp}
                             </div>
                         </div>
                         <div className="card-body">
@@ -1324,10 +1417,13 @@ export default function ApiSettingsPage() {
                 <div className="col-12 col-lg-6">
                     <div className="card">
                         <div className="card-header">
-                            <h3 className="card-title">
-                                <i className="ti ti-file-check me-2"></i>
-                                Jobcan Workflow ({locale === 'ja' ? '稟議連携' : '품의 연동'})
-                            </h3>
+                            <div className="d-flex align-items-center w-100">
+                                <h3 className="card-title mb-0">
+                                    <i className="ti ti-file-check me-2"></i>
+                                    Jobcan Workflow ({locale === 'ja' ? '稟議連携' : '품의 연동'})
+                                </h3>
+                                {badgeCorp}
+                            </div>
                         </div>
                         <div className="card-body">
                             <p className="text-muted small mb-3">

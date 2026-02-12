@@ -22,59 +22,147 @@ interface GateClientProps {
     }
 }
 
-export function GateClient({ userName, userEmail, kioskStats, marketingStats }: GateClientProps) {
-    const t = useTranslations()
+type ModuleStatus = 'active' | 'external' | 'planned'
 
-    const modules = [
+interface FeatureItem {
+    icon: string
+    title: string
+    desc: string
+}
+
+interface ModuleData {
+    id: string
+    title: string
+    subtitle: string
+    description: string
+    href: string
+    icon: string
+    color: string
+    status: ModuleStatus
+    progress: number
+    stats: { label: string; value: number }[]
+    features?: FeatureItem[]
+}
+
+export function GateClient({ userName, userEmail, kioskStats, marketingStats }: GateClientProps) {
+    const t = useTranslations('gate')
+
+    const modules: ModuleData[] = [
         {
             id: 'kiosk',
             title: 'Kiosk Asset CRM',
-            titleJa: 'キオスク資産管理',
-            titleKo: '키오스크 자산관리',
-            description: '키오스크 자산·발주·납품·거래처 통합 관리',
-            descriptionJa: 'キオスク資産・発注・納品・取引先統合管理',
+            subtitle: t('kioskSubtitle'),
+            description: t('kioskDesc'),
             href: '/dashboard',
             icon: 'ti-device-desktop',
             color: 'blue',
-            status: 'active' as const,
+            status: 'active',
+            progress: 90,
             stats: [
-                { label: '총 키오스크', labelJa: '総キオスク', value: kioskStats.totalKiosks },
-                { label: '배치 완료', labelJa: '配置済', value: kioskStats.deployedKiosks },
-                { label: '진행중 발주', labelJa: '進行中発注', value: kioskStats.pendingOrders },
-                { label: '거래처', labelJa: '取引先', value: kioskStats.totalCorporations },
+                { label: t('totalKiosks'), value: kioskStats.totalKiosks },
+                { label: t('deployedKiosks'), value: kioskStats.deployedKiosks },
+                { label: t('pendingOrders'), value: kioskStats.pendingOrders },
+                { label: t('totalCorporations'), value: kioskStats.totalCorporations },
             ]
         },
         {
             id: 'marketing',
             title: 'Marketing SEO CRM',
-            titleJa: 'マーケティングSEO CRM',
-            titleKo: '마케팅 SEO CRM',
-            description: '영업 추적·이메일 캠페인·콘텐츠·KPI 관리',
-            descriptionJa: '営業追跡・メールキャンペーン・コンテンツ・KPI管理',
+            subtitle: t('marketingSubtitle'),
+            description: t('marketingDesc'),
             href: '/marketing',
             icon: 'ti-chart-line',
             color: 'green',
-            status: 'active' as const,
+            status: 'active',
+            progress: 70,
             stats: [
-                { label: '관리 업체', labelJa: '管理企業', value: marketingStats.totalCompanies },
-                { label: '발송 메일', labelJa: '送信メール', value: marketingStats.emailsSent },
-                { label: '콘텐츠 플랜', labelJa: 'コンテンツプラン', value: marketingStats.contentPlans },
-                { label: '작업일지', labelJa: '作業日誌', value: marketingStats.workLogs },
+                { label: t('totalCompanies'), value: marketingStats.totalCompanies },
+                { label: t('emailsSent'), value: marketingStats.emailsSent },
+                { label: t('contentPlans'), value: marketingStats.contentPlans },
+                { label: t('workLogCount'), value: marketingStats.workLogs },
             ]
         },
         {
             id: 'pdf-tool',
             title: 'PDF Original Maker',
-            titleJa: 'PDF原本制作',
-            titleKo: 'PDF 원본 제작',
-            description: 'PDF에서 원본 문서 복원·제작',
-            descriptionJa: 'PDFから原本ドキュメント復元・制作',
+            subtitle: t('pdfSubtitle'),
+            description: t('pdfDesc'),
             href: 'http://localhost:3002',
             icon: 'ti-file-type-pdf',
             color: 'red',
-            status: 'external' as const,
+            status: 'external',
+            progress: 50,
+            stats: [],
+            features: [
+                {
+                    icon: 'ti-file-pencil',
+                    title: t('pdfFeature1Title'),
+                    desc: t('pdfFeature1Desc'),
+                },
+                {
+                    icon: 'ti-language',
+                    title: t('pdfFeature2Title'),
+                    desc: t('pdfFeature2Desc'),
+                },
+            ]
+        },
+        {
+            id: 'contract',
+            title: 'Contract Manager',
+            subtitle: t('contractSubtitle'),
+            description: t('contractDesc'),
+            href: '#',
+            icon: 'ti-file-invoice',
+            color: 'orange',
+            status: 'planned',
+            progress: 0,
             stats: []
         },
+        {
+            id: 'sales-dashboard',
+            title: 'Sales Dashboard',
+            subtitle: t('salesDashSubtitle'),
+            description: t('salesDashDesc'),
+            href: '#',
+            icon: 'ti-presentation-analytics',
+            color: 'cyan',
+            status: 'planned',
+            progress: 0,
+            stats: []
+        },
+        {
+            id: 'weekly-meeting',
+            title: 'Weekly Meeting Board',
+            subtitle: t('weeklyMeetingSubtitle'),
+            description: t('weeklyMeetingDesc'),
+            href: '#',
+            icon: 'ti-clipboard-text',
+            color: 'indigo',
+            status: 'planned',
+            progress: 0,
+            stats: []
+        },
+        {
+            id: 'deepl-bot',
+            title: 'Deepl Interpreter Bot',
+            subtitle: t('deeplBotSubtitle'),
+            description: t('deeplBotDesc'),
+            href: '#',
+            icon: 'ti-language-hiragana',
+            color: 'pink',
+            status: 'planned',
+            progress: 0,
+            stats: []
+        },
+    ]
+
+    const sharedModules = [
+        { href: '/dashboard/regions', icon: 'ti-map-pin', label: t('regionMgmt') },
+        { href: '/dashboard/accounts', icon: 'ti-users', label: t('accountMgmt') },
+        { href: '/shared/work-logs', icon: 'ti-clock-record', label: t('workLogs') },
+        { href: '/shared/dev-tasks', icon: 'ti-list-check', label: t('devStatus') },
+        { href: '/dashboard/api-settings', icon: 'ti-plug', label: t('apiSettings') },
+        { href: '/dashboard/ai-search', icon: 'ti-sparkles', label: t('aiSearch') },
     ]
 
     return (
@@ -102,7 +190,7 @@ export function GateClient({ userName, userEmail, kioskStats, marketingStats }: 
                         <button
                             className="btn btn-ghost-light btn-sm text-white"
                             onClick={() => signOut({ callbackUrl: '/login' })}
-                            title="로그아웃"
+                            title={t('logout')}
                         >
                             <i className="ti ti-logout"></i>
                         </button>
@@ -118,14 +206,14 @@ export function GateClient({ userName, userEmail, kioskStats, marketingStats }: 
                         KAFLIX CLOUD CRM
                     </h1>
                     <p className="text-muted fs-5">
-                        통합 업무 관리 시스템 · 統合業務管理システム
+                        {t('subtitle')}
                     </p>
                 </div>
 
                 {/* Module Cards */}
                 <div className="row g-4 justify-content-center">
                     {modules.map((mod) => (
-                        <div key={mod.id} className="col-12 col-md-6 col-lg-6 col-xl-4">
+                        <div key={mod.id} className="col-12 col-md-6 col-lg-4 col-xl-3">
                             {(mod.status === 'active' || mod.status === 'external') ? (
                                 <a href={mod.href} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
                                     <ModuleCard module={mod} />
@@ -141,52 +229,26 @@ export function GateClient({ userName, userEmail, kioskStats, marketingStats }: 
                 <div className="mt-5">
                     <h3 className="fw-bold mb-3" style={{ color: '#475569' }}>
                         <i className="ti ti-share me-2"></i>
-                        공통 모듈 · 共通モジュール
+                        {t('sharedModules')}
                     </h3>
                     <div className="row g-3">
-                        <div className="col-6 col-sm-4 col-md-3 col-lg-2">
-                            <Link href="/dashboard/regions" className="text-decoration-none">
-                                <div className="card card-sm text-center py-3 h-100" style={{ cursor: 'pointer' }}>
-                                    <i className="ti ti-map-pin text-primary mb-1" style={{ fontSize: '1.5rem' }}></i>
-                                    <div className="small fw-medium">지역관리</div>
-                                    <div className="small text-muted" style={{ fontSize: '0.7rem' }}>地域管理</div>
-                                </div>
-                            </Link>
-                        </div>
-                        <div className="col-6 col-sm-4 col-md-3 col-lg-2">
-                            <Link href="/dashboard/accounts" className="text-decoration-none">
-                                <div className="card card-sm text-center py-3 h-100" style={{ cursor: 'pointer' }}>
-                                    <i className="ti ti-users text-primary mb-1" style={{ fontSize: '1.5rem' }}></i>
-                                    <div className="small fw-medium">계정관리</div>
-                                    <div className="small text-muted" style={{ fontSize: '0.7rem' }}>アカウント管理</div>
-                                </div>
-                            </Link>
-                        </div>
-                        <div className="col-6 col-sm-4 col-md-3 col-lg-2">
-                            <Link href="/dashboard/api-settings" className="text-decoration-none">
-                                <div className="card card-sm text-center py-3 h-100" style={{ cursor: 'pointer' }}>
-                                    <i className="ti ti-plug text-primary mb-1" style={{ fontSize: '1.5rem' }}></i>
-                                    <div className="small fw-medium">API 설정</div>
-                                    <div className="small text-muted" style={{ fontSize: '0.7rem' }}>API設定</div>
-                                </div>
-                            </Link>
-                        </div>
-                        <div className="col-6 col-sm-4 col-md-3 col-lg-2">
-                            <Link href="/dashboard/ai-search" className="text-decoration-none">
-                                <div className="card card-sm text-center py-3 h-100" style={{ cursor: 'pointer' }}>
-                                    <i className="ti ti-sparkles text-primary mb-1" style={{ fontSize: '1.5rem' }}></i>
-                                    <div className="small fw-medium">AI 검색</div>
-                                    <div className="small text-muted" style={{ fontSize: '0.7rem' }}>AI検索</div>
-                                </div>
-                            </Link>
-                        </div>
+                        {sharedModules.map((item) => (
+                            <div key={item.href} className="col-6 col-sm-4 col-md-3 col-lg-2">
+                                <Link href={item.href} className="text-decoration-none">
+                                    <div className="card card-sm text-center py-3 h-100" style={{ cursor: 'pointer' }}>
+                                        <i className={`ti ${item.icon} text-primary mb-1`} style={{ fontSize: '1.5rem' }}></i>
+                                        <div className="small fw-medium">{item.label}</div>
+                                    </div>
+                                </Link>
+                            </div>
+                        ))}
                     </div>
                 </div>
 
                 {/* Footer */}
                 <div className="text-center mt-5 pt-4 border-top">
                     <small className="text-muted">
-                        © 2024-2026 KC Unified CRM v2.0.0 · Developed by gai · Powered by KAFLIXCLOUD
+                        &copy; 2024-2026 KC Unified CRM v2.0.0 &middot; Developed by gai &middot; Powered by KAFLIXCLOUD
                     </small>
                 </div>
             </div>
@@ -194,30 +256,25 @@ export function GateClient({ userName, userEmail, kioskStats, marketingStats }: 
     )
 }
 
-function ModuleCard({ module }: { module: {
-    id: string
-    title: string
-    titleKo: string
-    description: string
-    descriptionJa: string
-    icon: string
-    color: string
-    status: 'active' | 'external' | 'planned'
-    stats: { label: string; labelJa: string; value: number }[]
-}}) {
+function ModuleCard({ module }: { module: ModuleData }) {
+    const t = useTranslations('gate')
+    const isPlanned = module.status === 'planned'
+    const isExternal = module.status === 'external'
     const isClickable = module.status === 'active' || module.status === 'external'
 
     return (
         <div
-            className="card h-100"
+            className={`card h-100 ${isPlanned ? 'opacity-50' : ''}`}
             style={{
                 cursor: isClickable ? 'pointer' : 'default',
                 transition: 'transform 0.2s, box-shadow 0.2s',
-                border: `2px solid var(--tblr-${module.color})`,
+                border: isPlanned ? '1px dashed #cbd5e1' : `2px solid var(--tblr-${module.color})`,
             }}
             onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-4px)'
-                e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)'
+                if (isClickable) {
+                    e.currentTarget.style.transform = 'translateY(-4px)'
+                    e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)'
+                }
             }}
             onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0)'
@@ -230,16 +287,43 @@ function ModuleCard({ module }: { module: {
                     <span className={`avatar bg-${module.color} text-white`} style={{ width: '48px', height: '48px' }}>
                         <i className={`ti ${module.icon}`} style={{ fontSize: '1.5rem' }}></i>
                     </span>
-                    <span className={`badge bg-${module.color}-lt`}>
-                        <i className="ti ti-circle-filled me-1" style={{ fontSize: '0.5rem' }}></i>
-                        {module.status === 'external' ? 'External' : 'Active'}
-                    </span>
+                    {isPlanned ? (
+                        <span className="badge bg-secondary-lt">{t('comingSoon')}</span>
+                    ) : isExternal ? (
+                        <span className="badge bg-red-lt text-red">
+                            <i className="ti ti-circle-filled me-1" style={{ fontSize: '0.5rem' }}></i>
+                            {t('external')}
+                        </span>
+                    ) : (
+                        <span className={`badge bg-${module.color}-lt`}>
+                            <i className="ti ti-circle-filled me-1" style={{ fontSize: '0.5rem' }}></i>
+                            {t('active')}
+                        </span>
+                    )}
                 </div>
 
                 {/* Title */}
                 <h3 className="fw-bold mb-1" style={{ fontSize: '1.1rem' }}>{module.title}</h3>
-                <p className="text-muted small mb-0">{module.titleKo}</p>
+                <p className="text-muted small mb-0">{module.subtitle}</p>
                 <p className="text-muted small mb-3" style={{ fontSize: '0.8rem' }}>{module.description}</p>
+
+                {/* Progress */}
+                <div className="mb-3">
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                        <span className="text-muted" style={{ fontSize: '0.7rem' }}>{t('completion')}</span>
+                        <span className={`fw-bold text-${module.color}`} style={{ fontSize: '0.75rem' }}>{module.progress}%</span>
+                    </div>
+                    <div className="progress progress-sm" style={{ height: '6px' }}>
+                        <div
+                            className={`progress-bar bg-${module.color}`}
+                            style={{ width: `${module.progress}%` }}
+                            role="progressbar"
+                            aria-valuenow={module.progress}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                        />
+                    </div>
+                </div>
 
                 {/* Stats */}
                 {module.stats.length > 0 && (
@@ -254,15 +338,40 @@ function ModuleCard({ module }: { module: {
                         ))}
                     </div>
                 )}
+
+                {/* Features */}
+                {module.features && module.features.length > 0 && (
+                    <div className="d-flex flex-column gap-2">
+                        {module.features.map((feat, idx) => (
+                            <div key={idx} className={`bg-${module.color}-lt rounded p-3 d-flex align-items-start gap-3`}>
+                                <span className={`avatar avatar-sm bg-${module.color} text-white flex-shrink-0`} style={{ width: '36px', height: '36px' }}>
+                                    <i className={`ti ${feat.icon}`} style={{ fontSize: '1.1rem' }}></i>
+                                </span>
+                                <div>
+                                    <div className="fw-bold small mb-1">{feat.title}</div>
+                                    <div className="text-muted" style={{ fontSize: '0.75rem', lineHeight: 1.4 }}>{feat.desc}</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {/* Planned placeholder */}
+                {isPlanned && (
+                    <div className="text-center py-3">
+                        <i className="ti ti-clock text-muted" style={{ fontSize: '2rem' }}></i>
+                        <p className="text-muted small mt-2 mb-0">{module.description}</p>
+                    </div>
+                )}
             </div>
 
             {/* Footer */}
             <div className={`card-footer bg-${module.color}-lt text-center py-2`}>
                 <span className={`text-${module.color} fw-medium small`}>
-                    {module.status === 'planned' ? (
-                        <><i className="ti ti-clock me-1"></i>준비 중 · 準備中</>
+                    {isPlanned ? (
+                        <><i className="ti ti-clock me-1"></i>{t('preparing')}</>
                     ) : (
-                        <><i className="ti ti-external-link me-1"></i>새 탭으로 열기 · 新しいタブで開く</>
+                        <><i className="ti ti-external-link me-1"></i>{t('openExternal')}</>
                     )}
                 </span>
             </div>
