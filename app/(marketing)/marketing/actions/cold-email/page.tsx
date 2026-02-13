@@ -151,21 +151,22 @@ export default function ColdEmailPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="d-flex align-items-center justify-content-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            <Mail className="inline-block w-6 h-6 mr-2 text-primary" />
+          <h1 className="text-2xl fw-bold text-gray-900">
+            <Mail className="d-inline-block me-2 text-primary" size={24} />
             {t.coldEmailTitle}
           </h1>
           <p className="text-gray-500 mt-1">{t.coldEmailSubtitle}</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="d-flex align-items-center gap-3">
           {/* 월 선택 */}
-          <div className="relative">
+          <div className="position-relative">
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer"
+              className="form-select form-select-sm appearance-none cursor-pointer"
+              style={{ paddingRight: '2rem' }}
             >
               {AVAILABLE_MONTHS.map((month) => (
                 <option key={month} value={month}>
@@ -173,89 +174,98 @@ export default function ColdEmailPage() {
                 </option>
               ))}
             </select>
-            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
           </div>
           {/* 저장 버튼 */}
           <button
             onClick={saveData}
             disabled={isSaving}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+            className="btn btn-primary d-flex align-items-center gap-2 disabled:opacity-50"
           >
-            <Save className="w-4 h-4" />
+            <Save size={16} />
             {showSaved ? (locale === 'ja' ? '保存完了' : '저장 완료') : (locale === 'ja' ? '保存' : '저장')}
           </button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-4 gap-4">
-        <div className="stat-card">
-          <div className="flex items-center gap-2">
-            <Mail className="w-5 h-5 text-blue-400" />
-            <p className="stat-label">{t.emailSending}</p>
+      <div className="row g-3">
+        <div className="col-md-3">
+          <div className="stat-card">
+            <div className="d-flex align-items-center gap-2">
+              <Mail size={20} className="text-blue-400" />
+              <p className="stat-label">{t.emailSending}</p>
+            </div>
+            <p className="stat-value text-blue-600">{totalEmail}</p>
+            <p className="text-xs text-gray-400 mt-1">
+              {formatMonth(selectedMonth)}
+            </p>
           </div>
-          <p className="stat-value text-blue-600">{totalEmail}</p>
-          <p className="text-xs text-gray-400 mt-1">
-            {locale === 'ja' ? `${formatMonth(selectedMonth)}` : `${formatMonth(selectedMonth)}`}
-          </p>
         </div>
-        <div className="stat-card">
-          <div className="flex items-center gap-2">
-            <FileText className="w-5 h-5 text-green-400" />
-            <p className="stat-label">{t.inquiryForm}</p>
+        <div className="col-md-3">
+          <div className="stat-card">
+            <div className="d-flex align-items-center gap-2">
+              <FileText size={20} className="text-green-400" />
+              <p className="stat-label">{t.inquiryForm}</p>
+            </div>
+            <p className="stat-value text-green-600">{totalInquiry}</p>
+            <p className="text-xs text-gray-400 mt-1">
+              {formatMonth(selectedMonth)}
+            </p>
           </div>
-          <p className="stat-value text-green-600">{totalInquiry}</p>
-          <p className="text-xs text-gray-400 mt-1">
-            {locale === 'ja' ? `${formatMonth(selectedMonth)}` : `${formatMonth(selectedMonth)}`}
-          </p>
         </div>
-        <div className="stat-card">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-purple-400" />
-            <p className="stat-label">{t.totalOutreach}</p>
+        <div className="col-md-3">
+          <div className="stat-card">
+            <div className="d-flex align-items-center gap-2">
+              <TrendingUp size={20} className="text-purple-400" />
+              <p className="stat-label">{t.totalOutreach}</p>
+            </div>
+            <p className="stat-value text-purple-600">{totalOutreach}</p>
+            <p className="text-xs text-gray-400 mt-1">
+              {locale === 'ja' ? 'メール + フォーム' : '메일 + 양식'}
+            </p>
           </div>
-          <p className="stat-value text-purple-600">{totalOutreach}</p>
-          <p className="text-xs text-gray-400 mt-1">
-            {locale === 'ja' ? 'メール + フォーム' : '메일 + 양식'}
-          </p>
         </div>
-        <div className="stat-card">
-          <div className="flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-orange-400" />
-            <p className="stat-label">{locale === 'ja' ? '活動地域' : '활동 지역'}</p>
+        <div className="col-md-3">
+          <div className="stat-card">
+            <div className="d-flex align-items-center gap-2">
+              <MapPin size={20} className="text-orange-400" />
+              <p className="stat-label">{locale === 'ja' ? '活動地域' : '활동 지역'}</p>
+            </div>
+            <p className="stat-value text-orange-600">{regionTotals.filter(r => r.total > 0).length}</p>
+            <p className="text-xs text-gray-400 mt-1">
+              / {REGIONS.length} {locale === 'ja' ? '地域' : '지역'}
+            </p>
           </div>
-          <p className="stat-value text-orange-600">{regionTotals.filter(r => r.total > 0).length}</p>
-          <p className="text-xs text-gray-400 mt-1">
-            / {REGIONS.length} {locale === 'ja' ? '地域' : '지역'}
-          </p>
         </div>
       </div>
 
       {/* Top Regions */}
       {topRegions.length > 0 && (
         <div className="card">
-          <div className="card-header bg-gradient-to-r from-blue-50 to-purple-50">
+          <div className="card-header bg-blue-50">
             <h3 className="card-title">
-              <TrendingUp className="w-5 h-5 mr-2 text-primary" />
+              <TrendingUp size={20} className="me-2 text-primary" />
               {locale === 'ja' ? 'トップ地域 (活動量)' : '상위 지역 (활동량)'}
             </h3>
           </div>
           <div className="card-body">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="row g-3">
               {topRegions.map((record, index) => {
                 const region = REGIONS.find(r => r.code === record.regionCode)
                 const medals = ['🥇', '🥈', '🥉']
                 return (
-                  <div key={record.regionCode} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <span className="text-2xl">{medals[index]}</span>
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-900">{region?.nameJa || region?.name}</p>
-                      <div className="flex gap-4 text-sm text-gray-500 mt-1">
-                        <span className="text-blue-600">{locale === 'ja' ? 'メール' : '메일'}: {record.emailCount}</span>
-                        <span className="text-green-600">{locale === 'ja' ? 'フォーム' : '양식'}: {record.inquiryCount}</span>
+                  <div key={record.regionCode} className="col-md-4">
+                    <div className="d-flex align-items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      <span className="text-2xl">{medals[index]}</span>
+                      <div className="flex-fill">
+                        <p className="fw-medium text-gray-900">{region?.nameJa || region?.name}</p>
+                        <div className="d-flex gap-3 text-sm text-gray-500 mt-1">
+                          <span className="text-blue-600">{locale === 'ja' ? 'メール' : '메일'}: {record.emailCount}</span>
+                          <span className="text-green-600">{locale === 'ja' ? 'フォーム' : '양식'}: {record.inquiryCount}</span>
+                        </div>
                       </div>
+                      <span className="text-lg fw-bold text-primary">{record.total}</span>
                     </div>
-                    <span className="text-lg font-bold text-primary">{record.total}</span>
                   </div>
                 )
               })}
@@ -268,7 +278,7 @@ export default function ColdEmailPage() {
       <div className="card">
         <div className="card-header">
           <h3 className="card-title">
-            <Calendar className="w-5 h-5 mr-2" />
+            <Calendar size={20} className="me-2" />
             {formatMonth(selectedMonth)} {t.regionBreakdown}
           </h3>
           <span className="badge badge-info">
@@ -276,36 +286,36 @@ export default function ColdEmailPage() {
           </span>
         </div>
         <div className="card-body p-0">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+          <table className="table table-hover mb-0">
+            <thead>
               <tr>
-                <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                <th className="text-sm fw-medium text-gray-600">
                   {locale === 'ja' ? '地域' : '지역'}
                 </th>
-                <th className="text-center px-4 py-3 text-sm font-medium text-gray-600 w-24">
+                <th className="text-center text-sm fw-medium text-gray-600" style={{ width: '6rem' }}>
                   {locale === 'ja' ? '管轄' : '관할'}
                 </th>
-                <th className="text-center px-4 py-3 text-sm font-medium text-gray-600 w-28">
-                  <div className="flex items-center justify-center gap-1">
-                    <Mail className="w-4 h-4 text-blue-500" />
+                <th className="text-center text-sm fw-medium text-gray-600" style={{ width: '7rem' }}>
+                  <div className="d-flex align-items-center justify-content-center gap-1">
+                    <Mail size={16} className="text-blue-500" />
                     {t.emailSending}
                   </div>
                 </th>
-                <th className="text-center px-4 py-3 text-sm font-medium text-gray-600 w-28">
-                  <div className="flex items-center justify-center gap-1">
-                    <FileText className="w-4 h-4 text-green-500" />
+                <th className="text-center text-sm fw-medium text-gray-600" style={{ width: '7rem' }}>
+                  <div className="d-flex align-items-center justify-content-center gap-1">
+                    <FileText size={16} className="text-green-500" />
                     {t.inquiryForm}
                   </div>
                 </th>
-                <th className="text-center px-4 py-3 text-sm font-medium text-gray-600 w-20">
+                <th className="text-center text-sm fw-medium text-gray-600" style={{ width: '5rem' }}>
                   {locale === 'ja' ? '合計' : '합계'}
                 </th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                <th className="text-sm fw-medium text-gray-600">
                   {locale === 'ja' ? 'メモ' : '메모'}
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody>
               {REGIONS.map((region) => {
                 const record = records.find(r => r.regionCode === region.code) || {
                   month: selectedMonth,
@@ -319,78 +329,78 @@ export default function ColdEmailPage() {
                 const area = AREAS[region.areaCode]
 
                 return (
-                  <tr key={region.code} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs px-2 py-0.5 bg-gray-100 rounded font-mono text-gray-500">
+                  <tr key={region.code}>
+                    <td className="px-3 py-2">
+                      <div className="d-flex align-items-center gap-2">
+                        <span className="text-xs px-2 bg-gray-100 rounded font-monospace text-gray-500" style={{ paddingTop: '0.125rem', paddingBottom: '0.125rem' }}>
                           {region.code}
                         </span>
-                        <span className="font-medium text-gray-900">{region.nameJa}</span>
+                        <span className="fw-medium text-gray-900">{region.nameJa}</span>
                       </div>
-                      <p className="text-xs text-gray-400 mt-0.5 truncate max-w-xs">
+                      <p className="text-xs text-gray-400 mt-1 truncate" style={{ maxWidth: '20rem' }}>
                         {region.prefectures}
                       </p>
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-3 py-2 text-center">
                       <span
-                        className="text-xs px-2 py-1 rounded-full font-medium"
+                        className="text-xs px-2 py-1 rounded-full fw-medium"
                         style={{ backgroundColor: `${area.color}20`, color: area.color }}
                       >
                         {locale === 'ja' ? area.nameJa : area.nameKo}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-2">
                       <input
                         type="number"
                         min="0"
                         value={record.emailCount}
                         onChange={(e) => updateRecord(region.code, 'emailCount', parseInt(e.target.value) || 0)}
-                        className="w-full text-center px-2 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        className="form-control form-control-sm text-center"
                       />
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-2">
                       <input
                         type="number"
                         min="0"
                         value={record.inquiryCount}
                         onChange={(e) => updateRecord(region.code, 'inquiryCount', parseInt(e.target.value) || 0)}
-                        className="w-full text-center px-2 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+                        className="form-control form-control-sm text-center"
                       />
                     </td>
-                    <td className="px-4 py-3 text-center">
-                      <span className={`font-bold ${regionTotal > 0 ? 'text-primary' : 'text-gray-300'}`}>
+                    <td className="px-3 py-2 text-center">
+                      <span className={`fw-bold ${regionTotal > 0 ? 'text-primary' : 'text-gray-300'}`}>
                         {regionTotal}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-2">
                       <input
                         type="text"
                         value={record.note || ''}
                         onChange={(e) => updateRecord(region.code, 'note', e.target.value)}
                         placeholder={locale === 'ja' ? '備考...' : '비고...'}
-                        className="w-full px-2 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
+                        className="form-control form-control-sm text-sm"
                       />
                     </td>
                   </tr>
                 )
               })}
             </tbody>
-            <tfoot className="bg-gray-50 border-t border-gray-200">
+            <tfoot className="bg-gray-50 border-top">
               <tr>
-                <td className="px-4 py-3 font-bold text-gray-900">
+                <td className="px-3 py-2 fw-bold text-gray-900">
                   {t.monthlyTotal}
                 </td>
-                <td className="px-4 py-3"></td>
-                <td className="px-4 py-3 text-center font-bold text-blue-600">
+                <td className="px-3 py-2"></td>
+                <td className="px-3 py-2 text-center fw-bold text-blue-600">
                   {totalEmail}
                 </td>
-                <td className="px-4 py-3 text-center font-bold text-green-600">
+                <td className="px-3 py-2 text-center fw-bold text-green-600">
                   {totalInquiry}
                 </td>
-                <td className="px-4 py-3 text-center font-bold text-primary text-lg">
+                <td className="px-3 py-2 text-center fw-bold text-primary text-lg">
                   {totalOutreach}
                 </td>
-                <td className="px-4 py-3"></td>
+                <td className="px-3 py-2"></td>
               </tr>
             </tfoot>
           </table>
@@ -398,9 +408,9 @@ export default function ColdEmailPage() {
       </div>
 
       {/* Tips */}
-      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-2">
-        <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-blue-800">
+      <div className="alert alert-info d-flex align-items-start gap-2">
+        <Info size={20} className="text-blue-600 flex-shrink-0 mt-1" />
+        <p className="text-sm text-blue-800 mb-0">
           <strong>{locale === 'ja' ? 'ヒント' : '힌트'}:</strong>{' '}
           {locale === 'ja'
             ? '地域コードはKiosk CRMの管轄地域DBに連動しています。データは自動保存されません。変更後は必ず「保存」ボタンを押してください。'
@@ -409,16 +419,16 @@ export default function ColdEmailPage() {
       </div>
 
       {/* API Connection Info */}
-      <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg flex items-start gap-2">
-        <Link2 className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+      <div className="alert alert-secondary d-flex align-items-start gap-2">
+        <Link2 size={20} className="text-gray-500 flex-shrink-0 mt-1" />
         <div>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 mb-0">
             <strong>{locale === 'ja' ? '連携情報' : '연동 정보'}:</strong>{' '}
             {locale === 'ja'
               ? 'Kiosk CRM 管轄地域DB (localhost:3000/dashboard/regions) と同期可能'
               : 'Kiosk CRM 관할지역 DB (localhost:3000/dashboard/regions)와 동기화 가능'}
           </p>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-gray-400 mt-1 mb-0">
             Region API: GET /api/regions | {locale === 'ja' ? '現在はローカルストレージに保存' : '현재는 로컬 스토리지에 저장'}
           </p>
         </div>

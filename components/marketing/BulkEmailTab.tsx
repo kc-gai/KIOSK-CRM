@@ -441,38 +441,38 @@ export default function BulkEmailTab({
     ]
 
     return (
-      <div className="flex items-center justify-center gap-2 mb-6">
+      <div className="d-flex align-items-center justify-content-center gap-2 mb-4">
         {steps.map((s, i) => {
           const StepIcon = s.icon
           const isActive = step === s.num
           const isComplete = step > s.num
           return (
-            <div key={s.num} className="flex items-center">
+            <div key={s.num} className="d-flex align-items-center">
               {i > 0 && (
                 <div
-                  className={`w-12 h-0.5 mx-2 ${
-                    isComplete ? 'bg-blue-500' : 'bg-gray-200'
-                  }`}
+                  className={isComplete ? 'bg-blue-500' : 'bg-gray-200'}
+                  style={{ width: '3rem', height: '2px', marginLeft: '0.5rem', marginRight: '0.5rem' }}
                 />
               )}
-              <div className="flex items-center gap-2">
+              <div className="d-flex align-items-center gap-2">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                  className={`rounded-circle d-flex align-items-center justify-content-center text-sm fw-medium ${
                     isActive
                       ? 'bg-blue-500 text-white'
                       : isComplete
                       ? 'bg-blue-100 text-blue-600'
                       : 'bg-gray-100 text-gray-400'
                   }`}
+                  style={{ width: '2rem', height: '2rem' }}
                 >
                   {isComplete ? (
-                    <Check className="w-4 h-4" />
+                    <Check size={16} />
                   ) : (
-                    <StepIcon className="w-4 h-4" />
+                    <StepIcon size={16} />
                   )}
                 </div>
                 <span
-                  className={`text-sm font-medium hidden sm:inline ${
+                  className={`text-sm fw-medium d-none d-sm-inline ${
                     isActive ? 'text-blue-600' : isComplete ? 'text-blue-500' : 'text-gray-400'
                   }`}
                 >
@@ -499,30 +499,32 @@ export default function BulkEmailTab({
         {/* Filters */}
         <div className="card">
           <div className="card-body">
-            <div className="flex items-center gap-2 mb-3">
-              <Filter className="w-4 h-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">
+            <div className="d-flex align-items-center gap-2 mb-2">
+              <Filter size={16} className="text-gray-500" />
+              <span className="text-sm fw-medium text-gray-700">
                 {locale === 'ja' ? 'フィルター' : '필터'}
               </span>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div className="row g-2">
               {/* Search */}
-              <div className="relative col-span-2 md:col-span-1">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <div className="col-12 col-md position-relative">
+                <Search size={16} className="text-gray-400 position-absolute" style={{ left: '0.625rem', top: '50%', transform: 'translateY(-50%)' }} />
                 <input
                   type="text"
                   placeholder={locale === 'ja' ? '検索...' : '검색...'}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="form-control form-control-sm"
+                  style={{ paddingLeft: '2rem' }}
                 />
               </div>
 
               {/* Status filter */}
+              <div className="col-6 col-md">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="form-select form-select-sm"
               >
                 <option value="all">{t.status}: {t.all}</option>
                 {uniqueStatuses.map((s) => (
@@ -531,12 +533,14 @@ export default function BulkEmailTab({
                   </option>
                 ))}
               </select>
+              </div>
 
               {/* Round filter */}
+              <div className="col-6 col-md">
               <select
                 value={roundFilter}
                 onChange={(e) => setRoundFilter(e.target.value)}
-                className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="form-select form-select-sm"
               >
                 <option value="all">{t.contactRound}: {t.all}</option>
                 <option value="0">0{locale === 'ja' ? '回' : '회'}</option>
@@ -546,12 +550,14 @@ export default function BulkEmailTab({
                 <option value="4">4{locale === 'ja' ? '回' : '회'}</option>
                 <option value="5+">5+{locale === 'ja' ? '回' : '회'}</option>
               </select>
+              </div>
 
               {/* Region filter */}
+              <div className="col-6 col-md">
               <select
                 value={regionFilter}
                 onChange={(e) => setRegionFilter(e.target.value)}
-                className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="form-select form-select-sm"
               >
                 <option value="all">
                   {locale === 'ja' ? '地域' : '지역'}: {t.all}
@@ -562,34 +568,37 @@ export default function BulkEmailTab({
                   </option>
                 ))}
               </select>
+              </div>
 
               {/* Email only toggle */}
-              <label className="flex items-center gap-2 cursor-pointer text-sm">
+              <div className="col-6 col-md">
+              <label className="d-flex align-items-center gap-2 cursor-pointer text-sm">
                 <input
                   type="checkbox"
                   checked={emailOnlyFilter}
                   onChange={(e) => setEmailOnlyFilter(e.target.checked)}
-                  className="w-4 h-4 text-blue-500 border-gray-300 rounded focus:ring-blue-500"
+                  className="form-check-input"
                 />
-                <Mail className="w-4 h-4 text-gray-400" />
+                <Mail size={16} className="text-gray-400" />
                 {t.emailOnly}
               </label>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Selection controls and stats */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="d-flex align-items-center justify-content-between">
+          <div className="d-flex align-items-center gap-2">
             <button
               onClick={selectAll}
-              className="text-sm px-3 py-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+              className="btn btn-outline-primary btn-sm"
             >
               {t.selectAll}
             </button>
             <button
               onClick={deselectAll}
-              className="text-sm px-3 py-1.5 text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+              className="btn btn-ghost-secondary btn-sm"
             >
               {t.deselectAll}
             </button>
@@ -598,8 +607,8 @@ export default function BulkEmailTab({
               {locale === 'ja' ? '表示中' : ' 표시 중'}
             </span>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-blue-600">
+          <div className="d-flex align-items-center gap-2">
+            <span className="text-sm fw-medium text-blue-600">
               {t.selectedCompanies}: {validSelectedCount}{t.companies}
             </span>
             {validSelectedCount > 0 && (
@@ -615,11 +624,11 @@ export default function BulkEmailTab({
         {/* Company list */}
         <div className="card">
           <div className="card-body p-0">
-            <div className="max-h-[500px] overflow-y-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+            <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
+              <table className="table table-sm table-vcenter">
+                <thead className="sticky-top bg-gray-50 border-bottom">
                   <tr>
-                    <th className="w-10 px-3 py-2.5 text-center">
+                    <th className="px-2 py-2 text-center" style={{ width: '2.5rem' }}>
                       <input
                         type="checkbox"
                         checked={
@@ -632,27 +641,27 @@ export default function BulkEmailTab({
                           if (e.target.checked) selectAll()
                           else deselectAll()
                         }}
-                        className="w-4 h-4 text-blue-500 border-gray-300 rounded"
+                        className="form-check-input"
                       />
                     </th>
-                    <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500 uppercase">
+                    <th className="text-left px-2 py-2 text-xs fw-medium text-gray-500 text-uppercase">
                       {locale === 'ja' ? '会社名' : '업체명'}
                     </th>
-                    <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500 uppercase">
+                    <th className="text-left px-2 py-2 text-xs fw-medium text-gray-500 text-uppercase">
                       {locale === 'ja' ? '連絡先' : '연락처'}
                     </th>
-                    <th className="text-center px-3 py-2.5 text-xs font-medium text-gray-500 uppercase">
+                    <th className="text-center px-2 py-2 text-xs fw-medium text-gray-500 text-uppercase">
                       {locale === 'ja' ? '地域' : '지역'}
                     </th>
-                    <th className="text-center px-3 py-2.5 text-xs font-medium text-gray-500 uppercase">
+                    <th className="text-center px-2 py-2 text-xs fw-medium text-gray-500 text-uppercase">
                       {t.status}
                     </th>
-                    <th className="text-center px-3 py-2.5 text-xs font-medium text-gray-500 uppercase">
+                    <th className="text-center px-2 py-2 text-xs fw-medium text-gray-500 text-uppercase">
                       {t.contactRound}
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody>
                   {filteredCompanies.map((company) => {
                     const isBlacklisted = blacklistSet.has(company.id)
                     const hasValidEmail = hasEmail(company.contactMethod)
@@ -665,27 +674,28 @@ export default function BulkEmailTab({
                         key={company.id}
                         className={`transition-colors ${
                           isBlacklisted
-                            ? 'bg-red-50/50'
+                            ? 'bg-red-50'
                             : !hasValidEmail
-                            ? 'bg-gray-50/50'
+                            ? 'bg-gray-50'
                             : isSelected
-                            ? 'bg-blue-50/30'
+                            ? 'bg-blue-50'
                             : 'hover:bg-gray-50'
                         }`}
                       >
-                        <td className="px-3 py-2 text-center">
+                        <td className="px-2 py-1 text-center">
                           <input
                             type="checkbox"
                             checked={isSelected}
                             disabled={isDisabled}
                             onChange={() => toggleSelect(company.id)}
-                            className="w-4 h-4 text-blue-500 border-gray-300 rounded disabled:opacity-40"
+                            className="form-check-input"
+                            style={isDisabled ? { opacity: 0.4 } : undefined}
                           />
                         </td>
-                        <td className="px-3 py-2">
-                          <div className="flex items-center gap-1.5">
+                        <td className="px-2 py-1">
+                          <div className="d-flex align-items-center gap-1">
                             <span
-                              className={`text-sm font-medium ${
+                              className={`text-sm fw-medium ${
                                 isBlacklisted
                                   ? 'text-red-500 line-through'
                                   : !hasValidEmail
@@ -696,42 +706,42 @@ export default function BulkEmailTab({
                               {company.companyName}
                             </span>
                             {isBlacklisted && (
-                              <Ban className="w-3.5 h-3.5 text-red-400" />
+                              <Ban size={14} className="text-red-400" />
                             )}
                           </div>
                         </td>
-                        <td className="px-3 py-2">
+                        <td className="px-2 py-1">
                           <span
                             className={`text-sm ${
                               hasValidEmail ? 'text-gray-700' : 'text-gray-400 italic'
                             }`}
                           >
                             {hasValidEmail ? (
-                              <span className="flex items-center gap-1">
-                                <Mail className="w-3.5 h-3.5 text-blue-400" />
+                              <span className="d-flex align-items-center gap-1">
+                                <Mail size={14} className="text-blue-400" />
                                 {company.contactMethod}
                               </span>
                             ) : (
-                              <span className="flex items-center gap-1">
-                                <XCircle className="w-3.5 h-3.5 text-gray-300" />
+                              <span className="d-flex align-items-center gap-1">
+                                <XCircle size={14} className="text-gray-300" />
                                 {t.noEmail}
                               </span>
                             )}
                           </span>
                         </td>
-                        <td className="px-3 py-2 text-center">
+                        <td className="px-2 py-1 text-center">
                           <span className="text-xs text-gray-600">
                             {locale === 'ko' ? company.regionKo : company.region}
                           </span>
                         </td>
-                        <td className="px-3 py-2 text-center">
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                        <td className="px-2 py-1 text-center">
+                          <span className="text-xs px-2 py-0.5 rounded-circle bg-gray-100 text-gray-600">
                             {STATUS_LABELS[company.status]?.[locale] || company.status}
                           </span>
                         </td>
-                        <td className="px-3 py-2 text-center">
+                        <td className="px-2 py-1 text-center">
                           <span
-                            className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                            className={`text-xs fw-medium px-2 py-0.5 rounded-circle ${
                               contactCount === 0
                                 ? 'bg-green-50 text-green-600'
                                 : contactCount <= 2
@@ -749,7 +759,7 @@ export default function BulkEmailTab({
                   })}
                   {filteredCompanies.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400">
+                      <td colSpan={6} className="px-3 py-5 text-center text-sm text-gray-400">
                         {locale === 'ja' ? '条件に一致する企業はありません' : '조건에 맞는 업체가 없습니다'}
                       </td>
                     </tr>
@@ -769,9 +779,9 @@ export default function BulkEmailTab({
   const renderStep2 = () => {
     if (templatesLoading) {
       return (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
-          <span className="ml-2 text-gray-500">{t.loading}</span>
+        <div className="d-flex align-items-center justify-content-center py-5">
+          <Loader2 size={24} className="text-blue-500 animate-spin" />
+          <span className="ms-2 text-gray-500">{t.loading}</span>
         </div>
       )
     }
@@ -783,21 +793,21 @@ export default function BulkEmailTab({
         {/* Round distribution summary */}
         <div className="card">
           <div className="card-body">
-            <h4 className="text-sm font-medium text-gray-700 mb-3">
+            <h4 className="text-sm fw-medium text-gray-700 mb-2">
               {locale === 'ja' ? '回次別送信内訳' : '회차별 발송 내역'}
             </h4>
-            <div className="flex flex-wrap gap-3">
+            <div className="d-flex flex-wrap gap-2">
               {Object.entries(roundDistribution)
                 .sort(([a], [b]) => Number(a) - Number(b))
                 .map(([round, count]) => (
                   <div
                     key={round}
-                    className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg"
+                    className="d-flex align-items-center gap-2 px-2 py-1 bg-blue-50 rounded-lg"
                   >
-                    <span className="text-sm font-medium text-blue-700">
+                    <span className="text-sm fw-medium text-blue-700">
                       {getRoundLabel(Number(round), locale)}
                     </span>
-                    <span className="text-sm text-blue-600 font-bold">
+                    <span className="text-sm text-blue-600 fw-bold">
                       {count}{t.companies}
                     </span>
                   </div>
@@ -808,20 +818,20 @@ export default function BulkEmailTab({
 
         {/* Round tabs */}
         <div className="card">
-          <div className="card-header border-b border-gray-200">
-            <div className="flex items-center gap-1">
+          <div className="card-header border-bottom">
+            <div className="d-flex align-items-center gap-1">
               {activeRounds.map((round) => (
                 <button
                   key={round}
                   onClick={() => setActiveRoundTab(round)}
-                  className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+                  className={`px-3 py-1 text-sm fw-medium rounded-top transition-colors ${
                     activeRoundTab === round
                       ? 'bg-blue-500 text-white'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                      : 'text-gray-500 hover:bg-gray-100'
                   }`}
                 >
                   {getRoundLabel(round, locale)}
-                  <span className="ml-1 text-xs opacity-75">
+                  <span className="ms-1 text-xs" style={{ opacity: 0.75 }}>
                     ({roundDistribution[round] || 0})
                   </span>
                 </button>
@@ -838,8 +848,8 @@ export default function BulkEmailTab({
 
               if (!template && !override) {
                 return (
-                  <div className="text-center py-8">
-                    <AlertTriangle className="w-8 h-8 text-amber-400 mx-auto mb-2" />
+                  <div className="text-center py-5">
+                    <AlertTriangle size={32} className="text-amber-400 mx-auto mb-2" />
                     <p className="text-sm text-gray-500">{t.noTemplate}</p>
                     <p className="text-xs text-gray-400 mt-1">
                       {locale === 'ja'
@@ -853,12 +863,12 @@ export default function BulkEmailTab({
               return (
                 <div className="space-y-4">
                   {/* Header with edit toggle */}
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <div className="d-flex align-items-center justify-content-between">
+                    <h4 className="text-sm fw-medium text-gray-700 d-flex align-items-center gap-2">
                       {isEditing ? (
-                        <Edit2 className="w-4 h-4 text-blue-500" />
+                        <Edit2 size={16} className="text-blue-500" />
                       ) : (
-                        <Eye className="w-4 h-4 text-gray-400" />
+                        <Eye size={16} className="text-gray-400" />
                       )}
                       {isEditing
                         ? (locale === 'ja' ? '編集モード (今回のみ)' : '편집 모드 (이번만)')
@@ -872,11 +882,10 @@ export default function BulkEmailTab({
                           setEditingRound(activeRoundTab)
                         }
                       }}
-                      className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${
-                        isEditing
-                          ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                          : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
-                      }`}
+                      className={isEditing
+                        ? 'btn btn-ghost-secondary btn-sm'
+                        : 'btn btn-outline-primary btn-sm'
+                      }
                     >
                       {isEditing
                         ? (locale === 'ja' ? 'プレビューに戻る' : '미리보기로 돌아가기')
@@ -886,7 +895,7 @@ export default function BulkEmailTab({
 
                   {/* Subject */}
                   <div>
-                    <label className="text-xs font-medium text-gray-500 uppercase mb-1 block">
+                    <label className="text-xs fw-medium text-gray-500 text-uppercase mb-1 d-block">
                       {t.mailSubject}
                     </label>
                     {isEditing ? (
@@ -903,10 +912,10 @@ export default function BulkEmailTab({
                             },
                           }))
                         }
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        className="form-control form-control-sm"
                       />
                     ) : (
-                      <div className="px-3 py-2 bg-gray-50 rounded-lg text-sm text-gray-800 font-medium">
+                      <div className="px-2 py-1 bg-gray-50 rounded-lg text-sm text-gray-800 fw-medium">
                         {sampleCompany ? replaceVars(currentSubject, sampleCompany) : currentSubject}
                       </div>
                     )}
@@ -914,7 +923,7 @@ export default function BulkEmailTab({
 
                   {/* Body */}
                   <div>
-                    <label className="text-xs font-medium text-gray-500 uppercase mb-1 block">
+                    <label className="text-xs fw-medium text-gray-500 text-uppercase mb-1 d-block">
                       {t.mailBody}
                     </label>
                     {isEditing ? (
@@ -931,21 +940,21 @@ export default function BulkEmailTab({
                           }))
                         }
                         rows={12}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono"
+                        className="form-control font-monospace"
                       />
                     ) : (
-                      <div className="px-3 py-2 bg-gray-50 rounded-lg text-sm text-gray-700 whitespace-pre-wrap max-h-[400px] overflow-y-auto leading-relaxed">
+                      <div className="px-2 py-1 bg-gray-50 rounded-lg text-sm text-gray-700 whitespace-pre-wrap" style={{ maxHeight: '400px', overflowY: 'auto', lineHeight: 1.7 }}>
                         {sampleCompany ? replaceVars(currentBody, sampleCompany) : currentBody}
                       </div>
                     )}
                   </div>
 
                   {/* Variable guide */}
-                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p className="text-xs font-medium text-amber-700 mb-1">
+                  <div className="p-2 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-xs fw-medium text-amber-700 mb-1">
                       {t.variableGuide}
                     </p>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="d-flex flex-wrap gap-2">
                       {[
                         '{{会社名}}',
                         '{{地域}}',
@@ -998,19 +1007,19 @@ export default function BulkEmailTab({
         <div className="card">
           <div className="card-body py-12">
             <div className="text-center">
-              <Loader2 className="w-10 h-10 text-blue-500 animate-spin mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">{t.sending}</h3>
+              <Loader2 size={40} className="text-blue-500 animate-spin mx-auto mb-3" />
+              <h3 className="text-lg fw-semibold text-gray-900 mb-2">{t.sending}</h3>
               <p className="text-sm text-gray-500 mb-4">
                 {locale === 'ja'
                   ? 'メール送信処理中です。このページを閉じないでください。'
                   : '메일 발송 처리 중입니다. 이 페이지를 닫지 마세요.'}
               </p>
               {/* Progress bar */}
-              <div className="max-w-md mx-auto">
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="mx-auto" style={{ maxWidth: '28rem' }}>
+                <div className="progress" style={{ height: '0.5rem' }}>
                   <div
-                    className="h-full bg-blue-500 rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min(sendProgress, 100)}%` }}
+                    className="progress-bar"
+                    style={{ width: `${Math.min(sendProgress, 100)}%`, transition: 'width 0.5s' }}
                   />
                 </div>
                 <p className="text-xs text-gray-400 mt-2">
@@ -1028,23 +1037,26 @@ export default function BulkEmailTab({
         {/* Send summary */}
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title flex items-center gap-2">
-              <Send className="w-5 h-5 text-blue-500" />
+            <h3 className="card-title d-flex align-items-center gap-2">
+              <Send size={20} className="text-blue-500" />
               {t.confirmSend}
             </h3>
           </div>
           <div className="card-body">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="row g-3 mb-4">
               {/* Total */}
+              <div className="col-6 col-md-3">
               <div className="stat-card">
                 <p className="stat-label">{locale === 'ja' ? '送信対象' : '발송 대상'}</p>
                 <p className="stat-value text-blue-600">
                   {validSelected.length}
-                  <span className="text-sm font-normal text-gray-400 ml-1">{t.companies}</span>
+                  <span className="text-sm fw-normal text-gray-400 ms-1">{t.companies}</span>
                 </p>
+              </div>
               </div>
 
               {/* Remaining quota */}
+              <div className="col-6 col-md-3">
               <div className="stat-card">
                 <p className="stat-label">{t.remainingToday}</p>
                 <p className={`stat-value ${
@@ -1057,7 +1069,7 @@ export default function BulkEmailTab({
                   ) : stats ? (
                     <>
                       {stats.remainingToday}
-                      <span className="text-sm font-normal text-gray-400 ml-1">
+                      <span className="text-sm fw-normal text-gray-400 ms-1">
                         / {stats.dailyLimit}{t.emails}
                       </span>
                     </>
@@ -1066,29 +1078,34 @@ export default function BulkEmailTab({
                   )}
                 </p>
               </div>
+              </div>
 
               {/* Estimated time */}
+              <div className="col-6 col-md-3">
               <div className="stat-card">
                 <p className="stat-label">{t.estimatedTime}</p>
                 <p className="stat-value text-gray-700">
                   ~{estimatedMinutes}
-                  <span className="text-sm font-normal text-gray-400 ml-1">{t.minutes}</span>
+                  <span className="text-sm fw-normal text-gray-400 ms-1">{t.minutes}</span>
                 </p>
+              </div>
               </div>
 
               {/* Blacklisted */}
+              <div className="col-6 col-md-3">
               <div className="stat-card">
                 <p className="stat-label">{t.blacklisted}</p>
                 <p className="stat-value text-red-500">
                   {selectedCompanies.length - validSelected.length}
-                  <span className="text-sm font-normal text-gray-400 ml-1">{t.companies}</span>
+                  <span className="text-sm fw-normal text-gray-400 ms-1">{t.companies}</span>
                 </p>
+              </div>
               </div>
             </div>
 
             {/* Round breakdown */}
-            <div className="border-t border-gray-100 pt-4">
-              <h4 className="text-sm font-medium text-gray-700 mb-3">
+            <div className="border-top pt-3">
+              <h4 className="text-sm fw-medium text-gray-700 mb-2">
                 {locale === 'ja' ? '回次別内訳' : '회차별 내역'}
               </h4>
               <div className="space-y-2">
@@ -1102,27 +1119,27 @@ export default function BulkEmailTab({
                     return (
                       <div
                         key={round}
-                        className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg"
+                        className="d-flex align-items-center justify-content-between py-1 px-2 bg-gray-50 rounded-lg"
                       >
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm font-medium text-gray-700">
+                        <div className="d-flex align-items-center gap-2">
+                          <span className="text-sm fw-medium text-gray-700">
                             {getRoundLabel(Number(round), locale)}
                           </span>
-                          <span className="text-sm text-blue-600 font-bold">
+                          <span className="text-sm text-blue-600 fw-bold">
                             {count}{t.companies}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="d-flex align-items-center gap-2">
                           {hasTemplate ? (
-                            <span className="flex items-center gap-1 text-xs text-green-600">
-                              <CheckCircle className="w-3.5 h-3.5" />
+                            <span className="d-flex align-items-center gap-1 text-xs text-green-600">
+                              <CheckCircle size={14} />
                               {override
                                 ? (locale === 'ja' ? 'カスタム' : '커스텀')
                                 : t.emailTemplate}
                             </span>
                           ) : (
-                            <span className="flex items-center gap-1 text-xs text-amber-500">
-                              <AlertTriangle className="w-3.5 h-3.5" />
+                            <span className="d-flex align-items-center gap-1 text-xs text-amber-500">
+                              <AlertTriangle size={14} />
                               {t.noTemplate}
                             </span>
                           )}
@@ -1135,8 +1152,8 @@ export default function BulkEmailTab({
 
             {/* Warning if over quota */}
             {stats && stats.remainingToday < validSelected.length && (
-              <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
-                <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <div className="mt-3 p-2 bg-amber-50 border border-amber-200 rounded-lg d-flex align-items-start gap-2">
+                <AlertTriangle size={20} className="text-amber-500 flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-amber-700">
                   {locale === 'ja'
                     ? `本日の残り送信可能数(${stats.remainingToday}通)を超えています。${stats.remainingToday}通まで送信されます。`
@@ -1146,13 +1163,13 @@ export default function BulkEmailTab({
             )}
 
             {/* Send button */}
-            <div className="mt-6 flex justify-center">
+            <div className="mt-4 d-flex justify-content-center">
               <button
                 onClick={() => setShowConfirmModal(true)}
                 disabled={validSelected.length === 0}
-                className="flex items-center gap-2 px-8 py-3 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                className="btn btn-primary d-flex align-items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Send className="w-5 h-5" />
+                <Send size={20} />
                 {t.sendAll} ({validSelected.length}{t.emails})
               </button>
             </div>
@@ -1172,102 +1189,112 @@ export default function BulkEmailTab({
       <div className="space-y-4">
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title flex items-center gap-2">
+            <h3 className="card-title d-flex align-items-center gap-2">
               {sendSummary.sent > 0 ? (
-                <CheckCircle className="w-5 h-5 text-green-500" />
+                <CheckCircle size={20} className="text-green-500" />
               ) : (
-                <XCircle className="w-5 h-5 text-red-500" />
+                <XCircle size={20} className="text-red-500" />
               )}
               {t.sendResult}
             </h3>
           </div>
           <div className="card-body">
             {/* Result stats */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
-              <div className="text-center p-3 bg-gray-50 rounded-lg">
-                <p className="text-2xl font-bold text-gray-700">{sendSummary.total}</p>
+            <div className="row g-2 mb-4">
+              <div className="col-6 col-md">
+              <div className="text-center p-2 bg-gray-50 rounded-lg">
+                <p className="text-2xl fw-bold text-gray-700">{sendSummary.total}</p>
                 <p className="text-xs text-gray-500 mt-1">
                   {locale === 'ja' ? '合計' : '합계'}
                 </p>
               </div>
-              <div className="text-center p-3 bg-green-50 rounded-lg">
-                <p className="text-2xl font-bold text-green-600">{sendSummary.sent}</p>
+              </div>
+              <div className="col-6 col-md">
+              <div className="text-center p-2 bg-green-50 rounded-lg">
+                <p className="text-2xl fw-bold text-green-600">{sendSummary.sent}</p>
                 <p className="text-xs text-green-600 mt-1">{t.sent}</p>
               </div>
-              <div className="text-center p-3 bg-red-50 rounded-lg">
-                <p className="text-2xl font-bold text-red-600">{sendSummary.failed}</p>
+              </div>
+              <div className="col-6 col-md">
+              <div className="text-center p-2 bg-red-50 rounded-lg">
+                <p className="text-2xl fw-bold text-red-600">{sendSummary.failed}</p>
                 <p className="text-xs text-red-600 mt-1">{t.failed}</p>
               </div>
-              <div className="text-center p-3 bg-amber-50 rounded-lg">
-                <p className="text-2xl font-bold text-amber-600">{sendSummary.bounced}</p>
+              </div>
+              <div className="col-6 col-md">
+              <div className="text-center p-2 bg-amber-50 rounded-lg">
+                <p className="text-2xl fw-bold text-amber-600">{sendSummary.bounced}</p>
                 <p className="text-xs text-amber-600 mt-1">{t.bounced}</p>
               </div>
-              <div className="text-center p-3 bg-purple-50 rounded-lg">
-                <p className="text-2xl font-bold text-purple-600">
+              </div>
+              <div className="col-6 col-md">
+              <div className="text-center p-2 bg-purple-50 rounded-lg">
+                <p className="text-2xl fw-bold text-purple-600">
                   {sendSummary.skipped + sendSummary.blacklisted}
                 </p>
                 <p className="text-xs text-purple-600 mt-1">
                   {locale === 'ja' ? 'スキップ' : '스킵'}
                 </p>
               </div>
+              </div>
             </div>
 
             {/* Detailed results */}
             {sendResults.length > 0 && (
-              <div className="max-h-[300px] overflow-y-auto border border-gray-200 rounded-lg">
-                <table className="w-full">
-                  <thead className="bg-gray-50 sticky top-0">
+              <div className="border rounded-lg" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                <table className="table table-sm table-vcenter">
+                  <thead className="sticky-top bg-gray-50">
                     <tr>
-                      <th className="text-left px-3 py-2 text-xs font-medium text-gray-500">
+                      <th className="text-left px-2 py-1 text-xs fw-medium text-gray-500">
                         {locale === 'ja' ? '会社名' : '업체명'}
                       </th>
-                      <th className="text-center px-3 py-2 text-xs font-medium text-gray-500">
+                      <th className="text-center px-2 py-1 text-xs fw-medium text-gray-500">
                         {t.status}
                       </th>
-                      <th className="text-left px-3 py-2 text-xs font-medium text-gray-500">
+                      <th className="text-left px-2 py-1 text-xs fw-medium text-gray-500">
                         {locale === 'ja' ? '詳細' : '상세'}
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody>
                     {sendResults.map((result) => (
                       <tr key={result.companyId}>
-                        <td className="px-3 py-2 text-sm text-gray-700">
+                        <td className="px-2 py-1 text-sm text-gray-700">
                           {result.companyName}
                         </td>
-                        <td className="px-3 py-2 text-center">
+                        <td className="px-2 py-1 text-center">
                           {result.status === 'SENT' && (
-                            <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">
-                              <CheckCircle className="w-3 h-3" />
+                            <span className="d-inline-flex align-items-center gap-1 text-xs px-2 py-0.5 rounded-circle bg-green-100 text-green-700">
+                              <CheckCircle size={12} />
                               {t.sent}
                             </span>
                           )}
                           {result.status === 'FAILED' && (
-                            <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700">
-                              <XCircle className="w-3 h-3" />
+                            <span className="d-inline-flex align-items-center gap-1 text-xs px-2 py-0.5 rounded-circle bg-red-100 text-red-700">
+                              <XCircle size={12} />
                               {t.failed}
                             </span>
                           )}
                           {result.status === 'BOUNCED' && (
-                            <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
-                              <AlertTriangle className="w-3 h-3" />
+                            <span className="d-inline-flex align-items-center gap-1 text-xs px-2 py-0.5 rounded-circle bg-amber-100 text-amber-700">
+                              <AlertTriangle size={12} />
                               {t.bounced}
                             </span>
                           )}
                           {result.status === 'NO_TEMPLATE' && (
-                            <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-                              <FileText className="w-3 h-3" />
+                            <span className="d-inline-flex align-items-center gap-1 text-xs px-2 py-0.5 rounded-circle bg-gray-100 text-gray-600">
+                              <FileText size={12} />
                               {t.noTemplate}
                             </span>
                           )}
                           {result.status === 'NO_EMAIL' && (
-                            <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-                              <Mail className="w-3 h-3" />
+                            <span className="d-inline-flex align-items-center gap-1 text-xs px-2 py-0.5 rounded-circle bg-gray-100 text-gray-600">
+                              <Mail size={12} />
                               {t.noEmail}
                             </span>
                           )}
                         </td>
-                        <td className="px-3 py-2 text-xs text-gray-500">
+                        <td className="px-2 py-1 text-xs text-gray-500">
                           {result.error || '-'}
                         </td>
                       </tr>
@@ -1278,7 +1305,7 @@ export default function BulkEmailTab({
             )}
 
             {/* Action buttons */}
-            <div className="mt-6 flex justify-center gap-3">
+            <div className="mt-4 d-flex justify-content-center gap-2">
               <button
                 onClick={() => {
                   setStep(1)
@@ -1288,7 +1315,7 @@ export default function BulkEmailTab({
                   setEditOverrides({})
                   setSendProgress(0)
                 }}
-                className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                className="btn btn-ghost-secondary btn-sm"
               >
                 {locale === 'ja' ? '最初から' : '처음부터'}
               </button>
@@ -1310,59 +1337,60 @@ export default function BulkEmailTab({
     ).length
 
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ zIndex: 50 }}>
         <div
-          className="absolute inset-0 bg-black/40"
+          className="position-absolute top-0 start-0 w-100 h-100"
+          style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
           onClick={() => setShowConfirmModal(false)}
         />
-        <div className="relative bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+        <div className="position-relative bg-white rounded-xl shadow-lg w-100 mx-3 p-4" style={{ maxWidth: '28rem' }}>
           <button
             onClick={() => setShowConfirmModal(false)}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+            className="position-absolute text-gray-400" style={{ top: '1rem', right: '1rem' }}
           >
-            <X className="w-5 h-5" />
+            <X size={20} />
           </button>
-          <div className="text-center mb-6">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Send className="w-6 h-6 text-blue-600" />
+          <div className="text-center mb-4">
+            <div className="bg-blue-100 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style={{ width: '3rem', height: '3rem' }}>
+              <Send size={24} className="text-blue-600" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">{t.confirmSend}</h3>
+            <h3 className="text-lg fw-semibold text-gray-900">{t.confirmSend}</h3>
             <p className="text-sm text-gray-500 mt-2">{t.confirmSendMessage}</p>
           </div>
-          <div className="bg-gray-50 rounded-lg p-4 mb-6 space-y-2">
-            <div className="flex justify-between text-sm">
+          <div className="bg-gray-50 rounded-lg p-3 mb-4 space-y-2">
+            <div className="d-flex justify-content-between text-sm">
               <span className="text-gray-600">
                 {locale === 'ja' ? '送信対象' : '발송 대상'}
               </span>
-              <span className="font-medium text-gray-900">
+              <span className="fw-medium text-gray-900">
                 {validCount}{t.companies}
               </span>
             </div>
-            <div className="flex justify-between text-sm">
+            <div className="d-flex justify-content-between text-sm">
               <span className="text-gray-600">{t.estimatedTime}</span>
-              <span className="font-medium text-gray-900">~{estimatedMinutes}{t.minutes}</span>
+              <span className="fw-medium text-gray-900">~{estimatedMinutes}{t.minutes}</span>
             </div>
             {Object.entries(roundDistribution)
               .sort(([a], [b]) => Number(a) - Number(b))
               .map(([round, count]) => (
-                <div key={round} className="flex justify-between text-sm">
+                <div key={round} className="d-flex justify-content-between text-sm">
                   <span className="text-gray-600">{getRoundLabel(Number(round), locale)}</span>
-                  <span className="font-medium text-gray-900">{count}{t.companies}</span>
+                  <span className="fw-medium text-gray-900">{count}{t.companies}</span>
                 </div>
               ))}
           </div>
-          <div className="flex gap-3">
+          <div className="d-flex gap-2">
             <button
               onClick={() => setShowConfirmModal(false)}
-              className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              className="btn btn-ghost-secondary flex-fill"
             >
               {locale === 'ja' ? 'キャンセル' : '취소'}
             </button>
             <button
               onClick={handleSend}
-              className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+              className="btn btn-primary flex-fill d-flex align-items-center justify-content-center gap-2"
             >
-              <Send className="w-4 h-4" />
+              <Send size={16} />
               {t.sendAll}
             </button>
           </div>
@@ -1384,14 +1412,14 @@ export default function BulkEmailTab({
     ).length
 
     return (
-      <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+      <div className="d-flex align-items-center justify-content-between pt-3 border-top">
         <div>
           {step > 1 && (
             <button
               onClick={() => setStep((prev) => (prev - 1) as 1 | 2 | 3)}
-              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              className="btn btn-ghost-secondary btn-sm d-flex align-items-center gap-2"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft size={16} />
               {locale === 'ja' ? '戻る' : '뒤로'}
             </button>
           )}
@@ -1401,10 +1429,10 @@ export default function BulkEmailTab({
             <button
               onClick={() => setStep((prev) => (prev + 1) as 1 | 2 | 3)}
               disabled={step === 1 && validSelectedCount === 0}
-              className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn btn-primary btn-sm d-flex align-items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {locale === 'ja' ? '次へ' : '다음'}
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight size={16} />
             </button>
           )}
         </div>
@@ -1418,9 +1446,9 @@ export default function BulkEmailTab({
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center gap-2 mb-2">
-        <Mail className="w-5 h-5 text-blue-500" />
-        <h2 className="text-lg font-semibold text-gray-900">{t.bulkEmail}</h2>
+      <div className="d-flex align-items-center gap-2 mb-2">
+        <Mail size={20} className="text-blue-500" />
+        <h2 className="text-lg fw-semibold text-gray-900">{t.bulkEmail}</h2>
       </div>
 
       {/* Step indicator */}

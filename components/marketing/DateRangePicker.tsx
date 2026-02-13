@@ -52,27 +52,27 @@ export default function DateRangePicker({ value, onChange }: DateRangePickerProp
   }
 
   return (
-    <div className="relative">
+    <div className="position-relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+        className="d-flex align-items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm hover:bg-gray-50 transition-colors"
       >
-        <Calendar className="w-4 h-4 text-gray-500" />
+        <Calendar size={16} className="text-gray-500" />
         <span className="text-gray-700">{displayLabel}</span>
-        <ChevronDown className="w-4 h-4 text-gray-400" />
+        <ChevronDown size={16} className="text-gray-400" />
       </button>
 
       {isOpen && (
         <>
-          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-lg shadow-lg min-w-[200px]">
+          <div className="position-fixed" style={{ inset: 0, zIndex: 10 }} onClick={() => setIsOpen(false)} />
+          <div className="position-absolute end-0 top-100 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg" style={{ zIndex: 20, minWidth: '200px' }}>
             {!showCustom ? (
               <div className="py-1">
                 {periodOptions.map((option) => (
                   <button
                     key={option.value}
                     onClick={() => handleSelect(option.value)}
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${
+                    className={`w-100 text-start px-3 py-2 text-sm hover:bg-gray-50 ${
                       value === option.value ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
                     }`}
                   >
@@ -81,40 +81,40 @@ export default function DateRangePicker({ value, onChange }: DateRangePickerProp
                 ))}
               </div>
             ) : (
-              <div className="p-4 space-y-3">
+              <div className="p-3 space-y-3">
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">
+                  <label className="d-block text-xs text-gray-500 mb-1">
                     {locale === 'ja' ? '開始日' : '시작일'}
                   </label>
                   <input
                     type="date"
                     value={customStart}
                     onChange={(e) => setCustomStart(e.target.value)}
-                    className="w-full px-2 py-1.5 border border-gray-200 rounded text-sm"
+                    className="form-control form-control-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">
+                  <label className="d-block text-xs text-gray-500 mb-1">
                     {locale === 'ja' ? '終了日' : '종료일'}
                   </label>
                   <input
                     type="date"
                     value={customEnd}
                     onChange={(e) => setCustomEnd(e.target.value)}
-                    className="w-full px-2 py-1.5 border border-gray-200 rounded text-sm"
+                    className="form-control form-control-sm"
                   />
                 </div>
-                <div className="flex gap-2">
+                <div className="d-flex gap-2">
                   <button
                     onClick={() => setShowCustom(false)}
-                    className="flex-1 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded"
+                    className="flex-fill btn btn-ghost-secondary btn-sm"
                   >
                     {locale === 'ja' ? '戻る' : '뒤로'}
                   </button>
                   <button
                     onClick={handleCustomApply}
                     disabled={!customStart || !customEnd}
-                    className="flex-1 px-3 py-1.5 text-sm bg-primary text-white rounded disabled:opacity-50"
+                    className="flex-fill btn btn-primary btn-sm disabled:opacity-50"
                   >
                     {locale === 'ja' ? '適用' : '적용'}
                   </button>

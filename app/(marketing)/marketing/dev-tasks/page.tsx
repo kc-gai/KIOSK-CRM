@@ -61,7 +61,7 @@ interface SubMenu {
   id: string
   name: string
   nameJa: string
-  icon: React.FC<{ className?: string }>
+  icon: React.FC<{ className?: string; size?: number }>
   tasks: DevTask[]
 }
 
@@ -740,7 +740,7 @@ const DEV_CATEGORIES: DevCategory[] = [
 // Helpers
 // ==========================================
 
-const ICON_MAP: Record<CategoryIcon, React.FC<{ className?: string; style?: React.CSSProperties }>> = {
+const ICON_MAP: Record<CategoryIcon, React.FC<{ className?: string; style?: React.CSSProperties; size?: number }>> = {
   dashboard: LayoutDashboard,
   globe: Globe,
   send: Send,
@@ -756,7 +756,7 @@ const PRIORITY_STYLES: Record<Priority, { bg: string; text: string; label: strin
   LOW: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Low' },
 }
 
-const STATUS_ICON: Record<TaskStatus, React.FC<{ className?: string }>> = {
+const STATUS_ICON: Record<TaskStatus, React.FC<{ className?: string; size?: number }>> = {
   completed: CheckCircle2,
   in_progress: Clock,
   pending: Circle,
@@ -850,8 +850,8 @@ export default function DevTasksPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <BarChart3 className="w-7 h-7 text-primary" />
+        <h1 className="text-2xl fw-bold text-gray-900 d-flex align-items-center gap-2">
+          <BarChart3 size={28} className="text-primary" />
           {isJa ? '開発スケジュール' : '개발 스케줄'}
         </h1>
         <p className="text-sm text-gray-500 mt-1">
@@ -860,102 +860,119 @@ export default function DevTasksPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-              <BarChart3 className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <div className="text-xs text-gray-500">{isJa ? '全体進捗度' : '전체 진척도'}</div>
-              <div className="text-2xl font-bold text-gray-900">{stats.totalProgress}%</div>
-            </div>
-          </div>
-          <div className="w-full bg-gray-100 rounded-full h-2">
-            <div className="bg-blue-500 h-2 rounded-full transition-all" style={{ width: `${stats.totalProgress}%` }} />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-              <CheckCircle2 className="w-5 h-5 text-green-600" />
-            </div>
-            <div>
-              <div className="text-xs text-gray-500">{isJa ? '完了' : '완료'}</div>
-              <div className="text-2xl font-bold text-gray-900">
-                {stats.completed}<span className="text-base font-normal text-gray-400">/{stats.total}</span>
+      <div className="row g-3">
+        <div className="col-6 col-lg-3">
+          <div className="card shadow-sm">
+            <div className="card-body p-3">
+              <div className="d-flex align-items-center gap-2 mb-2">
+                <div className="rounded-lg bg-blue-50 d-flex align-items-center justify-content-center" style={{ width: '2.5rem', height: '2.5rem' }}>
+                  <BarChart3 size={20} className="text-blue-600" />
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500">{isJa ? '全体進捗度' : '전체 진척도'}</div>
+                  <div className="text-2xl fw-bold text-gray-900">{stats.totalProgress}%</div>
+                </div>
+              </div>
+              <div className="progress" style={{ height: '0.5rem' }}>
+                <div className="progress-bar bg-blue-500" style={{ width: `${stats.totalProgress}%` }} />
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-              <Clock className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <div className="text-xs text-gray-500">{isJa ? '進行中' : '진행 중'}</div>
-              <div className="text-2xl font-bold text-gray-900">{stats.inProgress}</div>
+        <div className="col-6 col-lg-3">
+          <div className="card shadow-sm">
+            <div className="card-body p-3">
+              <div className="d-flex align-items-center gap-2">
+                <div className="rounded-lg bg-green-50 d-flex align-items-center justify-content-center" style={{ width: '2.5rem', height: '2.5rem' }}>
+                  <CheckCircle2 size={20} className="text-green-600" />
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500">{isJa ? '完了' : '완료'}</div>
+                  <div className="text-2xl fw-bold text-gray-900">
+                    {stats.completed}<span className="text-sm fw-normal text-gray-400">/{stats.total}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
-              <AlertCircle className="w-5 h-5 text-red-500" />
+        <div className="col-6 col-lg-3">
+          <div className="card shadow-sm">
+            <div className="card-body p-3">
+              <div className="d-flex align-items-center gap-2">
+                <div className="rounded-lg bg-blue-50 d-flex align-items-center justify-content-center" style={{ width: '2.5rem', height: '2.5rem' }}>
+                  <Clock size={20} className="text-blue-600" />
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500">{isJa ? '進行中' : '진행 중'}</div>
+                  <div className="text-2xl fw-bold text-gray-900">{stats.inProgress}</div>
+                </div>
+              </div>
             </div>
-            <div>
-              <div className="text-xs text-gray-500">{isJa ? '高優先度 待機' : 'High Priority 대기'}</div>
-              <div className="text-2xl font-bold text-gray-900">{stats.highPriority}</div>
+          </div>
+        </div>
+
+        <div className="col-6 col-lg-3">
+          <div className="card shadow-sm">
+            <div className="card-body p-3">
+              <div className="d-flex align-items-center gap-2">
+                <div className="rounded-lg bg-red-50 d-flex align-items-center justify-content-center" style={{ width: '2.5rem', height: '2.5rem' }}>
+                  <AlertCircle size={20} className="text-red-500" />
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500">{isJa ? '高優先度 待機' : 'High Priority 대기'}</div>
+                  <div className="text-2xl fw-bold text-gray-900">{stats.highPriority}</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Category Progress Overview — 7 sidebar menus */}
-      <div className="grid grid-cols-4 lg:grid-cols-7 gap-3">
+      <div className="row g-2">
         {DEV_CATEGORIES.map(cat => {
           const progress = getCategoryProgress(cat)
           const IconComp = ICON_MAP[cat.icon]
           return (
-            <button
-              key={cat.id}
-              onClick={() => {
-                const el = document.getElementById(`cat-${cat.id}`)
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                setExpandedCategories(prev => new Set([...Array.from(prev), cat.id]))
-              }}
-              className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 hover:shadow-md transition-shadow text-left"
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <IconComp className="w-4 h-4" style={{ color: cat.color }} />
-                <span className="text-xs font-medium text-gray-700 truncate">
-                  {isJa ? cat.title : cat.titleKo}
-                </span>
-              </div>
-              <div className="text-lg font-bold text-gray-900 mb-1">{progress}%</div>
-              <div className="w-full bg-gray-100 rounded-full h-1.5">
-                <div
-                  className={`h-1.5 rounded-full transition-all ${getProgressColor(progress)}`}
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-            </button>
+            <div key={cat.id} className="col-3 col-lg">
+              <button
+                onClick={() => {
+                  const el = document.getElementById(`cat-${cat.id}`)
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                  setExpandedCategories(prev => new Set([...Array.from(prev), cat.id]))
+                }}
+                className="card shadow-sm p-3 hover:shadow-md transition-shadow text-start w-100 border"
+              >
+                <div className="d-flex align-items-center gap-2 mb-2">
+                  <IconComp size={16} style={{ color: cat.color }} />
+                  <span className="text-xs fw-medium text-gray-700 truncate">
+                    {isJa ? cat.title : cat.titleKo}
+                  </span>
+                </div>
+                <div className="text-lg fw-bold text-gray-900 mb-1">{progress}%</div>
+                <div className="progress" style={{ height: '0.375rem' }}>
+                  <div
+                    className={`progress-bar transition-all ${getProgressColor(progress)}`}
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </button>
+            </div>
           )
         })}
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <Filter className="w-4 h-4 text-gray-400" />
+      <div className="d-flex align-items-center gap-2 flex-wrap">
+        <Filter size={16} className="text-gray-400" />
         {(['all', 'in_progress', 'pending', 'completed'] as const).map(s => (
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+            className={`btn btn-sm text-xs fw-medium rounded-lg transition-colors ${
               statusFilter === s
                 ? 'bg-gray-800 text-white'
                 : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
@@ -967,12 +984,12 @@ export default function DevTasksPage() {
               : (isJa ? '完了' : '완료')}
           </button>
         ))}
-        <div className="w-px h-5 bg-gray-200 mx-1" />
+        <div className="bg-gray-200 mx-1" style={{ width: '1px', height: '1.25rem' }} />
         {(['HIGH', 'MEDIUM', 'LOW'] as Priority[]).map(p => (
           <button
             key={p}
             onClick={() => setPriorityFilter(priorityFilter === p ? null : p)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+            className={`btn btn-sm text-xs fw-medium rounded-lg transition-colors ${
               priorityFilter === p
                 ? `${PRIORITY_STYLES[p].bg} ${PRIORITY_STYLES[p].text}`
                 : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
@@ -984,163 +1001,167 @@ export default function DevTasksPage() {
       </div>
 
       {/* Category Sections */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div className="row g-4">
         {filteredCategories.map(cat => {
           const isExpanded = expandedCategories.has(cat.id)
           const IconComp = ICON_MAP[cat.icon]
           const totalTasks = cat.subMenus.reduce((sum, sm) => sum + sm.tasks.length, 0)
 
           return (
-            <div key={cat.id} id={`cat-${cat.id}`} className="bg-white rounded-lg border border-gray-200 shadow-sm">
-              {/* Category Header */}
-              <button
-                onClick={() => toggleCategory(cat.id)}
-                className="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-t-lg"
-              >
-                <div className="flex items-center gap-3">
-                  {isExpanded
-                    ? <ChevronDown className="w-5 h-5 text-gray-400" />
-                    : <ChevronRight className="w-5 h-5 text-gray-400" />}
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${cat.color}15` }}>
-                    <IconComp className="w-4 h-4" style={{ color: cat.color }} />
-                  </div>
-                  <div className="text-left">
-                    <div className="font-semibold text-gray-800 flex items-center gap-2">
-                      {isJa ? cat.title : cat.titleKo}
-                      <span className="text-xs font-normal text-gray-400">{totalTasks}</span>
+            <div key={cat.id} className="col-12 col-xl-6">
+              <div id={`cat-${cat.id}`} className="card shadow-sm">
+                {/* Category Header */}
+                <button
+                  onClick={() => toggleCategory(cat.id)}
+                  className="w-100 ps-3 pe-3 pt-3 pb-3 d-flex align-items-center justify-content-between hover:bg-gray-50 transition-colors rounded-lg"
+                >
+                  <div className="d-flex align-items-center gap-2">
+                    {isExpanded
+                      ? <ChevronDown size={20} className="text-gray-400" />
+                      : <ChevronRight size={20} className="text-gray-400" />}
+                    <div className="rounded-lg d-flex align-items-center justify-content-center" style={{ width: '2rem', height: '2rem', backgroundColor: `${cat.color}15` }}>
+                      <IconComp size={16} style={{ color: cat.color }} />
+                    </div>
+                    <div className="text-start">
+                      <div className="fw-semibold text-gray-800 d-flex align-items-center gap-2">
+                        {isJa ? cat.title : cat.titleKo}
+                        <span className="text-xs fw-normal text-gray-400">{totalTasks}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="text-right text-xs text-gray-400">
-                  {getCategoryProgress(cat)}%
-                </div>
-              </button>
-
-              {/* Category Body */}
-              {isExpanded && (
-                <div className="border-t border-gray-100">
-                  <div className="px-5 py-2 text-xs text-gray-500">
-                    {isJa ? cat.description : cat.descriptionKo}
+                  <div className="text-end text-xs text-gray-400">
+                    {getCategoryProgress(cat)}%
                   </div>
+                </button>
 
-                  {/* Sub-Menus */}
-                  {cat.subMenus.map(sm => {
-                    const SmIcon = sm.icon
-                    const smCompleted = sm.tasks.filter(t => t.status === 'completed').length
+                {/* Category Body */}
+                {isExpanded && (
+                  <div className="border-top border-gray-100">
+                    <div className="ps-3 pe-3 pt-2 pb-2 text-xs text-gray-500">
+                      {isJa ? cat.description : cat.descriptionKo}
+                    </div>
 
-                    return (
-                      <div key={sm.id}>
-                        {/* Sub-menu header (show only if category has multiple sub-menus) */}
-                        {cat.subMenus.length > 1 && (
-                          <div className="px-5 py-2.5 bg-gray-50/70 border-y border-gray-100 flex items-center gap-2">
-                            <SmIcon className="w-3.5 h-3.5 text-gray-500" />
-                            <span className="text-xs font-semibold text-gray-600">
-                              {isJa ? sm.nameJa : sm.name}
-                            </span>
-                            <span className="text-[10px] text-gray-400">
-                              {smCompleted}/{sm.tasks.length}
-                            </span>
-                          </div>
-                        )}
+                    {/* Sub-Menus */}
+                    {cat.subMenus.map(sm => {
+                      const SmIcon = sm.icon
+                      const smCompleted = sm.tasks.filter(t => t.status === 'completed').length
 
-                        {/* Tasks */}
-                        <div className="divide-y divide-gray-50">
-                          {sm.tasks.map(task => {
-                            const isTaskExpanded = expandedTasks.has(task.id)
-                            const StatusIcon = STATUS_ICON[task.status]
-                            const taskTags = (isJa && task.tagsJa) ? task.tagsJa : task.tags
-                            const taskDeps = (isJa && task.dependenciesJa) ? task.dependenciesJa : task.dependencies
+                      return (
+                        <div key={sm.id}>
+                          {/* Sub-menu header (show only if category has multiple sub-menus) */}
+                          {cat.subMenus.length > 1 && (
+                            <div className="ps-3 pe-3 pt-2 pb-2 bg-gray-50/70 border-top border-bottom border-gray-100 d-flex align-items-center gap-2">
+                              <SmIcon size={14} className="text-gray-500" />
+                              <span className="text-xs fw-semibold text-gray-600">
+                                {isJa ? sm.nameJa : sm.name}
+                              </span>
+                              <span className="text-[10px] text-gray-400">
+                                {smCompleted}/{sm.tasks.length}
+                              </span>
+                            </div>
+                          )}
 
-                            return (
-                              <div key={task.id} className="px-5 py-3">
-                                <div className="flex items-center gap-3">
-                                  <StatusIcon className={`w-5 h-5 flex-shrink-0 ${STATUS_COLOR[task.status]}`} />
-                                  <button
-                                    onClick={() => toggleTask(task.id)}
-                                    className="flex-1 text-left flex items-center gap-2 min-w-0"
-                                  >
-                                    {task.subTasks.length > 0 && (
-                                      isTaskExpanded
-                                        ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                                        : <ChevronRight className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                                    )}
-                                    <span className={`text-sm font-medium truncate ${
-                                      task.status === 'completed' ? 'text-gray-500' : 'text-gray-800'
-                                    }`}>
-                                      {isJa ? task.titleJa : task.title}
-                                    </span>
-                                    <span className={`flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-semibold ${
-                                      PRIORITY_STYLES[task.priority].bg} ${PRIORITY_STYLES[task.priority].text}`}>
-                                      {PRIORITY_STYLES[task.priority].label.toUpperCase()}
-                                    </span>
-                                  </button>
-                                  <div className="flex items-center gap-2 flex-shrink-0 w-32">
-                                    <div className="flex-1 bg-gray-100 rounded-full h-1.5">
-                                      <div
-                                        className={`h-1.5 rounded-full transition-all ${getProgressColor(task.progress)}`}
-                                        style={{ width: `${task.progress}%` }}
-                                      />
+                          {/* Tasks */}
+                          <div className="divide-y divide-gray-50">
+                            {sm.tasks.map(task => {
+                              const isTaskExpanded = expandedTasks.has(task.id)
+                              const StatusIcon = STATUS_ICON[task.status]
+                              const taskTags = (isJa && task.tagsJa) ? task.tagsJa : task.tags
+                              const taskDeps = (isJa && task.dependenciesJa) ? task.dependenciesJa : task.dependencies
+
+                              return (
+                                <div key={task.id} className="ps-3 pe-3 pt-2 pb-2">
+                                  <div className="d-flex align-items-center gap-2">
+                                    <StatusIcon size={20} className={`flex-shrink-0 ${STATUS_COLOR[task.status]}`} />
+                                    <button
+                                      onClick={() => toggleTask(task.id)}
+                                      className="flex-fill text-start d-flex align-items-center gap-2"
+                                      style={{ minWidth: 0 }}
+                                    >
+                                      {task.subTasks.length > 0 && (
+                                        isTaskExpanded
+                                          ? <ChevronDown size={14} className="text-gray-400 flex-shrink-0" />
+                                          : <ChevronRight size={14} className="text-gray-400 flex-shrink-0" />
+                                      )}
+                                      <span className={`text-sm fw-medium truncate ${
+                                        task.status === 'completed' ? 'text-gray-500' : 'text-gray-800'
+                                      }`}>
+                                        {isJa ? task.titleJa : task.title}
+                                      </span>
+                                      <span className={`flex-shrink-0 text-[10px] fw-semibold rounded px-2 py-0.5 ${
+                                        PRIORITY_STYLES[task.priority].bg} ${PRIORITY_STYLES[task.priority].text}`}>
+                                        {PRIORITY_STYLES[task.priority].label.toUpperCase()}
+                                      </span>
+                                    </button>
+                                    <div className="d-flex align-items-center gap-2 flex-shrink-0" style={{ width: '8rem' }}>
+                                      <div className="flex-fill progress" style={{ height: '0.375rem' }}>
+                                        <div
+                                          className={`progress-bar transition-all ${getProgressColor(task.progress)}`}
+                                          style={{ width: `${task.progress}%` }}
+                                        />
+                                      </div>
+                                      <span className={`text-xs fw-medium text-end ${
+                                        task.progress === 100 ? 'text-green-600' : 'text-gray-500'}`}
+                                        style={{ width: '2.5rem' }}>
+                                        {task.progress}%
+                                      </span>
                                     </div>
-                                    <span className={`text-xs font-medium w-10 text-right ${
-                                      task.progress === 100 ? 'text-green-600' : 'text-gray-500'}`}>
-                                      {task.progress}%
-                                    </span>
                                   </div>
+
+                                  {task.status !== 'completed' && (
+                                    <div className="ms-4 mt-1 text-xs text-gray-400">
+                                      {isJa ? task.descriptionJa : task.description}
+                                    </div>
+                                  )}
+
+                                  {taskDeps && taskDeps.length > 0 && (
+                                    <div className="ms-4 mt-1 d-flex align-items-center gap-1">
+                                      <AlertCircle size={12} className="text-amber-500" />
+                                      {taskDeps.map((dep, i) => (
+                                        <span key={i} className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded">
+                                          {dep}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {taskTags.length > 0 && (
+                                    <div className="ms-4 mt-1 d-flex flex-wrap gap-1">
+                                      {taskTags.map((tag, i) => (
+                                        <span key={i} className="text-[10px] text-gray-500 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded">
+                                          {tag}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {isTaskExpanded && task.subTasks.length > 0 && (
+                                    <div className="ms-4 mt-2 space-y-1 ps-3 border-start border-2 border-gray-100">
+                                      {task.subTasks.map(sub => {
+                                        const SubIcon = STATUS_ICON[sub.status]
+                                        return (
+                                          <div key={sub.id} className="d-flex align-items-center gap-2">
+                                            <SubIcon size={16} className={STATUS_COLOR[sub.status]} />
+                                            <span className={`text-xs ${
+                                              sub.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-700'
+                                            }`}>
+                                              {isJa ? sub.titleJa : sub.title}
+                                            </span>
+                                          </div>
+                                        )
+                                      })}
+                                    </div>
+                                  )}
                                 </div>
-
-                                {task.status !== 'completed' && (
-                                  <div className="ml-8 mt-1 text-xs text-gray-400">
-                                    {isJa ? task.descriptionJa : task.description}
-                                  </div>
-                                )}
-
-                                {taskDeps && taskDeps.length > 0 && (
-                                  <div className="ml-8 mt-1.5 flex items-center gap-1.5">
-                                    <AlertCircle className="w-3 h-3 text-amber-500" />
-                                    {taskDeps.map((dep, i) => (
-                                      <span key={i} className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded">
-                                        {dep}
-                                      </span>
-                                    ))}
-                                  </div>
-                                )}
-
-                                {taskTags.length > 0 && (
-                                  <div className="ml-8 mt-1.5 flex flex-wrap gap-1">
-                                    {taskTags.map((tag, i) => (
-                                      <span key={i} className="text-[10px] text-gray-500 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded">
-                                        {tag}
-                                      </span>
-                                    ))}
-                                  </div>
-                                )}
-
-                                {isTaskExpanded && task.subTasks.length > 0 && (
-                                  <div className="ml-8 mt-2 space-y-1.5 pl-4 border-l-2 border-gray-100">
-                                    {task.subTasks.map(sub => {
-                                      const SubIcon = STATUS_ICON[sub.status]
-                                      return (
-                                        <div key={sub.id} className="flex items-center gap-2">
-                                          <SubIcon className={`w-4 h-4 ${STATUS_COLOR[sub.status]}`} />
-                                          <span className={`text-xs ${
-                                            sub.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-700'
-                                          }`}>
-                                            {isJa ? sub.titleJa : sub.title}
-                                          </span>
-                                        </div>
-                                      )
-                                    })}
-                                  </div>
-                                )}
-                              </div>
-                            )
-                          })}
+                              )
+                            })}
+                          </div>
                         </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           )
         })}

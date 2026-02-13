@@ -374,68 +374,66 @@ export default function ContentOptimizationPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="d-flex align-items-center justify-content-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">✨ {t.contentOptTitle}</h1>
+          <h1 className="text-2xl fw-bold text-gray-900">✨ {t.contentOptTitle}</h1>
           <p className="text-gray-500 mt-1">{t.contentOptSubtitle}</p>
         </div>
         <button
           onClick={saveData}
           disabled={isSaving}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+          className={`d-flex align-items-center gap-2 btn ${
             saveStatus === 'success'
-              ? 'bg-green-500 text-white'
-              : 'bg-primary text-white hover:bg-primary/90'
+              ? 'btn-success'
+              : 'btn-primary'
           }`}
         >
           {isSaving ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 size={16} className="animate-spin" />
           ) : saveStatus === 'success' ? (
-            <Check className="w-4 h-4" />
+            <Check size={16} />
           ) : (
-            <Save className="w-4 h-4" />
+            <Save size={16} />
           )}
           {saveStatus === 'success' ? t.saved : t.save}
         </button>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="flex gap-4">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
-                activeTab === tab.id
-                  ? 'border-primary text-primary font-medium'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <tab.icon className="w-4 h-4" />
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
+      <nav className="nav nav-tabs">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`nav-link d-flex align-items-center gap-2 ${
+              activeTab === tab.id
+                ? 'active'
+                : ''
+            }`}
+          >
+            <tab.icon size={16} />
+            {tab.label}
+          </button>
+        ))}
+      </nav>
 
       {/* Tab Content */}
       {activeTab === 'ai-impact' && (
         <div className="space-y-6">
           {/* Info Banner */}
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-blue-600 mt-0.5" />
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="d-flex align-items-start gap-2">
+              <AlertTriangle size={20} className="text-blue-600 mt-0.5" />
               <div>
-                <p className="font-medium text-blue-800">{t.highImprLowCtr}</p>
+                <p className="fw-medium text-blue-800">{t.highImprLowCtr}</p>
                 <p className="text-sm text-blue-600 mt-1">{t.aiImpactDesc}</p>
               </div>
             </div>
           </div>
 
           {/* Data Period Info */}
-          <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
-            <h4 className="font-semibold text-purple-800 mb-2">
+          <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+            <h4 className="fw-semibold text-purple-800 mb-2">
               📅 {locale === 'ja' ? 'データ期間について' : '데이터 기간 안내'}
             </h4>
             <div className="text-sm text-purple-700 space-y-1">
@@ -456,20 +454,21 @@ export default function ContentOptimizationPage() {
           {/* Filter Controls */}
           <div className="card">
             <div className="card-body">
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-gray-700">
+              <div className="d-flex flex-wrap align-items-center gap-3">
+                <div className="d-flex align-items-center gap-2">
+                  <label className="text-sm fw-medium text-gray-700">
                     {locale === 'ja' ? '最小表示回数:' : '최소 노출수:'}
                   </label>
                   <input
                     type="number"
                     value={filterMinImpr}
                     onChange={(e) => setFilterMinImpr(parseInt(e.target.value) || 0)}
-                    className="w-24 px-3 py-1.5 border border-gray-300 rounded-lg text-sm"
+                    className="form-control form-control-sm"
+                    style={{ width: '6rem' }}
                   />
                 </div>
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-gray-700">
+                <div className="d-flex align-items-center gap-2">
+                  <label className="text-sm fw-medium text-gray-700">
                     {locale === 'ja' ? '最大CTR:' : '최대 CTR:'}
                   </label>
                   <input
@@ -477,24 +476,25 @@ export default function ContentOptimizationPage() {
                     step="0.1"
                     value={filterMaxCtr}
                     onChange={(e) => setFilterMaxCtr(parseFloat(e.target.value) || 0)}
-                    className="w-20 px-3 py-1.5 border border-gray-300 rounded-lg text-sm"
+                    className="form-control form-control-sm"
+                    style={{ width: '5rem' }}
                   />
                   <span className="text-sm text-gray-500">%</span>
                 </div>
                 <button
                   onClick={fetchPageData}
                   disabled={pageDataLoading}
-                  className="flex items-center gap-2 px-4 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm transition-colors"
+                  className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-2"
                 >
-                  <RefreshCw className={`w-4 h-4 ${pageDataLoading ? 'animate-spin' : ''}`} />
+                  <RefreshCw size={16} className={pageDataLoading ? 'animate-spin' : ''} />
                   {locale === 'ja' ? '更新' : '새로고침'}
                 </button>
                 {selectedPages.size > 0 && (
                   <button
                     onClick={addSelectedToRewrite}
-                    className="flex items-center gap-2 px-4 py-1.5 bg-primary text-white rounded-lg text-sm hover:bg-primary/90 transition-colors ml-auto"
+                    className="btn btn-sm btn-primary d-flex align-items-center gap-2 ms-auto"
                   >
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight size={16} />
                     {locale === 'ja'
                       ? `${selectedPages.size}件をリライト対象に追加`
                       : `${selectedPages.size}건을 리라이팅 대상에 추가`}
@@ -506,10 +506,10 @@ export default function ContentOptimizationPage() {
 
           {/* Page List */}
           <div className="card">
-            <div className="card-header flex items-center justify-between">
+            <div className="card-header d-flex align-items-center justify-content-between">
               <h3 className="card-title">
                 {locale === 'ja' ? '高表示・低CTR記事' : '고노출・저CTR 기사'}
-                <span className="ml-2 text-sm font-normal text-gray-500">
+                <span className="ms-2 text-sm fw-normal text-gray-500">
                   ({safePageData.length}{locale === 'ja' ? '件' : '건'})
                 </span>
               </h3>
@@ -526,12 +526,12 @@ export default function ContentOptimizationPage() {
             </div>
             <div className="overflow-x-auto">
               {pageDataLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                <div className="d-flex align-items-center justify-content-center py-4">
+                  <Loader2 size={24} className="animate-spin text-gray-400" />
                 </div>
               ) : safePageData.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <FileText className="w-12 h-12 text-gray-300 mb-4" />
+                <div className="d-flex flex-column align-items-center justify-content-center py-4 text-center">
+                  <FileText size={48} className="text-gray-300 mb-3" />
                   <p className="text-gray-500">
                     {locale === 'ja'
                       ? '条件に該当する記事がありません'
@@ -539,33 +539,33 @@ export default function ContentOptimizationPage() {
                   </p>
                 </div>
               ) : (
-                <table className="w-full">
+                <table className="table table-sm table-hover">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-10">
+                      <th className="px-3 py-2 text-start text-xs fw-medium text-gray-500 uppercase" style={{ width: '2.5rem' }}>
                         <input
                           type="checkbox"
                           checked={selectedPages.size === safePageData.length}
                           onChange={toggleSelectAll}
-                          className="rounded"
+                          className="form-check-input"
                         />
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-3 py-2 text-start text-xs fw-medium text-gray-500 uppercase">
                         {locale === 'ja' ? 'ページ' : '페이지'}
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-3 py-2 text-end text-xs fw-medium text-gray-500 uppercase">
                         {locale === 'ja' ? '表示回数' : '노출수'}
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-3 py-2 text-end text-xs fw-medium text-gray-500 uppercase">
                         {locale === 'ja' ? 'クリック数' : '클릭수'}
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-3 py-2 text-end text-xs fw-medium text-gray-500 uppercase">
                         CTR
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-3 py-2 text-end text-xs fw-medium text-gray-500 uppercase">
                         {locale === 'ja' ? '順位' : '순위'}
                       </th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-3 py-2 text-center text-xs fw-medium text-gray-500 uppercase">
                         {locale === 'ja' ? '優先度' : '우선순위'}
                       </th>
                     </tr>
@@ -579,58 +579,58 @@ export default function ContentOptimizationPage() {
                       return (
                         <tr
                           key={page.page}
-                          className={`hover:bg-gray-50 cursor-pointer ${isSelected ? 'bg-blue-50' : ''} ${isAlreadyAdded ? 'opacity-50' : ''}`}
+                          className={`cursor-pointer ${isSelected ? 'bg-blue-50' : ''} ${isAlreadyAdded ? 'opacity-50' : ''}`}
                           onClick={() => !isAlreadyAdded && togglePageSelection(page.page)}
                         >
-                          <td className="px-4 py-3">
+                          <td className="px-3 py-2">
                             <input
                               type="checkbox"
                               checked={isSelected}
                               onChange={() => togglePageSelection(page.page)}
                               disabled={isAlreadyAdded}
-                              className="rounded"
+                              className="form-check-input"
                               onClick={(e) => e.stopPropagation()}
                             />
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-3 py-2">
                             <div>
-                              <p className="font-medium text-gray-900 text-sm">
+                              <p className="fw-medium text-gray-900 text-sm">
                                 {page.title || page.page}
                               </p>
                               <a
                                 href={`https://www.kaflixcloud.co.jp${page.page}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                                className="text-xs text-blue-600 hover:underline d-flex align-items-center gap-1"
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                <ExternalLink className="w-3 h-3" />
+                                <ExternalLink size={12} />
                                 {page.page}
                               </a>
                               {isAlreadyAdded && (
-                                <span className="text-xs text-green-600 mt-1 block">
+                                <span className="text-xs text-green-600 mt-1 d-block">
                                   ✓ {locale === 'ja' ? 'リライト対象済み' : '리라이팅 대상에 추가됨'}
                                 </span>
                               )}
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-right">
-                            <span className="font-medium text-gray-900">
+                          <td className="px-3 py-2 text-end">
+                            <span className="fw-medium text-gray-900">
                               {page.impressions.toLocaleString()}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-right text-gray-600">
+                          <td className="px-3 py-2 text-end text-gray-600">
                             {page.clicks.toLocaleString()}
                           </td>
-                          <td className="px-4 py-3 text-right">
-                            <span className="text-red-600 font-medium">
+                          <td className="px-3 py-2 text-end">
+                            <span className="text-red-600 fw-medium">
                               {page.ctr.toFixed(2)}%
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-right text-gray-600">
+                          <td className="px-3 py-2 text-end text-gray-600">
                             {page.position.toFixed(1)}
                           </td>
-                          <td className="px-4 py-3 text-center">
+                          <td className="px-3 py-2 text-center">
                             <span className={`text-xs px-2 py-0.5 rounded ${priorityConfig[priority].color}`}>
                               {priorityConfig[priority].label}
                             </span>
@@ -645,7 +645,7 @@ export default function ContentOptimizationPage() {
           </div>
 
           {/* Help Text */}
-          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
             <p className="text-sm text-yellow-800">
               <strong>💡 {locale === 'ja' ? 'ヒント' : '힌트'}:</strong>{' '}
               {locale === 'ja'
@@ -659,48 +659,56 @@ export default function ContentOptimizationPage() {
       {activeTab === 'rewrite-manage' && (
         <div className="space-y-6">
           {/* Stats Cards */}
-          <div className="grid grid-cols-4 gap-4">
-            <div className="stat-card">
-              <p className="stat-label">{locale === 'ja' ? '全記事' : '전체 기사'}</p>
-              <p className="stat-value">{stats.total}</p>
+          <div className="row g-3">
+            <div className="col-md-3">
+              <div className="stat-card">
+                <p className="stat-label">{locale === 'ja' ? '全記事' : '전체 기사'}</p>
+                <p className="stat-value">{stats.total}</p>
+              </div>
             </div>
-            <div className="stat-card">
-              <p className="stat-label">{t.notStartedStatus}</p>
-              <p className="stat-value text-gray-500">{stats.notStarted}</p>
+            <div className="col-md-3">
+              <div className="stat-card">
+                <p className="stat-label">{t.notStartedStatus}</p>
+                <p className="stat-value text-gray-500">{stats.notStarted}</p>
+              </div>
             </div>
-            <div className="stat-card">
-              <p className="stat-label">{t.inProgressStatus}</p>
-              <p className="stat-value text-blue-500">{stats.inProgress}</p>
+            <div className="col-md-3">
+              <div className="stat-card">
+                <p className="stat-label">{t.inProgressStatus}</p>
+                <p className="stat-value text-blue-500">{stats.inProgress}</p>
+              </div>
             </div>
-            <div className="stat-card">
-              <p className="stat-label">{t.completedStatus}</p>
-              <p className="stat-value text-green-500">{stats.completed}</p>
+            <div className="col-md-3">
+              <div className="stat-card">
+                <p className="stat-label">{t.completedStatus}</p>
+                <p className="stat-value text-green-500">{stats.completed}</p>
+              </div>
             </div>
           </div>
 
           {/* Progress Bar */}
           <div className="card">
             <div className="card-body">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">{t.progressRate}</span>
+              <div className="d-flex align-items-center justify-content-between mb-2">
+                <span className="text-sm fw-medium text-gray-700">{t.progressRate}</span>
                 <span className="text-sm text-gray-500">{stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden flex">
+              <div className="w-100 bg-gray-200 rounded-full d-flex" style={{ height: '0.75rem', overflow: 'hidden' }}>
                 <div
-                  className="bg-green-500 h-3 transition-all"
-                  style={{ width: `${stats.total > 0 ? (stats.completed / stats.total) * 100 : 0}%` }}
+                  className="bg-green-500 transition-all"
+                  style={{ width: `${stats.total > 0 ? (stats.completed / stats.total) * 100 : 0}%`, height: '0.75rem' }}
                 />
                 <div
-                  className="bg-blue-500 h-3 transition-all"
-                  style={{ width: `${stats.total > 0 ? (stats.inProgress / stats.total) * 100 : 0}%` }}
+                  className="bg-blue-500 transition-all"
+                  style={{ width: `${stats.total > 0 ? (stats.inProgress / stats.total) * 100 : 0}%`, height: '0.75rem' }}
                 />
               </div>
             </div>
           </div>
 
           {/* Before/After Period Definition */}
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h4 className="font-semibold text-blue-800 mb-2">
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <h4 className="fw-semibold text-blue-800 mb-2">
               📊 {locale === 'ja' ? 'Before/After 期間の定義' : 'Before/After 기간 정의'}
             </h4>
             <div className="text-sm text-blue-700 space-y-1">
@@ -725,12 +733,12 @@ export default function ContentOptimizationPage() {
           </div>
 
           {/* Add Button */}
-          <div className="flex justify-end">
+          <div className="d-flex justify-content-end">
             <button
               onClick={() => setShowAddForm(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+              className="btn btn-primary d-flex align-items-center gap-2"
             >
-              <Plus className="w-4 h-4" />
+              <Plus size={16} />
               {t.addArticle}
             </button>
           </div>
@@ -739,67 +747,67 @@ export default function ContentOptimizationPage() {
           {showAddForm && (
             <div className="card bg-blue-50 border-blue-200">
               <div className="card-body">
-                <h3 className="font-semibold text-gray-800 mb-4">{t.addArticle}</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{t.articleTitle}</label>
+                <h3 className="fw-semibold text-gray-800 mb-3">{t.addArticle}</h3>
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <label className="d-block text-sm fw-medium text-gray-700 mb-1">{t.articleTitle}</label>
                     <input
                       type="text"
                       value={newItem.articleTitle}
                       onChange={(e) => setNewItem(prev => ({ ...prev, articleTitle: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      className="form-control"
                       placeholder={locale === 'ja' ? '記事タイトルを入力' : '기사 제목 입력'}
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{t.articleUrl}</label>
+                  <div className="col-md-6">
+                    <label className="d-block text-sm fw-medium text-gray-700 mb-1">{t.articleUrl}</label>
                     <input
                       type="url"
                       value={newItem.articleUrl}
                       onChange={(e) => setNewItem(prev => ({ ...prev, articleUrl: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      className="form-control"
                       placeholder="https://..."
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{t.initialCtr} (%)</label>
+                  <div className="col-md-6">
+                    <label className="d-block text-sm fw-medium text-gray-700 mb-1">{t.initialCtr} (%)</label>
                     <input
                       type="number"
                       step="0.01"
                       value={newItem.initialCtr}
                       onChange={(e) => setNewItem(prev => ({ ...prev, initialCtr: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      className="form-control"
                       placeholder="0.67"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{t.impressions}</label>
+                  <div className="col-md-6">
+                    <label className="d-block text-sm fw-medium text-gray-700 mb-1">{t.impressions}</label>
                     <input
                       type="number"
                       value={newItem.initialImpr}
                       onChange={(e) => setNewItem(prev => ({ ...prev, initialImpr: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      className="form-control"
                       placeholder="10000"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{locale === 'ja' ? 'カテゴリ' : '카테고리'}</label>
+                  <div className="col-md-6">
+                    <label className="d-block text-sm fw-medium text-gray-700 mb-1">{locale === 'ja' ? 'カテゴリ' : '카테고리'}</label>
                     <select
                       value={newItem.category}
                       onChange={(e) => setNewItem(prev => ({ ...prev, category: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      className="form-select"
                     >
                       <option value="CTR改善">{locale === 'ja' ? 'CTR改善' : 'CTR 개선'}</option>
                       <option value="AEO対応">{locale === 'ja' ? 'AEO対応' : 'AEO 대응'}</option>
                       <option value="構造改善">{locale === 'ja' ? '構造改善' : '구조 개선'}</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{locale === 'ja' ? '優先度' : '우선순위'}</label>
+                  <div className="col-md-6">
+                    <label className="d-block text-sm fw-medium text-gray-700 mb-1">{locale === 'ja' ? '優先度' : '우선순위'}</label>
                     <select
                       value={newItem.priority}
                       onChange={(e) => setNewItem(prev => ({ ...prev, priority: e.target.value as 'HIGH' | 'MEDIUM' | 'LOW' }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      className="form-select"
                     >
                       <option value="HIGH">{locale === 'ja' ? '高' : '높음'}</option>
                       <option value="MEDIUM">{locale === 'ja' ? '中' : '보통'}</option>
@@ -807,16 +815,16 @@ export default function ContentOptimizationPage() {
                     </select>
                   </div>
                 </div>
-                <div className="flex justify-end gap-2 mt-4">
+                <div className="d-flex justify-content-end gap-2 mt-3">
                   <button
                     onClick={() => setShowAddForm(false)}
-                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="btn btn-ghost"
                   >
                     {locale === 'ja' ? 'キャンセル' : '취소'}
                   </button>
                   <button
                     onClick={addNewItem}
-                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                    className="btn btn-primary"
                   >
                     {t.add}
                   </button>
@@ -840,8 +848,8 @@ export default function ContentOptimizationPage() {
                 <div key={item.id} className="card">
                   <div className="card-body">
                     {/* Header Row */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3">
+                    <div className="d-flex align-items-start justify-content-between mb-3">
+                      <div className="d-flex align-items-center gap-2">
                         <span className={`text-xs px-2 py-0.5 rounded ${priorityConfig[item.priority].color}`}>
                           {priorityConfig[item.priority].label}
                         </span>
@@ -852,12 +860,12 @@ export default function ContentOptimizationPage() {
                           {item.category}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="d-flex align-items-center gap-2">
                         {item.status === 'COMPLETED' && (
                           <button
                             onClick={() => refreshItemMetrics(item.id)}
                             disabled={isUpdating || !canMeasureAfter}
-                            className={`flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg transition-colors disabled:opacity-50 ${
+                            className={`btn btn-sm d-flex align-items-center gap-1 ${
                               canMeasureAfter
                                 ? 'bg-blue-50 text-blue-600 hover:bg-blue-100'
                                 : 'bg-gray-100 text-gray-400 cursor-not-allowed'
@@ -866,30 +874,30 @@ export default function ContentOptimizationPage() {
                               ? (locale === 'ja' ? '完了後1ヶ月経過後に測定可能' : '완료 후 1개월 경과 후 측정 가능')
                               : (locale === 'ja' ? '指標を更新' : '지표 업데이트')}
                           >
-                            <RefreshCw className={`w-3.5 h-3.5 ${isUpdating ? 'animate-spin' : ''}`} />
+                            <RefreshCw size={14} className={isUpdating ? 'animate-spin' : ''} />
                             {locale === 'ja' ? '指標更新' : '지표 업데이트'}
                           </button>
                         )}
                         <button
                           onClick={() => deleteItem(item.id)}
-                          className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                          className="btn btn-sm btn-ghost text-gray-400 hover:text-red-500 hover:bg-red-50"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     </div>
 
                     {/* Title & URL */}
-                    <div className="mb-4">
-                      <h4 className="font-semibold text-gray-900">{item.articleTitle}</h4>
+                    <div className="mb-3">
+                      <h4 className="fw-semibold text-gray-900">{item.articleTitle}</h4>
                       {item.articleUrl && (
                         <a
                           href={item.articleUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm text-blue-600 hover:underline flex items-center gap-1 mt-1"
+                          className="text-sm text-blue-600 hover:underline d-flex align-items-center gap-1 mt-1"
                         >
-                          <ExternalLink className="w-3.5 h-3.5" />
+                          <ExternalLink size={14} />
                           {item.articleUrl}
                         </a>
                       )}
@@ -897,17 +905,17 @@ export default function ContentOptimizationPage() {
 
                     {/* Period Info (only for completed items) */}
                     {item.status === 'COMPLETED' && item.completedAt && (
-                      <div className="mb-4 p-3 bg-purple-50 rounded-lg">
-                        <div className="flex items-center justify-between text-xs">
+                      <div className="mb-3 p-2 bg-purple-50 rounded-lg">
+                        <div className="d-flex align-items-center justify-content-between text-xs">
                           <div>
-                            <span className="text-purple-600 font-medium">
+                            <span className="text-purple-600 fw-medium">
                               {locale === 'ja' ? '改善完了日: ' : '개선 완료일: '}
                             </span>
                             <span className="text-purple-800">
                               {new Date(item.completedAt).toLocaleDateString(locale === 'ja' ? 'ja-JP' : 'ko-KR')}
                             </span>
                           </div>
-                          <div className="flex gap-4">
+                          <div className="d-flex gap-3">
                             {beforePeriod && (
                               <span className="text-purple-600">
                                 Before: {formatDateShort(beforePeriod.start)}~{formatDateShort(beforePeriod.end)}
@@ -926,7 +934,7 @@ export default function ContentOptimizationPage() {
 
                     {/* Not Completed - Show instruction */}
                     {item.status !== 'COMPLETED' && (
-                      <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                      <div className="mb-3 p-2 bg-gray-50 rounded-lg">
                         <p className="text-xs text-gray-500">
                           {locale === 'ja'
                             ? '※ Before/After比較は「完了」ステータスに変更後、1ヶ月経過後に測定できます'
@@ -936,101 +944,107 @@ export default function ContentOptimizationPage() {
                     )}
 
                     {/* Before/After Metrics Comparison */}
-                    <div className="grid grid-cols-3 gap-4 mb-4">
+                    <div className="row g-3 mb-3">
                       {/* Impressions */}
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <p className="text-xs text-gray-500 mb-2">{locale === 'ja' ? '表示回数' : '노출수'}</p>
-                        <div className="flex items-center gap-2">
-                          <div>
-                            <p className="text-xs text-gray-400">Before</p>
-                            <p className="font-semibold text-gray-700">
-                              {item.initialImpr?.toLocaleString() ?? '-'}
-                            </p>
+                      <div className="col-md-4">
+                        <div className="p-2 bg-gray-50 rounded-lg">
+                          <p className="text-xs text-gray-500 mb-2">{locale === 'ja' ? '表示回数' : '노출수'}</p>
+                          <div className="d-flex align-items-center gap-2">
+                            <div>
+                              <p className="text-xs text-gray-400">Before</p>
+                              <p className="fw-semibold text-gray-700">
+                                {item.initialImpr?.toLocaleString() ?? '-'}
+                              </p>
+                            </div>
+                            <ArrowRight size={16} className="text-gray-400" />
+                            <div>
+                              <p className="text-xs text-gray-400">After</p>
+                              <p className={`fw-semibold ${item.currentImpr !== null ? 'text-gray-900' : 'text-gray-300'}`}>
+                                {item.currentImpr?.toLocaleString() ?? (item.status === 'COMPLETED' ? (canMeasureAfter ? '-' : locale === 'ja' ? '待機中' : '대기중') : '-')}
+                              </p>
+                            </div>
+                            {imprChange !== null && (
+                              <span className={`ms-auto text-sm fw-medium ${
+                                parseFloat(imprChange) > 0 ? 'text-green-600' : parseFloat(imprChange) < 0 ? 'text-red-600' : 'text-gray-500'
+                              }`}>
+                                {parseFloat(imprChange) > 0 ? '+' : ''}{imprChange}%
+                              </span>
+                            )}
                           </div>
-                          <ArrowRight className="w-4 h-4 text-gray-400" />
-                          <div>
-                            <p className="text-xs text-gray-400">After</p>
-                            <p className={`font-semibold ${item.currentImpr !== null ? 'text-gray-900' : 'text-gray-300'}`}>
-                              {item.currentImpr?.toLocaleString() ?? (item.status === 'COMPLETED' ? (canMeasureAfter ? '-' : locale === 'ja' ? '待機中' : '대기중') : '-')}
-                            </p>
-                          </div>
-                          {imprChange !== null && (
-                            <span className={`ml-auto text-sm font-medium ${
-                              parseFloat(imprChange) > 0 ? 'text-green-600' : parseFloat(imprChange) < 0 ? 'text-red-600' : 'text-gray-500'
-                            }`}>
-                              {parseFloat(imprChange) > 0 ? '+' : ''}{imprChange}%
-                            </span>
-                          )}
                         </div>
                       </div>
 
                       {/* Clicks */}
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <p className="text-xs text-gray-500 mb-2">{locale === 'ja' ? 'クリック数' : '클릭수'}</p>
-                        <div className="flex items-center gap-2">
-                          <div>
-                            <p className="text-xs text-gray-400">Before</p>
-                            <p className="font-semibold text-gray-700">
-                              {item.initialClicks?.toLocaleString() ?? '-'}
-                            </p>
+                      <div className="col-md-4">
+                        <div className="p-2 bg-gray-50 rounded-lg">
+                          <p className="text-xs text-gray-500 mb-2">{locale === 'ja' ? 'クリック数' : '클릭수'}</p>
+                          <div className="d-flex align-items-center gap-2">
+                            <div>
+                              <p className="text-xs text-gray-400">Before</p>
+                              <p className="fw-semibold text-gray-700">
+                                {item.initialClicks?.toLocaleString() ?? '-'}
+                              </p>
+                            </div>
+                            <ArrowRight size={16} className="text-gray-400" />
+                            <div>
+                              <p className="text-xs text-gray-400">After</p>
+                              <p className={`fw-semibold ${item.currentClicks !== null ? 'text-gray-900' : 'text-gray-300'}`}>
+                                {item.currentClicks?.toLocaleString() ?? (item.status === 'COMPLETED' ? (canMeasureAfter ? '-' : locale === 'ja' ? '待機中' : '대기중') : '-')}
+                              </p>
+                            </div>
+                            {clicksChange !== null && (
+                              <span className={`ms-auto text-sm fw-medium ${
+                                parseFloat(clicksChange) > 0 ? 'text-green-600' : parseFloat(clicksChange) < 0 ? 'text-red-600' : 'text-gray-500'
+                              }`}>
+                                {parseFloat(clicksChange) > 0 ? '+' : ''}{clicksChange}%
+                              </span>
+                            )}
                           </div>
-                          <ArrowRight className="w-4 h-4 text-gray-400" />
-                          <div>
-                            <p className="text-xs text-gray-400">After</p>
-                            <p className={`font-semibold ${item.currentClicks !== null ? 'text-gray-900' : 'text-gray-300'}`}>
-                              {item.currentClicks?.toLocaleString() ?? (item.status === 'COMPLETED' ? (canMeasureAfter ? '-' : locale === 'ja' ? '待機中' : '대기중') : '-')}
-                            </p>
-                          </div>
-                          {clicksChange !== null && (
-                            <span className={`ml-auto text-sm font-medium ${
-                              parseFloat(clicksChange) > 0 ? 'text-green-600' : parseFloat(clicksChange) < 0 ? 'text-red-600' : 'text-gray-500'
-                            }`}>
-                              {parseFloat(clicksChange) > 0 ? '+' : ''}{clicksChange}%
-                            </span>
-                          )}
                         </div>
                       </div>
 
                       {/* CTR */}
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <p className="text-xs text-gray-500 mb-2">CTR</p>
-                        <div className="flex items-center gap-2">
-                          <div>
-                            <p className="text-xs text-gray-400">Before</p>
-                            <p className="font-semibold text-gray-700">
-                              {item.initialCtr !== null ? `${item.initialCtr}%` : '-'}
-                            </p>
+                      <div className="col-md-4">
+                        <div className="p-2 bg-gray-50 rounded-lg">
+                          <p className="text-xs text-gray-500 mb-2">CTR</p>
+                          <div className="d-flex align-items-center gap-2">
+                            <div>
+                              <p className="text-xs text-gray-400">Before</p>
+                              <p className="fw-semibold text-gray-700">
+                                {item.initialCtr !== null ? `${item.initialCtr}%` : '-'}
+                              </p>
+                            </div>
+                            <ArrowRight size={16} className="text-gray-400" />
+                            <div>
+                              <p className="text-xs text-gray-400">After</p>
+                              <p className={`fw-semibold ${item.currentCtr !== null ? 'text-gray-900' : 'text-gray-300'}`}>
+                                {item.currentCtr !== null ? `${item.currentCtr}%` : (item.status === 'COMPLETED' ? (canMeasureAfter ? '-' : locale === 'ja' ? '待機中' : '대기중') : '-')}
+                              </p>
+                            </div>
+                            {ctrChange !== null && (
+                              <span className={`ms-auto d-flex align-items-center gap-1 text-sm fw-medium ${
+                                parseFloat(ctrChange) > 0 ? 'text-green-600' : parseFloat(ctrChange) < 0 ? 'text-red-600' : 'text-gray-500'
+                              }`}>
+                                {parseFloat(ctrChange) > 0 ? <TrendingUp size={16} /> : parseFloat(ctrChange) < 0 ? <TrendingDown size={16} /> : null}
+                                {parseFloat(ctrChange) > 0 ? '+' : ''}{ctrChange}%
+                              </span>
+                            )}
                           </div>
-                          <ArrowRight className="w-4 h-4 text-gray-400" />
-                          <div>
-                            <p className="text-xs text-gray-400">After</p>
-                            <p className={`font-semibold ${item.currentCtr !== null ? 'text-gray-900' : 'text-gray-300'}`}>
-                              {item.currentCtr !== null ? `${item.currentCtr}%` : (item.status === 'COMPLETED' ? (canMeasureAfter ? '-' : locale === 'ja' ? '待機中' : '대기중') : '-')}
-                            </p>
-                          </div>
-                          {ctrChange !== null && (
-                            <span className={`ml-auto flex items-center gap-1 text-sm font-medium ${
-                              parseFloat(ctrChange) > 0 ? 'text-green-600' : parseFloat(ctrChange) < 0 ? 'text-red-600' : 'text-gray-500'
-                            }`}>
-                              {parseFloat(ctrChange) > 0 ? <TrendingUp className="w-4 h-4" /> : parseFloat(ctrChange) < 0 ? <TrendingDown className="w-4 h-4" /> : null}
-                              {parseFloat(ctrChange) > 0 ? '+' : ''}{ctrChange}%
-                            </span>
-                          )}
                         </div>
                       </div>
                     </div>
 
                     {/* Last Updated Info */}
                     {item.metricsUpdatedAt && (
-                      <p className="text-xs text-gray-400 mb-3">
+                      <p className="text-xs text-gray-400 mb-2">
                         {locale === 'ja' ? '指標更新日時: ' : '지표 업데이트: '}
                         {new Date(item.metricsUpdatedAt).toLocaleString(locale === 'ja' ? 'ja-JP' : 'ko-KR')}
                       </p>
                     )}
 
                     {/* Status & Changes */}
-                    <div className="flex items-center gap-4 pt-3 border-t border-gray-100">
-                      <div className="flex items-center gap-2">
+                    <div className="d-flex align-items-center gap-3 pt-2 border-t border-gray-100">
+                      <div className="d-flex align-items-center gap-2">
                         <label className="text-xs text-gray-500">{t.rewriteStatus}:</label>
                         <select
                           value={item.status}
@@ -1042,12 +1056,12 @@ export default function ContentOptimizationPage() {
                           <option value="COMPLETED">{t.completedStatus}</option>
                         </select>
                       </div>
-                      <div className="flex-1">
+                      <div className="flex-fill">
                         <input
                           type="text"
                           value={item.changes}
                           onChange={(e) => updateItemChanges(item.id, e.target.value)}
-                          className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm"
+                          className="form-control form-control-sm"
                           placeholder={locale === 'ja' ? '変更内容を入力...' : '변경 내용 입력...'}
                         />
                       </div>
@@ -1059,8 +1073,8 @@ export default function ContentOptimizationPage() {
 
             {rewriteItems.length === 0 && (
               <div className="card">
-                <div className="card-body text-center py-12">
-                  <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                <div className="card-body text-center py-4">
+                  <FileText size={48} className="text-gray-300 mx-auto mb-3" />
                   <p className="text-gray-500">
                     {locale === 'ja'
                       ? 'リライト対象の記事がありません。AI分析タブから記事を追加してください。'
@@ -1080,139 +1094,143 @@ export default function ContentOptimizationPage() {
               <h3 className="card-title">{t.structureGuideTitle}</h3>
             </div>
             <div className="card-body">
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 mb-4">
                 {locale === 'ja'
                   ? 'AI検索時代では、「AIに引用される」と「ユーザーにクリックされる」の両方を狙うコンテンツ設計が重要です。'
                   : 'AI 검색 시대에는 "AI에 인용되는 것"과 "사용자에게 클릭되는 것" 두 가지를 모두 노리는 콘텐츠 설계가 중요합니다.'}
               </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="row g-4">
                 {/* AI Citation Section */}
-                <div className="p-6 bg-purple-50 rounded-xl border border-purple-200">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <span className="text-xl">🤖</span>
+                <div className="col-md-6">
+                  <div className="p-4 bg-purple-50 rounded-xl border border-purple-200">
+                    <div className="d-flex align-items-center gap-2 mb-3">
+                      <div className="bg-purple-100 rounded-lg d-flex align-items-center justify-content-center" style={{ width: '2.5rem', height: '2.5rem' }}>
+                        <span className="text-xl">🤖</span>
+                      </div>
+                      <h4 className="fw-semibold text-purple-800">{t.aiCitationSection}</h4>
                     </div>
-                    <h4 className="font-semibold text-purple-800">{t.aiCitationSection}</h4>
+                    <p className="text-sm text-purple-600 mb-3">
+                      {locale === 'ja'
+                        ? 'AIに引用されやすいコンテンツ要素'
+                        : 'AI에 인용되기 쉬운 콘텐츠 요소'}
+                    </p>
+                    <ul className="space-y-3">
+                      <li className="d-flex align-items-start gap-2">
+                        <span className="text-purple-500 mt-0.5">✓</span>
+                        <div>
+                          <p className="fw-medium text-gray-800">{t.faqFormat}</p>
+                          <p className="text-xs text-gray-500">
+                            {locale === 'ja'
+                              ? '質問と回答の形式で情報を整理'
+                              : '질문과 답변 형식으로 정보 정리'}
+                          </p>
+                        </div>
+                      </li>
+                      <li className="d-flex align-items-start gap-2">
+                        <span className="text-purple-500 mt-0.5">✓</span>
+                        <div>
+                          <p className="fw-medium text-gray-800">{t.schemaMarkup}</p>
+                          <p className="text-xs text-gray-500">
+                            {locale === 'ja'
+                              ? 'FAQPage, HowTo, Articleスキーマの実装'
+                              : 'FAQPage, HowTo, Article 스키마 구현'}
+                          </p>
+                        </div>
+                      </li>
+                      <li className="d-flex align-items-start gap-2">
+                        <span className="text-purple-500 mt-0.5">✓</span>
+                        <div>
+                          <p className="fw-medium text-gray-800">{t.clearDefinition}</p>
+                          <p className="text-xs text-gray-500">
+                            {locale === 'ja'
+                              ? '「〜とは」で始まる明確な説明文'
+                              : '"~란"으로 시작하는 명확한 설명문'}
+                          </p>
+                        </div>
+                      </li>
+                      <li className="d-flex align-items-start gap-2">
+                        <span className="text-purple-500 mt-0.5">✓</span>
+                        <div>
+                          <p className="fw-medium text-gray-800">{t.featuredSnippet}</p>
+                          <p className="text-xs text-gray-500">
+                            {locale === 'ja'
+                              ? '箇条書き、表、ステップ形式の活用'
+                              : '글머리 기호, 표, 단계 형식 활용'}
+                          </p>
+                        </div>
+                      </li>
+                    </ul>
                   </div>
-                  <p className="text-sm text-purple-600 mb-4">
-                    {locale === 'ja'
-                      ? 'AIに引用されやすいコンテンツ要素'
-                      : 'AI에 인용되기 쉬운 콘텐츠 요소'}
-                  </p>
-                  <ul className="space-y-3">
-                    <li className="flex items-start gap-3">
-                      <span className="text-purple-500 mt-0.5">✓</span>
-                      <div>
-                        <p className="font-medium text-gray-800">{t.faqFormat}</p>
-                        <p className="text-xs text-gray-500">
-                          {locale === 'ja'
-                            ? '質問と回答の形式で情報を整理'
-                            : '질문과 답변 형식으로 정보 정리'}
-                        </p>
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="text-purple-500 mt-0.5">✓</span>
-                      <div>
-                        <p className="font-medium text-gray-800">{t.schemaMarkup}</p>
-                        <p className="text-xs text-gray-500">
-                          {locale === 'ja'
-                            ? 'FAQPage, HowTo, Articleスキーマの実装'
-                            : 'FAQPage, HowTo, Article 스키마 구현'}
-                        </p>
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="text-purple-500 mt-0.5">✓</span>
-                      <div>
-                        <p className="font-medium text-gray-800">{t.clearDefinition}</p>
-                        <p className="text-xs text-gray-500">
-                          {locale === 'ja'
-                            ? '「〜とは」で始まる明確な説明文'
-                            : '"~란"으로 시작하는 명확한 설명문'}
-                        </p>
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="text-purple-500 mt-0.5">✓</span>
-                      <div>
-                        <p className="font-medium text-gray-800">{t.featuredSnippet}</p>
-                        <p className="text-xs text-gray-500">
-                          {locale === 'ja'
-                            ? '箇条書き、表、ステップ形式の活用'
-                            : '글머리 기호, 표, 단계 형식 활용'}
-                        </p>
-                      </div>
-                    </li>
-                  </ul>
                 </div>
 
                 {/* Click Drive Section */}
-                <div className="p-6 bg-green-50 rounded-xl border border-green-200">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                      <span className="text-xl">👆</span>
+                <div className="col-md-6">
+                  <div className="p-4 bg-green-50 rounded-xl border border-green-200">
+                    <div className="d-flex align-items-center gap-2 mb-3">
+                      <div className="bg-green-100 rounded-lg d-flex align-items-center justify-content-center" style={{ width: '2.5rem', height: '2.5rem' }}>
+                        <span className="text-xl">👆</span>
+                      </div>
+                      <h4 className="fw-semibold text-green-800">{t.clickDriveSection}</h4>
                     </div>
-                    <h4 className="font-semibold text-green-800">{t.clickDriveSection}</h4>
+                    <p className="text-sm text-green-600 mb-3">
+                      {locale === 'ja'
+                        ? 'クリックしないと得られない価値を提供'
+                        : '클릭해야만 얻을 수 있는 가치 제공'}
+                    </p>
+                    <ul className="space-y-3">
+                      <li className="d-flex align-items-start gap-2">
+                        <span className="text-green-500 mt-0.5">✓</span>
+                        <div>
+                          <p className="fw-medium text-gray-800">{t.exclusiveInsight}</p>
+                          <p className="text-xs text-gray-500">
+                            {locale === 'ja'
+                              ? '独自調査データ、業界分析、専門家意見'
+                              : '독자 조사 데이터, 업계 분석, 전문가 의견'}
+                          </p>
+                        </div>
+                      </li>
+                      <li className="d-flex align-items-start gap-2">
+                        <span className="text-green-500 mt-0.5">✓</span>
+                        <div>
+                          <p className="fw-medium text-gray-800">{t.downloadMaterial}</p>
+                          <p className="text-xs text-gray-500">
+                            {locale === 'ja'
+                              ? 'チェックリスト、テンプレート、ガイドPDF'
+                              : '체크리스트, 템플릿, 가이드 PDF'}
+                          </p>
+                        </div>
+                      </li>
+                      <li className="d-flex align-items-start gap-2">
+                        <span className="text-green-500 mt-0.5">✓</span>
+                        <div>
+                          <p className="fw-medium text-gray-800">{t.calculator}</p>
+                          <p className="text-xs text-gray-500">
+                            {locale === 'ja'
+                              ? '料金計算、ROI試算、比較ツール'
+                              : '요금 계산, ROI 시산, 비교 도구'}
+                          </p>
+                        </div>
+                      </li>
+                      <li className="d-flex align-items-start gap-2">
+                        <span className="text-green-500 mt-0.5">✓</span>
+                        <div>
+                          <p className="fw-medium text-gray-800">{t.caseStudy}</p>
+                          <p className="text-xs text-gray-500">
+                            {locale === 'ja'
+                              ? '実際の導入事例、成功ストーリー'
+                              : '실제 도입 사례, 성공 스토리'}
+                          </p>
+                        </div>
+                      </li>
+                    </ul>
                   </div>
-                  <p className="text-sm text-green-600 mb-4">
-                    {locale === 'ja'
-                      ? 'クリックしないと得られない価値を提供'
-                      : '클릭해야만 얻을 수 있는 가치 제공'}
-                  </p>
-                  <ul className="space-y-3">
-                    <li className="flex items-start gap-3">
-                      <span className="text-green-500 mt-0.5">✓</span>
-                      <div>
-                        <p className="font-medium text-gray-800">{t.exclusiveInsight}</p>
-                        <p className="text-xs text-gray-500">
-                          {locale === 'ja'
-                            ? '独自調査データ、業界分析、専門家意見'
-                            : '독자 조사 데이터, 업계 분석, 전문가 의견'}
-                        </p>
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="text-green-500 mt-0.5">✓</span>
-                      <div>
-                        <p className="font-medium text-gray-800">{t.downloadMaterial}</p>
-                        <p className="text-xs text-gray-500">
-                          {locale === 'ja'
-                            ? 'チェックリスト、テンプレート、ガイドPDF'
-                            : '체크리스트, 템플릿, 가이드 PDF'}
-                        </p>
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="text-green-500 mt-0.5">✓</span>
-                      <div>
-                        <p className="font-medium text-gray-800">{t.calculator}</p>
-                        <p className="text-xs text-gray-500">
-                          {locale === 'ja'
-                            ? '料金計算、ROI試算、比較ツール'
-                            : '요금 계산, ROI 시산, 비교 도구'}
-                        </p>
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="text-green-500 mt-0.5">✓</span>
-                      <div>
-                        <p className="font-medium text-gray-800">{t.caseStudy}</p>
-                        <p className="text-xs text-gray-500">
-                          {locale === 'ja'
-                            ? '実際の導入事例、成功ストーリー'
-                            : '실제 도입 사례, 성공 스토리'}
-                        </p>
-                      </div>
-                    </li>
-                  </ul>
                 </div>
               </div>
 
               {/* Implementation Tips */}
-              <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <h4 className="font-semibold text-yellow-800 mb-2">
+              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <h4 className="fw-semibold text-yellow-800 mb-2">
                   {locale === 'ja' ? '💡 実装のポイント' : '💡 구현 포인트'}
                 </h4>
                 <ul className="text-sm text-yellow-700 space-y-1">

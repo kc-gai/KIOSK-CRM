@@ -1,5 +1,38 @@
 /* Marketing Module - Tabler 통합 후 최소 커스텀 스타일 */
 
+/* ── 사이드바 네비게이션 ── */
+aside .nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  color: #626976;
+  text-decoration: none;
+  transition: background-color 0.15s, color 0.15s;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+}
+
+aside .nav-item:hover {
+  background-color: #f1f5f9;
+  color: #1e293b;
+}
+
+aside .nav-item.active {
+  background-color: rgba(32, 107, 196, 0.08);
+  color: #206bc4;
+  font-weight: 500;
+}
+
+aside a.nav-item {
+  text-decoration: none;
+}
+
 /* Stat Card (마케팅 페이지 전용) */
 .stat-card {
   background: white;

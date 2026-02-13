@@ -163,24 +163,24 @@ export default function EmailSettingsPanel() {
   const SectionHeader = ({ section, icon: Icon, title }: { section: 'sender' | 'send' | 'templates'; icon: React.ElementType; title: string }) => (
     <button
       onClick={() => setExpandedSection(expandedSection === section ? section : section)}
-      className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors ${
+      className={`w-100 d-flex align-items-center justify-content-between px-3 py-2 rounded-lg transition-colors ${
         expandedSection === section ? 'bg-blue-50 text-blue-700' : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
       }`}
     >
-      <div className="flex items-center gap-2">
-        <Icon className="w-4 h-4" />
-        <span className="font-medium text-sm">{title}</span>
+      <div className="d-flex align-items-center gap-2">
+        <Icon size={16} />
+        <span className="fw-medium text-sm">{title}</span>
       </div>
-      {expandedSection === section ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+      {expandedSection === section ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
     </button>
   )
 
   if (settingsLoading || templatesLoading) {
     return (
       <div className="card">
-        <div className="card-body flex items-center justify-center py-12">
-          <Loader2 className="w-5 h-5 text-primary animate-spin" />
-          <span className="ml-2 text-sm text-gray-500">{t.loading}</span>
+        <div className="card-body d-flex align-items-center justify-content-center py-5">
+          <Loader2 size={20} className="text-primary animate-spin" />
+          <span className="ms-2 text-sm text-gray-500">{t.loading}</span>
         </div>
       </div>
     )
@@ -189,44 +189,44 @@ export default function EmailSettingsPanel() {
   return (
     <div className="card">
       <div className="card-header">
-        <div className="flex items-center gap-2">
-          <Settings className="w-5 h-5 text-primary" />
+        <div className="d-flex align-items-center gap-2">
+          <Settings size={20} className="text-primary" />
           <h3 className="card-title">{t.emailSettings}</h3>
         </div>
       </div>
 
-      <div className="card-body space-y-4">
+      <div className="card-body space-y-3">
         {/* ===== 발신자 설정 ===== */}
         <SectionHeader section="sender" icon={Mail} title={t.senderSettings} />
         {expandedSection === 'sender' && settings && (
-          <div className="px-2 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">{t.senderEmail}</label>
+          <div className="px-1 space-y-3">
+            <div className="row g-3">
+              <div className="col-12 col-md-6">
+                <label className="form-label text-xs fw-medium text-gray-500">{t.senderEmail}</label>
                 <input
                   type="email"
                   value={settings.senderEmail}
                   onChange={(e) => setSettings({ ...settings, senderEmail: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  className="form-control form-control-sm"
                 />
               </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">{t.senderName}</label>
+              <div className="col-12 col-md-6">
+                <label className="form-label text-xs fw-medium text-gray-500">{t.senderName}</label>
                 <input
                   type="text"
                   value={settings.senderName}
                   onChange={(e) => setSettings({ ...settings, senderName: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  className="form-control form-control-sm"
                 />
               </div>
             </div>
-            <div className="flex justify-end">
+            <div className="d-flex justify-content-end">
               <button
                 onClick={saveSettings}
                 disabled={settingsSaving}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50"
+                className="btn btn-primary btn-sm d-inline-flex align-items-center gap-2"
               >
-                {settingsSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : settingsSaved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+                {settingsSaving ? <Loader2 size={16} className="animate-spin" /> : settingsSaved ? <Check size={16} /> : <Save size={16} />}
                 {settingsSaving ? t.saving : settingsSaved ? t.saved : t.saveSettings}
               </button>
             </div>
@@ -236,82 +236,82 @@ export default function EmailSettingsPanel() {
         {/* ===== 발송 설정 ===== */}
         <SectionHeader section="send" icon={Settings} title={t.sendSettings} />
         {expandedSection === 'send' && settings && (
-          <div className="px-2 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">
+          <div className="px-1 space-y-3">
+            <div className="row g-3">
+              <div className="col-12 col-md-6 col-lg-4">
+                <label className="form-label text-xs fw-medium text-gray-500">
                   {t.dailyLimitLabel}
                 </label>
-                <div className="flex items-center gap-2">
+                <div className="d-flex align-items-center gap-2">
                   <input
                     type="number"
                     value={settings.dailyLimit}
                     onChange={(e) => setSettings({ ...settings, dailyLimit: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    className="form-control form-control-sm"
                     min={1}
                     max={500}
                   />
                   <span className="text-xs text-gray-400 whitespace-nowrap">{t.emails}</span>
                 </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">
+              <div className="col-12 col-md-6 col-lg-4">
+                <label className="form-label text-xs fw-medium text-gray-500">
                   {t.sendInterval}
                 </label>
-                <div className="flex items-center gap-2">
+                <div className="d-flex align-items-center gap-2">
                   <input
                     type="number"
                     value={settings.intervalSeconds}
                     onChange={(e) => setSettings({ ...settings, intervalSeconds: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    className="form-control form-control-sm"
                     min={5}
                     max={300}
                   />
                   <span className="text-xs text-gray-400 whitespace-nowrap">{t.seconds}</span>
                 </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">
+              <div className="col-12 col-md-6 col-lg-4">
+                <label className="form-label text-xs fw-medium text-gray-500">
                   {t.batchSize}
                 </label>
-                <div className="flex items-center gap-2">
+                <div className="d-flex align-items-center gap-2">
                   <input
                     type="number"
                     value={settings.batchSize}
                     onChange={(e) => setSettings({ ...settings, batchSize: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    className="form-control form-control-sm"
                     min={1}
                     max={50}
                   />
                   <span className="text-xs text-gray-400 whitespace-nowrap">{t.companies}</span>
                 </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">
+              <div className="col-12 col-md-6 col-lg-4">
+                <label className="form-label text-xs fw-medium text-gray-500">
                   {t.batchInterval}
                 </label>
-                <div className="flex items-center gap-2">
+                <div className="d-flex align-items-center gap-2">
                   <input
                     type="number"
                     value={settings.batchIntervalMin}
                     onChange={(e) => setSettings({ ...settings, batchIntervalMin: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    className="form-control form-control-sm"
                     min={1}
                     max={60}
                   />
                   <span className="text-xs text-gray-400 whitespace-nowrap">{t.minutes}</span>
                 </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">
+              <div className="col-12 col-md-6 col-lg-4">
+                <label className="form-label text-xs fw-medium text-gray-500">
                   {t.followUpDays}
                 </label>
-                <div className="flex items-center gap-2">
+                <div className="d-flex align-items-center gap-2">
                   <input
                     type="number"
                     value={settings.followUpDays}
                     onChange={(e) => setSettings({ ...settings, followUpDays: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    className="form-control form-control-sm"
                     min={1}
                     max={90}
                   />
@@ -319,13 +319,13 @@ export default function EmailSettingsPanel() {
                 </div>
               </div>
             </div>
-            <div className="flex justify-end">
+            <div className="d-flex justify-content-end">
               <button
                 onClick={saveSettings}
                 disabled={settingsSaving}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50"
+                className="btn btn-primary btn-sm d-inline-flex align-items-center gap-2"
               >
-                {settingsSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : settingsSaved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+                {settingsSaving ? <Loader2 size={16} className="animate-spin" /> : settingsSaved ? <Check size={16} /> : <Save size={16} />}
                 {settingsSaving ? t.saving : settingsSaved ? t.saved : t.saveSettings}
               </button>
             </div>
@@ -335,27 +335,27 @@ export default function EmailSettingsPanel() {
         {/* ===== 템플릿 관리 ===== */}
         <SectionHeader section="templates" icon={FileText} title={t.templateSettings} />
         {expandedSection === 'templates' && (
-          <div className="px-2 space-y-3">
+          <div className="px-1 space-y-2">
             {/* Reset button */}
-            <div className="flex justify-end">
+            <div className="d-flex justify-content-end">
               <button
                 onClick={resetTemplates}
-                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-orange-700 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors"
+                className="btn btn-sm d-inline-flex align-items-center gap-1 text-orange-700 bg-orange-50 hover:bg-orange-100"
               >
-                <RotateCcw className="w-3 h-3" />
+                <RotateCcw size={12} />
                 {t.resetTemplates}
               </button>
             </div>
 
             {/* Template list */}
             {templates.map((tpl) => (
-              <div key={tpl.id} className="border border-gray-200 rounded-lg overflow-hidden">
+              <div key={tpl.id} className="card">
                 {/* Template header */}
-                <div className={`flex items-center justify-between px-4 py-3 ${
-                  templateSaved === tpl.id ? 'bg-green-50' : 'bg-gray-50/50'
+                <div className={`d-flex align-items-center justify-content-between px-3 py-2 ${
+                  templateSaved === tpl.id ? 'bg-green-50' : 'bg-gray-50'
                 }`}>
-                  <div className="flex items-center gap-3">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                  <div className="d-flex align-items-center gap-2">
+                    <span className="d-inline-flex align-items-center px-1 text-xs fw-medium bg-blue-100 text-blue-700" style={{ padding: '2px 8px', borderRadius: '9999px' }}>
                       {getRoundLabel(tpl.contactRound)}
                     </span>
                     {editingTemplateId === tpl.id ? (
@@ -363,41 +363,42 @@ export default function EmailSettingsPanel() {
                         type="text"
                         value={editForm?.name || ''}
                         onChange={(e) => setEditForm(prev => prev ? { ...prev, name: e.target.value } : null)}
-                        className="px-2 py-1 border border-gray-300 rounded text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        className="form-control form-control-sm fw-medium"
+                        style={{ width: 'auto' }}
                       />
                     ) : (
-                      <span className="text-sm font-medium text-gray-800">{tpl.name}</span>
+                      <span className="text-sm fw-medium text-gray-800">{tpl.name}</span>
                     )}
                     {templateSaved === tpl.id && (
-                      <span className="inline-flex items-center gap-1 text-xs text-green-600">
-                        <Check className="w-3 h-3" /> {t.saved}
+                      <span className="d-inline-flex align-items-center gap-1 text-xs text-green-600">
+                        <Check size={12} /> {t.saved}
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="d-flex align-items-center gap-2">
                     {editingTemplateId === tpl.id ? (
                       <>
                         <button
                           onClick={cancelEdit}
-                          className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                          className="btn btn-ghost-secondary btn-sm"
                         >
                           {t.cancel}
                         </button>
                         <button
                           onClick={() => saveTemplate(tpl)}
                           disabled={templateSaving}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50"
+                          className="btn btn-primary btn-sm d-inline-flex align-items-center gap-1"
                         >
-                          {templateSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                          {templateSaving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
                           {t.saveSettings}
                         </button>
                       </>
                     ) : (
                       <button
                         onClick={() => startEditTemplate(tpl)}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                        className="btn btn-sm d-inline-flex align-items-center gap-1 text-blue-700 bg-blue-50 hover:bg-blue-100"
                       >
-                        <Pencil className="w-3 h-3" />
+                        <Pencil size={12} />
                         {t.editTemplate}
                       </button>
                     )}
@@ -405,34 +406,35 @@ export default function EmailSettingsPanel() {
                 </div>
 
                 {/* Template content */}
-                <div className="px-4 py-3 space-y-3">
+                <div className="card-body px-3 py-2 space-y-2">
                   {/* Subject */}
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">{t.mailSubject}</label>
+                    <label className="form-label text-xs fw-medium text-gray-500">{t.mailSubject}</label>
                     {editingTemplateId === tpl.id ? (
                       <input
                         type="text"
                         value={editForm?.subject || ''}
                         onChange={(e) => setEditForm(prev => prev ? { ...prev, subject: e.target.value } : null)}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                        className="form-control form-control-sm"
                       />
                     ) : (
-                      <p className="text-sm text-gray-700 bg-gray-50 px-3 py-2 rounded-lg">{tpl.subject}</p>
+                      <p className="text-sm text-gray-700 bg-gray-50 px-2 py-1 rounded-lg mb-0">{tpl.subject}</p>
                     )}
                   </div>
 
                   {/* Body */}
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">{t.mailBody}</label>
+                    <label className="form-label text-xs fw-medium text-gray-500">{t.mailBody}</label>
                     {editingTemplateId === tpl.id ? (
                       <textarea
                         value={editForm?.bodyText || ''}
                         onChange={(e) => setEditForm(prev => prev ? { ...prev, bodyText: e.target.value } : null)}
                         rows={12}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-y"
+                        className="form-control font-monospace"
+                        style={{ lineHeight: 1.6, resize: 'vertical' }}
                       />
                     ) : (
-                      <pre className="text-sm text-gray-700 bg-gray-50 px-3 py-2 rounded-lg whitespace-pre-wrap font-sans leading-relaxed max-h-[200px] overflow-y-auto">
+                      <pre className="text-sm text-gray-700 bg-gray-50 px-2 py-1 rounded-lg mb-0" style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', lineHeight: 1.6, maxHeight: '200px', overflowY: 'auto' }}>
                         {tpl.bodyText}
                       </pre>
                     )}
@@ -442,7 +444,7 @@ export default function EmailSettingsPanel() {
             ))}
 
             {templates.length === 0 && (
-              <div className="text-center py-8 text-gray-400 text-sm">
+              <div className="text-center py-5 text-gray-400 text-sm">
                 {locale === 'ja' ? 'テンプレートがありません' : '템플릿이 없습니다'}
               </div>
             )}

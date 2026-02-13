@@ -274,9 +274,12 @@ export default function SalesTrackingPage() {
   const [expandedPipedriveOffices, setExpandedPipedriveOffices] = useState<Set<string>>(new Set())
   const [showPipedriveLeadList, setShowPipedriveLeadList] = useState(false)
 
-  // Sales Tracking State (Google Sheets)
+  // Sales Tracking State (DB - synced from Google Sheets)
   const [salesLoading, setSalesLoading] = useState(true)
   const [salesError, setSalesError] = useState<string | null>(null)
+  const [needsSync, setNeedsSync] = useState(false)
+  const [syncing, setSyncing] = useState(false)
+  const [syncResult, setSyncResult] = useState<string | null>(null)
   const [stats, setStats] = useState<SalesOverviewStats | null>(null)
   const [companies, setCompanies] = useState<RentalCarCompany[]>([])
   const [selectedOffice, setSelectedOffice] = useState<string | null>(null)
@@ -400,6 +403,12 @@ export default function SalesTrackingPage() {
         if (includeCompanies && result.data.companies) {
           setCompanies(result.data.companies)
         }
+        // DB에 데이터가 없으면 동기화 필요 표시
+        if (result.data.needsSync) {
+          setNeedsSync(true)
+        } else {
+          setNeedsSync(false)
+        }
       } else {
         setSalesError(result.error || 'Failed to fetch data')
       }
@@ -407,6 +416,34 @@ export default function SalesTrackingPage() {
       setSalesError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setSalesLoading(false)
+    }
+  }
+
+  // Google Sheets → DB 동기화
+  const syncFromSheets = async () => {
+    setSyncing(true)
+    setSyncResult(null)
+    try {
+      const response = await fetch('/api/sales-tracking/sync', { method: 'POST' })
+      const result = await response.json()
+
+      if (result.success) {
+        const d = result.data
+        setSyncResult(
+          locale === 'ja'
+            ? `同期完了: ${d.totalFetched}社取得 (新規${d.created}, 更新${d.updated}, 連絡${d.contactsCreated}件)`
+            : `동기화 완료: ${d.totalFetched}사 가져옴 (신규${d.created}, 갱신${d.updated}, 연락${d.contactsCreated}건)`
+        )
+        setNeedsSync(false)
+        // 동기화 후 데이터 새로고침
+        await fetchSalesData(true)
+      } else {
+        setSyncResult(locale === 'ja' ? `同期エラー: ${result.error}` : `동기화 오류: ${result.error}`)
+      }
+    } catch (err) {
+      setSyncResult(locale === 'ja' ? '同期に失敗しました' : '동기화에 실패했습니다')
+    } finally {
+      setSyncing(false)
     }
   }
 
@@ -1507,111 +1544,121 @@ export default function SalesTrackingPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="d-flex align-items-center justify-content-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <FileSpreadsheet className="w-6 h-6 text-primary" />
+          <h1 className="text-2xl fw-bold text-gray-900 d-flex align-items-center gap-2">
+            <FileSpreadsheet size={24} className="text-primary" />
             {locale === 'ja' ? '営業進捗管理' : '영업 진척 관리'}
           </h1>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="d-flex align-items-center gap-2">
           {activeTab === 'contacts' && (
-            <a
-              href="https://docs.google.com/spreadsheets/d/1DmsvdcknuIXETeBj72ewSefwjJ8fKb6ROAl3dS5JJmg/edit"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
-            >
-              <ExternalLink className="w-4 h-4" />
-              {locale === 'ja' ? 'Sheets を開く' : 'Sheets 열기'}
-            </a>
+            <>
+              <a
+                href="https://docs.google.com/spreadsheets/d/1DmsvdcknuIXETeBj72ewSefwjJ8fKb6ROAl3dS5JJmg/edit"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2"
+              >
+                <ExternalLink size={16} />
+                {locale === 'ja' ? 'Sheets を開く' : 'Sheets 열기'}
+              </a>
+              <button
+                onClick={syncFromSheets}
+                disabled={syncing}
+                className="btn btn-warning btn-sm d-flex align-items-center gap-2"
+              >
+                <RefreshCw size={16} className={syncing ? 'animate-spin' : ''} />
+                {syncing
+                  ? (locale === 'ja' ? '同期中...' : '동기화 중...')
+                  : (locale === 'ja' ? 'Sheets同期' : 'Sheets 동기화')}
+              </button>
+            </>
           )}
           <button
             onClick={() => activeTab === 'pipedrive' ? fetchPipedriveData() : fetchSalesData(true)}
             disabled={activeTab === 'pipedrive' ? pipedriveLoading : salesLoading}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+            className="btn btn-primary d-flex align-items-center gap-2 disabled:opacity-50"
           >
-            <RefreshCw className={`w-4 h-4 ${(activeTab === 'pipedrive' ? pipedriveLoading : salesLoading) ? 'animate-spin' : ''}`} />
+            <RefreshCw size={16} className={`${(activeTab === 'pipedrive' ? pipedriveLoading : salesLoading) ? 'animate-spin' : ''}`} />
             {locale === 'ja' ? '更新' : '새로고침'}
           </button>
         </div>
+        {/* Sync result message */}
+        {syncResult && (
+          <div className={`alert ${syncResult.includes('エラー') || syncResult.includes('오류') || syncResult.includes('失敗') || syncResult.includes('실패') ? 'alert-danger' : 'alert-success'} alert-dismissible mt-2`} role="alert">
+            <div className="d-flex align-items-center">
+              <div>{syncResult}</div>
+              <button type="button" className="btn-close ms-auto" onClick={() => setSyncResult(null)}></button>
+            </div>
+          </div>
+        )}
+        {/* Needs sync banner */}
+        {needsSync && !syncing && (
+          <div className="alert alert-warning mt-2" role="alert">
+            <div className="d-flex align-items-center gap-2">
+              <AlertCircle size={16} />
+              <span>
+                {locale === 'ja'
+                  ? 'DBにデータがありません。「Sheets同期」ボタンでGoogle Sheetsからデータを取り込んでください。'
+                  : 'DB에 데이터가 없습니다. "Sheets 동기화" 버튼으로 Google Sheets에서 데이터를 가져와주세요.'}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200">
-        <nav className="flex space-x-8">
+      <ul className="nav nav-tabs mb-3">
+        <li className="nav-item">
           <button
             onClick={() => setActiveTab('pipedrive')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-              activeTab === 'pipedrive'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
+            className={`nav-link d-flex align-items-center gap-2 ${activeTab === 'pipedrive' ? 'active' : ''}`}
           >
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              {locale === 'ja' ? 'Pipedrive リード' : 'Pipedrive 리드'}
-              <span className="bg-yellow-100 text-yellow-700 text-xs px-1.5 py-0.5 rounded">
-                {locale === 'ja' ? '暫定' : '임시'}
-              </span>
-              {regionData && (
-                <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full">
-                  {regionData.total}
-                </span>
-              )}
-            </div>
+            <Users size={16} />
+            {locale === 'ja' ? 'Pipedrive リード' : 'Pipedrive 리드'}
+            <span className="badge bg-yellow-lt ms-1">
+              {locale === 'ja' ? '暫定' : '임시'}
+            </span>
+            {regionData && (
+              <span className="badge bg-blue-lt ms-1">{regionData.total}</span>
+            )}
           </button>
+        </li>
+        <li className="nav-item">
           <button
             onClick={() => setActiveTab('contacts')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-              activeTab === 'contacts'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
+            className={`nav-link d-flex align-items-center gap-2 ${activeTab === 'contacts' ? 'active' : ''}`}
           >
-            <div className="flex items-center gap-2">
-              <FileSpreadsheet className="w-4 h-4" />
-              {locale === 'ja' ? 'コンタクトリスト' : '컨택 리스트'}
-              {validLeadCount > 0 && (
-                <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">
-                  {validLeadCount.toLocaleString()}
-                </span>
-              )}
-            </div>
+            <FileSpreadsheet size={16} />
+            {locale === 'ja' ? 'コンタクトリスト' : '컨택 리스트'}
+            {validLeadCount > 0 && (
+              <span className="badge bg-green-lt ms-1">{validLeadCount.toLocaleString()}</span>
+            )}
           </button>
+        </li>
+        <li className="nav-item">
           <button
             onClick={() => setActiveTab('cold-email')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-              activeTab === 'cold-email'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
+            className={`nav-link d-flex align-items-center gap-2 ${activeTab === 'cold-email' ? 'active' : ''}`}
           >
-            <div className="flex items-center gap-2">
-              <Mail className="w-4 h-4" />
-              {locale === 'ja' ? 'コールドメール' : '콜드메일'}
-              {coldEmailTotals.total > 0 && (
-                <span className="bg-purple-100 text-purple-700 text-xs px-2 py-0.5 rounded-full">
-                  {coldEmailTotals.total}
-                </span>
-              )}
-            </div>
+            <Mail size={16} />
+            {locale === 'ja' ? 'コールドメール' : '콜드메일'}
+            {coldEmailTotals.total > 0 && (
+              <span className="badge bg-purple-lt ms-1">{coldEmailTotals.total}</span>
+            )}
           </button>
+        </li>
+        <li className="nav-item">
           <button
             onClick={() => setActiveTab('bulk-email')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-              activeTab === 'bulk-email'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
+            className={`nav-link d-flex align-items-center gap-2 ${activeTab === 'bulk-email' ? 'active' : ''}`}
           >
-            <div className="flex items-center gap-2">
-              <Send className="w-4 h-4" />
-              {locale === 'ja' ? '一括メール送信' : '일괄 메일 발송'}
-            </div>
+            <Send size={16} />
+            {locale === 'ja' ? '一括メール送信' : '일괄 메일 발송'}
           </button>
-        </nav>
-      </div>
+        </li>
+      </ul>
 
       {/* Tab Content */}
       {activeTab === 'pipedrive' ? (
@@ -1620,9 +1667,9 @@ export default function SalesTrackingPage() {
         // =======================================
         <>
           {pipedriveError ? (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-              <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-              <h2 className="text-lg font-semibold text-red-800 mb-2">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+              <AlertCircle size={48} className="text-red-500 mx-auto mb-4" />
+              <h2 className="text-lg fw-semibold text-red-800 mb-2">
                 {locale === 'ja' ? 'Pipedrive接続エラー' : 'Pipedrive 연결 오류'}
               </h2>
               <p className="text-red-600 mb-4">{pipedriveError}</p>
@@ -1640,14 +1687,14 @@ export default function SalesTrackingPage() {
               </div>
               <button
                 onClick={fetchPipedriveData}
-                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="btn btn-primary mt-4"
               >
                 {locale === 'ja' ? '再試行' : '다시 시도'}
               </button>
             </div>
           ) : pipedriveLoading && !regionData ? (
-            <div className="flex items-center justify-center h-64">
-              <RefreshCw className="w-8 h-8 animate-spin text-blue-500" />
+            <div className="d-flex align-items-center justify-content-center h-64">
+              <RefreshCw size={32} className="animate-spin text-blue-500" />
             </div>
           ) : regionData ? (
             <>
@@ -1656,24 +1703,30 @@ export default function SalesTrackingPage() {
                 {/* 1. 리드 섹션 */}
                 <div className="card">
                   <div className="card-header py-2">
-                    <h3 className="card-title text-sm font-semibold">{locale === 'ja' ? '1. Pipedriveリード概要' : '1. Pipedrive 리드 개요'}</h3>
+                    <h3 className="card-title text-sm fw-semibold">{locale === 'ja' ? '1. Pipedriveリード概要' : '1. Pipedrive 리드 개요'}</h3>
                   </div>
                   <div className="card-body py-3">
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="text-center p-3 bg-blue-50 rounded-lg">
-                        <p className="text-xs text-blue-600 mb-1">{locale === 'ja' ? '総リード' : '총 리드'}</p>
-                        <p className="text-2xl font-bold text-blue-600">{regionData.total.toLocaleString()}</p>
-                        <p className="text-xs text-blue-400">Pipedrive</p>
+                    <div className="row g-3">
+                      <div className="col-md-4">
+                        <div className="text-center p-2 bg-blue-50 rounded-lg">
+                          <p className="text-xs text-blue-600 mb-1">{locale === 'ja' ? '総リード' : '총 리드'}</p>
+                          <p className="text-2xl fw-bold text-blue-600">{regionData.total.toLocaleString()}</p>
+                          <p className="text-xs text-blue-400">Pipedrive</p>
+                        </div>
                       </div>
-                      <div className="text-center p-3 bg-green-50 rounded-lg">
-                        <p className="text-xs text-green-600 mb-1">{locale === 'ja' ? '地域特定済み' : '지역 특정됨'}</p>
-                        <p className="text-2xl font-bold text-green-600">{regionData.stats.reduce((sum, r) => sum + r.count, 0).toLocaleString()}</p>
-                        <p className="text-xs text-green-400">{Math.round((regionData.stats.reduce((sum, r) => sum + r.count, 0) / regionData.total) * 100)}%</p>
+                      <div className="col-md-4">
+                        <div className="text-center p-2 bg-green-50 rounded-lg">
+                          <p className="text-xs text-green-600 mb-1">{locale === 'ja' ? '地域特定済み' : '지역 특정됨'}</p>
+                          <p className="text-2xl fw-bold text-green-600">{regionData.stats.reduce((sum, r) => sum + r.count, 0).toLocaleString()}</p>
+                          <p className="text-xs text-green-400">{Math.round((regionData.stats.reduce((sum, r) => sum + r.count, 0) / regionData.total) * 100)}%</p>
+                        </div>
                       </div>
-                      <div className="text-center p-3 bg-gray-100 rounded-lg">
-                        <p className="text-xs text-gray-600 mb-1">{locale === 'ja' ? '未指定' : '미지정'}</p>
-                        <p className="text-2xl font-bold text-gray-500">{regionData.unassigned.count.toLocaleString()}</p>
-                        <p className="text-xs text-gray-400">{locale === 'ja' ? '住所未登録' : '주소 미등록'}</p>
+                      <div className="col-md-4">
+                        <div className="text-center p-2 bg-gray-100 rounded-lg">
+                          <p className="text-xs text-gray-600 mb-1">{locale === 'ja' ? '未指定' : '미지정'}</p>
+                          <p className="text-2xl fw-bold text-gray-500">{regionData.unassigned.count.toLocaleString()}</p>
+                          <p className="text-xs text-gray-400">{locale === 'ja' ? '住所未登録' : '주소 미등록'}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1682,19 +1735,20 @@ export default function SalesTrackingPage() {
                 {/* 2. 사무소별 통계 */}
                 <div className="card">
                   <div className="card-header py-2">
-                    <h3 className="card-title text-sm font-semibold">{locale === 'ja' ? '2. オフィス別リード数' : '2. 사무소별 리드 수'}</h3>
+                    <h3 className="card-title text-sm fw-semibold">{locale === 'ja' ? '2. オフィス別リード数' : '2. 사무소별 리드 수'}</h3>
                   </div>
                   <div className="card-body py-3">
-                    <div className="grid grid-cols-5 gap-2">
+                    <div className="row g-2">
                       {pipedriveOffices.map((office) => (
-                        <div key={office.code} className="text-center p-2 bg-gray-50 rounded-lg">
-                          <div className="flex items-center justify-center gap-1 mb-1">
-                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: office.color }} />
+                        <div key={office.code} className="col">
+                          <div className="text-center p-1 bg-gray-50 rounded-lg">
+                          <div className="d-flex align-items-center justify-content-center gap-1 mb-1">
+                            <div className="w-2 h-2 rounded-circle" style={{ backgroundColor: office.color }} />
                             <p className="text-xs text-gray-500">{locale === 'ja' ? office.nameJa : office.nameKo}</p>
                           </div>
-                          <p className="text-lg font-bold" style={{ color: office.color }}>{office.totalCount}</p>
+                          <p className="text-lg fw-bold" style={{ color: office.color }}>{office.totalCount}</p>
                           <p className="text-xs text-gray-400">{office.regions.length}{locale === 'ja' ? '地域' : '지역'}</p>
-                        </div>
+                        </div></div>
                       ))}
                     </div>
                   </div>
@@ -1702,12 +1756,12 @@ export default function SalesTrackingPage() {
               </div>
 
               {/* Charts - Side by Side */}
-              <div className="grid grid-cols-2 gap-6">
+              <div className="row g-4">
                 {/* Office Distribution Pie */}
-                <div className="card">
+                <div className="col-6"><div className="card">
                   <div className="card-header">
-                    <h3 className="card-title flex items-center gap-2">
-                      <Building className="w-5 h-5 text-primary" />
+                    <h3 className="card-title d-flex align-items-center gap-2">
+                      <Building size={20} className="text-primary" />
                       {locale === 'ja' ? 'オフィス別分布' : '사무소별 분포'}
                     </h3>
                   </div>
@@ -1734,13 +1788,13 @@ export default function SalesTrackingPage() {
                       </ResponsiveContainer>
                     </div>
                   </div>
-                </div>
+                </div></div>
 
                 {/* Office Bar Chart */}
-                <div className="card">
+                <div className="col-6"><div className="card">
                   <div className="card-header">
-                    <h3 className="card-title flex items-center gap-2">
-                      <TrendingUp className="w-5 h-5 text-primary" />
+                    <h3 className="card-title d-flex align-items-center gap-2">
+                      <TrendingUp size={20} className="text-primary" />
                       {locale === 'ja' ? 'オフィス別リード数' : '사무소별 리드 수'}
                     </h3>
                   </div>
@@ -1761,17 +1815,17 @@ export default function SalesTrackingPage() {
                       </ResponsiveContainer>
                     </div>
                   </div>
-                </div>
+                </div></div>
               </div>
 
               {/* Office/Region Expandable List */}
               <div className="card">
                 <div className="card-header">
-                  <h3 className="card-title flex items-center gap-2">
-                    <MapPin className="w-5 h-5 text-primary" />
+                  <h3 className="card-title d-flex align-items-center gap-2">
+                    <MapPin size={20} className="text-primary" />
                     {locale === 'ja' ? '管轄オフィス・地域別詳細' : '관할 사무소/지역별 상세'}
                   </h3>
-                  <div className="flex items-center gap-2">
+                  <div className="d-flex align-items-center gap-2">
                     <button
                       onClick={() => setExpandedPipedriveOffices(new Set(pipedriveOffices.map(o => o.code)))}
                       className="text-sm text-primary hover:underline"
@@ -1793,42 +1847,41 @@ export default function SalesTrackingPage() {
                     const officePercent = Math.round((office.totalCount / regionData.total) * 100)
 
                     return (
-                      <div key={office.code} className="border-b border-gray-100 last:border-b-0">
+                      <div key={office.code} className="border-bottom border-gray-100 last:border-bottom-0">
                         {/* Office Header */}
                         <div
                           onClick={() => togglePipedriveOffice(office.code)}
-                          className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors"
+                          className="d-flex align-items-center justify-content-between px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors"
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="d-flex align-items-center gap-3">
                             {isExpanded ? (
-                              <ChevronDown className="w-5 h-5 text-gray-400" />
+                              <ChevronDown size={20} className="text-gray-400" />
                             ) : (
-                              <ChevronRight className="w-5 h-5 text-gray-400" />
+                              <ChevronRight size={20} className="text-gray-400" />
                             )}
-                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: office.color }} />
+                            <div className="w-3 h-3 rounded-circle" style={{ backgroundColor: office.color }} />
                             <div>
                               <span className="font-medium text-gray-900">
                                 {locale === 'ja' ? office.nameJa : office.nameKo}
                               </span>
-                              <span className="text-sm text-gray-500 ml-2">
+                              <span className="text-sm text-gray-500 ms-2">
                                 ({office.regions.length} {locale === 'ja' ? '地域' : '지역'})
                               </span>
                             </div>
                           </div>
-                          <div className="flex items-center gap-6">
-                            <div className="text-right">
-                              <span className="text-lg font-bold text-gray-900">{office.totalCount}</span>
-                              <span className="text-sm text-gray-500 ml-1">{locale === 'ja' ? '件' : '건'}</span>
+                          <div className="d-flex align-items-center gap-6">
+                            <div className="text-end">
+                              <span className="text-lg fw-bold text-gray-900">{office.totalCount}</span>
+                              <span className="text-sm text-gray-500 ms-1">{locale === 'ja' ? '件' : '건'}</span>
                             </div>
                             <div className="w-32">
-                              <div className="flex items-center gap-2">
-                                <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                              <div className="d-flex align-items-center gap-2">
+                                <div className="flex-fill overflow-hidden" style={{ height: '8px', backgroundColor: '#e5e7eb', borderRadius: '4px' }}>
                                   <div
-                                    className="h-full rounded-full"
-                                    style={{ width: `${officePercent}%`, backgroundColor: office.color }}
+                                    style={{ width: `${officePercent}%`, height: '100%', backgroundColor: office.color, borderRadius: '4px' }}
                                   />
                                 </div>
-                                <span className="text-xs text-gray-500 w-10">{officePercent}%</span>
+                                <span style={{ fontSize: '0.75rem', color: '#6b7280', width: '40px' }}>{officePercent}%</span>
                               </div>
                             </div>
                           </div>
@@ -1849,15 +1902,15 @@ export default function SalesTrackingPage() {
                                       setSelectedPipedriveOffice(office.code)
                                       setShowPipedriveLeadList(true)
                                     }}
-                                    className="flex items-center justify-between py-2 px-4 hover:bg-white rounded cursor-pointer transition-colors"
+                                    className="d-flex align-items-center justify-content-between py-2 px-4 hover:bg-white rounded cursor-pointer transition-colors"
                                   >
-                                    <div className="flex items-center gap-2">
-                                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: region.region.color }} />
+                                    <div className="d-flex align-items-center gap-2">
+                                      <span className="w-2 h-2 rounded-circle" style={{ backgroundColor: region.region.color }} />
                                       <span className="text-gray-700">
                                         {locale === 'ja' ? region.region.nameJa : region.region.nameKo}
                                       </span>
                                     </div>
-                                    <div className="flex items-center gap-4">
+                                    <div className="d-flex align-items-center gap-4">
                                       <span className="text-sm text-gray-600">
                                         {region.count} {locale === 'ja' ? '件' : '건'}
                                       </span>
@@ -1873,24 +1926,24 @@ export default function SalesTrackingPage() {
                   })}
                   {/* Unassigned Section */}
                   {regionData.unassigned.count > 0 && (
-                    <div className="border-b border-gray-100 last:border-b-0">
+                    <div className="border-bottom border-gray-100 last:border-bottom-0">
                       <div
                         onClick={() => {
                           setSelectedPipedriveRegion('UNKNOWN')
                           setSelectedPipedriveOffice(null)
                           setShowPipedriveLeadList(true)
                         }}
-                        className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors"
+                        className="d-flex align-items-center justify-content-between px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors"
                       >
-                        <div className="flex items-center gap-3">
-                          <AlertCircle className="w-5 h-5 text-gray-400" />
+                        <div className="d-flex align-items-center gap-3">
+                          <AlertCircle size={20} className="text-gray-400" />
                           <span className="font-medium text-gray-600">
                             {locale === 'ja' ? '未指定 (住所未登録)' : '미지정 (주소 미등록)'}
                           </span>
                         </div>
-                        <div className="text-right">
-                          <span className="text-lg font-bold text-gray-500">{regionData.unassigned.count}</span>
-                          <span className="text-sm text-gray-400 ml-1">{locale === 'ja' ? '件' : '건'}</span>
+                        <div className="text-end">
+                          <span className="text-lg fw-bold text-gray-500">{regionData.unassigned.count}</span>
+                          <span className="text-sm text-gray-400 ms-1">{locale === 'ja' ? '件' : '건'}</span>
                         </div>
                       </div>
                     </div>
@@ -1902,8 +1955,8 @@ export default function SalesTrackingPage() {
               {showPipedriveLeadList && selectedPipedriveRegionData && (
                 <div className="card">
                   <div className="card-header">
-                    <h3 className="card-title flex items-center gap-2">
-                      <Users className="w-5 h-5 text-primary" />
+                    <h3 className="card-title d-flex align-items-center gap-2">
+                      <Users size={20} className="text-primary" />
                       {selectedPipedriveRegion === 'UNKNOWN'
                         ? (locale === 'ja' ? '未指定リード' : '미지정 리드')
                         : `${locale === 'ja' ? selectedPipedriveRegionData.region.nameJa : selectedPipedriveRegionData.region.nameKo} ${locale === 'ja' ? 'リード一覧' : '리드 목록'}`
@@ -1924,29 +1977,29 @@ export default function SalesTrackingPage() {
                     </button>
                   </div>
                   <div className="card-body p-0">
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead className="bg-gray-50 border-b border-gray-200">
+                    <div className="overflow-auto">
+                      <table className="table table-sm table-vcenter">
+                        <thead className="bg-gray-50 border-bottom border-gray-200">
                           <tr>
-                            <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                            <th className="text-left px-4 py-3 text-sm fw-medium text-gray-600">
                               {locale === 'ja' ? '組織' : '조직'}
                             </th>
-                            <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                            <th className="text-left px-4 py-3 text-sm fw-medium text-gray-600">
                               {locale === 'ja' ? '状態' : '상태'}
                             </th>
-                            <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                            <th className="text-left px-4 py-3 text-sm fw-medium text-gray-600">
                               {locale === 'ja' ? '住所' : '주소'}
                             </th>
-                            <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                            <th className="text-left px-4 py-3 text-sm fw-medium text-gray-600">
                               {locale === 'ja' ? '電話番号' : '전화번호'}
                             </th>
-                            <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                            <th className="text-left px-4 py-3 text-sm fw-medium text-gray-600">
                               {locale === 'ja' ? 'メール' : '이메일'}
                             </th>
-                            <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                            <th className="text-left px-4 py-3 text-sm fw-medium text-gray-600">
                               {locale === 'ja' ? 'HP問合せ' : 'HP 문의'}
                             </th>
-                            <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                            <th className="text-left px-4 py-3 text-sm fw-medium text-gray-600">
                               {locale === 'ja' ? '登録日' : '등록일'}
                             </th>
                           </tr>
@@ -1980,7 +2033,7 @@ export default function SalesTrackingPage() {
                                 <td className="px-4 py-3">
                                   {statusTag ? (
                                     <span
-                                      className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
+                                      className="d-inline-flex align-items-center px-2 py-0.5 rounded text-xs fw-medium"
                                       style={{ backgroundColor: statusColor?.bg, color: statusColor?.text }}
                                     >
                                       {statusTag}
@@ -1996,8 +2049,8 @@ export default function SalesTrackingPage() {
                                 </td>
                                 <td className="px-4 py-3">
                                   {lead.phone ? (
-                                    <a href={`tel:${lead.phone}`} className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800">
-                                      <Phone className="w-3 h-3" />
+                                    <a href={`tel:${lead.phone}`} className="d-flex align-items-center gap-1 text-xs text-blue-600 hover:text-blue-800">
+                                      <Phone size={12} />
                                       {lead.phone}
                                     </a>
                                   ) : (
@@ -2006,8 +2059,8 @@ export default function SalesTrackingPage() {
                                 </td>
                                 <td className="px-4 py-3">
                                   {lead.email ? (
-                                    <a href={`mailto:${lead.email}`} className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800">
-                                      <Mail className="w-3 h-3" />
+                                    <a href={`mailto:${lead.email}`} className="d-flex align-items-center gap-1 text-xs text-blue-600 hover:text-blue-800">
+                                      <Mail size={12} />
                                       {lead.email.length > 20 ? lead.email.slice(0, 20) + '...' : lead.email}
                                     </a>
                                   ) : (
@@ -2027,7 +2080,7 @@ export default function SalesTrackingPage() {
                       </table>
                     </div>
                     {selectedPipedriveRegionData.leads.length > 50 && (
-                      <div className="px-4 py-3 text-center text-sm text-gray-500 border-t">
+                      <div className="px-3 py-2 text-center text-sm text-gray-500 border-top">
                         {locale === 'ja'
                           ? `他 ${selectedPipedriveRegionData.leads.length - 50}件`
                           : `외 ${selectedPipedriveRegionData.leads.length - 50}건`}
@@ -2038,8 +2091,8 @@ export default function SalesTrackingPage() {
               )}
 
               {/* Info */}
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-2">
-                <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg d-flex align-items-start gap-2">
+                <Info size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-blue-800">
                   <strong>Pipedrive {locale === 'ja' ? '連動' : '연동'}:</strong>{' '}
                   {locale === 'ja'
@@ -2057,16 +2110,16 @@ export default function SalesTrackingPage() {
         // =======================================
         <>
           {salesLoading && !stats ? (
-            <div className="flex items-center justify-center h-64">
-              <RefreshCw className="w-8 h-8 animate-spin text-primary" />
+            <div className="d-flex align-items-center justify-content-center h-64">
+              <RefreshCw size={32} className="animate-spin text-primary" />
             </div>
           ) : salesError ? (
             <div className="p-6 bg-red-50 border border-red-200 rounded-lg text-center">
-              <AlertCircle className="w-12 h-12 mx-auto text-red-400 mb-3" />
+              <AlertCircle size={48} className="mx-auto text-red-400 mb-3" />
               <p className="text-red-600">{salesError}</p>
               <button
                 onClick={() => fetchSalesData(true)}
-                className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                className="btn btn-danger mt-4"
               >
                 {locale === 'ja' ? '再試行' : '다시 시도'}
               </button>
@@ -2078,10 +2131,10 @@ export default function SalesTrackingPage() {
                 {/* 1. 리드 현황 - 1행 구조 */}
                 <div className="card">
                   <div className="card-header py-2">
-                    <h3 className="card-title text-sm font-semibold">{locale === 'ja' ? '1. リード現況' : '1. 리드 현황'}</h3>
+                    <h3 className="card-title text-sm fw-semibold">{locale === 'ja' ? '1. リード現況' : '1. 리드 현황'}</h3>
                   </div>
                   <div className="card-body py-3">
-                    <div className="flex items-stretch gap-4">
+                    <div className="d-flex align-items-stretch gap-4">
                       {/* 총 리드 */}
                       <div
                         onClick={() => {
@@ -2095,22 +2148,22 @@ export default function SalesTrackingPage() {
                         }`}
                       >
                         <p className="text-xs text-gray-500 mb-1">{locale === 'ja' ? '総リード' : '총 리드'}</p>
-                        <p className="text-3xl font-bold text-gray-700">{totalPipedriveLeads.toLocaleString()}</p>
+                        <p className="text-3xl fw-bold text-gray-700">{totalPipedriveLeads.toLocaleString()}</p>
                         <p className="text-xs text-gray-400">Pipedrive</p>
                       </div>
 
                       {/* 화살표 */}
-                      <div className="flex items-center text-gray-300 text-2xl">=</div>
+                      <div className="d-flex align-items-center text-gray-300 text-2xl">=</div>
 
                       {/* 유효 리드 (교섭중 + 미교섭) - 보류/실주 제외 */}
-                      <div className="flex-1 p-4 bg-blue-50 rounded-lg">
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="text-xs text-blue-600 font-medium">{locale === 'ja' ? '有効リード' : '유효 리드'}</p>
-                          <p className="text-2xl font-bold text-blue-600">
+                      <div className="flex-fill p-4 bg-blue-50 rounded-lg">
+                        <div className="d-flex align-items-center justify-content-between mb-2">
+                          <p className="text-xs text-blue-600 fw-medium">{locale === 'ja' ? '有効リード' : '유효 리드'}</p>
+                          <p className="text-2xl fw-bold text-blue-600">
                             {validLeadCount.toLocaleString()}
                           </p>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="d-flex gap-2">
                           {/* 교섭 중 */}
                           <div
                             onClick={() => {
@@ -2124,7 +2177,7 @@ export default function SalesTrackingPage() {
                             }`}
                           >
                             <p className="text-[10px] text-green-600">{locale === 'ja' ? '交渉中' : '교섭중'}</p>
-                            <p className="text-lg font-bold text-green-600">
+                            <p className="text-lg fw-bold text-green-600">
                               {((mergedStatusBreakdown['連絡中'] || 0) + (mergedStatusBreakdown['商談中'] || 0) + (mergedStatusBreakdown['見積提出'] || 0)).toLocaleString()}
                             </p>
                           </div>
@@ -2141,7 +2194,7 @@ export default function SalesTrackingPage() {
                             }`}
                           >
                             <p className="text-[10px] text-gray-600">{locale === 'ja' ? '未交渉' : '미교섭'}</p>
-                            <p className="text-lg font-bold text-gray-600">
+                            <p className="text-lg fw-bold text-gray-600">
                               {(mergedStatusBreakdown['未交渉'] || 0).toLocaleString()}
                             </p>
                           </div>
@@ -2149,7 +2202,7 @@ export default function SalesTrackingPage() {
                       </div>
 
                       {/* 더하기 기호 */}
-                      <div className="flex items-center text-gray-300 text-2xl">+</div>
+                      <div className="d-flex align-items-center text-gray-300 text-2xl">+</div>
 
                       {/* 영업 제외 */}
                       <div
@@ -2164,7 +2217,7 @@ export default function SalesTrackingPage() {
                         }`}
                       >
                         <p className="text-xs text-red-500 mb-1">{locale === 'ja' ? '営業除外' : '영업 제외'}</p>
-                        <p className="text-3xl font-bold text-red-500">
+                        <p className="text-3xl fw-bold text-red-500">
                           {excludedLeads.toLocaleString()}
                         </p>
                         <p className="text-xs text-red-400">
@@ -2180,24 +2233,24 @@ export default function SalesTrackingPage() {
                 {/* 2. 오피스별 리드 수 (Pipedrive 기준) */}
                 <div className="card">
                   <div className="card-header py-2">
-                    <div className="flex items-center justify-between">
-                      <h3 className="card-title text-sm font-semibold">{locale === 'ja' ? '2. オフィス別リード数' : '2. 오피스별 리드 수'}</h3>
+                    <div className="d-flex align-items-center justify-content-between">
+                      <h3 className="card-title text-sm fw-semibold">{locale === 'ja' ? '2. オフィス別リード数' : '2. 오피스별 리드 수'}</h3>
                       <span className="text-xs text-gray-500">
                         {locale === 'ja' ? '総リード' : '총 리드'}: {totalPipedriveLeads.toLocaleString()} (Pipedrive)
                       </span>
                     </div>
                   </div>
                   <div className="card-body py-3">
-                    <div className="grid grid-cols-5 gap-3">
+                    <div className="row g-2">
                       {pipedriveOffices.map((office) => {
                         const validLeads = stats.byOffice?.[office.code]?.totalCompanies || 0
                         const pipedriveTotal = office.totalCount
                         const excluded = Math.max(0, pipedriveTotal - validLeads)
                         return (
-                          <div key={office.code} className="p-3 bg-white border border-gray-100 rounded-lg">
-                            <div className="flex items-center justify-center gap-1 mb-2">
+                          <div key={office.code} className="col"><div className="p-2 bg-white border border-gray-100 rounded-lg">
+                            <div className="d-flex align-items-center justify-content-center gap-1 mb-2">
                               <span
-                                className="w-2 h-2 rounded-full"
+                                className="w-2 h-2 rounded-circle"
                                 style={{ backgroundColor: office.color }}
                               />
                               <p className="text-xs text-gray-500">
@@ -2205,11 +2258,11 @@ export default function SalesTrackingPage() {
                               </p>
                             </div>
                             {/* Pipedrive 총 리드 */}
-                            <p className="text-2xl font-bold text-center" style={{ color: office.color }}>
+                            <p className="text-2xl fw-bold text-center" style={{ color: office.color }}>
                               {pipedriveTotal.toLocaleString()}
                             </p>
                             {/* 유효/제외 breakdown */}
-                            <div className="flex justify-center gap-2 mt-2 text-[10px]">
+                            <div className="d-flex justify-content-center gap-2 mt-2 text-[10px]">
                               <span className="text-blue-600">
                                 {locale === 'ja' ? '有効' : '유효'} {validLeads}
                               </span>
@@ -2218,7 +2271,7 @@ export default function SalesTrackingPage() {
                                 {locale === 'ja' ? '除外' : '제외'} {excluded}
                               </span>
                             </div>
-                          </div>
+                          </div></div>
                         )
                       })}
                     </div>
@@ -2226,14 +2279,14 @@ export default function SalesTrackingPage() {
                 </div>
 
                 {/* 3. 유효리드 연락 현황 & 최근 30일 연락 */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="row g-3">
                   {/* 3. 유효리드 연락 현황 (왼쪽 2/3) */}
-                  <div className="col-span-2 card">
+                  <div className="col-md-8"><div className="card">
                     <div className="card-header py-2">
-                      <h3 className="card-title text-sm font-semibold">{locale === 'ja' ? '3. 有効リード連絡状況' : '3. 유효리드 연락 현황'}</h3>
+                      <h3 className="card-title text-sm fw-semibold">{locale === 'ja' ? '3. 有効リード連絡状況' : '3. 유효리드 연락 현황'}</h3>
                     </div>
                     <div className="card-body py-3">
-                      <div className="grid grid-cols-6 gap-2">
+                      <div className="row g-2">
                         {[0, 1, 2, 3, 4, '5+'].map((count) => {
                           const data = contactCountStats[count.toString()]
                           const label = count === 0
@@ -2242,29 +2295,29 @@ export default function SalesTrackingPage() {
                               ? (locale === 'ja' ? '5回以上' : '5회 이상')
                               : (locale === 'ja' ? `${count}回` : `${count}회`)
                           return (
-                            <div key={count} className="text-center p-2 bg-gray-50 rounded-lg">
+                            <div key={count} className="col-2"><div className="text-center p-1 bg-gray-50 rounded-lg">
                               <p className="text-xs text-gray-500 mb-1">{label}</p>
-                              <p className="text-lg font-bold text-gray-700">{data.total}</p>
+                              <p className="text-lg fw-bold text-gray-700">{data.total}</p>
                               <div className="text-xs mt-1 space-y-0.5">
                                 <p className="text-green-600">{locale === 'ja' ? '交渉' : '교섭'} {data.success}</p>
                                 <p className="text-gray-400">{locale === 'ja' ? '無応答' : '무응답'} {data.noResponse}</p>
                               </div>
-                            </div>
+                            </div></div>
                           )
                         })}
                       </div>
                     </div>
-                  </div>
+                  </div></div>
 
                   {/* 4. 최근 30일 연락 (오른쪽 1/3) */}
-                  <div className="card">
+                  <div className="col-md-4"><div className="card">
                     <div className="card-header py-2">
-                      <h3 className="card-title text-sm font-semibold">{locale === 'ja' ? '4. 最近30日連絡' : '4. 최근 30일 연락'}</h3>
+                      <h3 className="card-title text-sm fw-semibold">{locale === 'ja' ? '4. 最近30日連絡' : '4. 최근 30일 연락'}</h3>
                     </div>
                     <div className="card-body py-3">
-                      <div className="flex flex-col items-center justify-center h-full">
+                      <div className="d-flex flex-column align-items-center justify-content-center h-100">
                         <div className="text-center">
-                          <p className="text-4xl font-bold text-blue-600">{contactStats.recentlyContacted}</p>
+                          <p className="text-4xl fw-bold text-blue-600">{contactStats.recentlyContacted}</p>
                           <p className="text-xs text-gray-500 mt-1">{locale === 'ja' ? 'アクティブ営業' : '활성 영업'}</p>
                         </div>
                         <div className="text-center text-sm text-gray-500 mt-3">
@@ -2273,17 +2326,17 @@ export default function SalesTrackingPage() {
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </div></div>
                 </div>
               </div>
 
               {/* Charts */}
-              <div className="grid grid-cols-2 gap-6">
+              <div className="row g-4">
                 {/* Contact Count Distribution (연락 횟수 분포) */}
-                <div className="card">
+                <div className="col-6"><div className="card">
                   <div className="card-header">
-                    <h3 className="card-title flex items-center gap-2">
-                      <Phone className="w-5 h-5 text-primary" />
+                    <h3 className="card-title d-flex align-items-center gap-2">
+                      <Phone size={20} className="text-primary" />
                       {locale === 'ja' ? '連絡回数分布' : '연락 횟수 분포'}
                     </h3>
                   </div>
@@ -2310,13 +2363,13 @@ export default function SalesTrackingPage() {
                       </ResponsiveContainer>
                     </div>
                   </div>
-                </div>
+                </div></div>
 
                 {/* Office Status */}
-                <div className="card">
+                <div className="col-6"><div className="card">
                   <div className="card-header">
-                    <h3 className="card-title flex items-center gap-2">
-                      <Building2 className="w-5 h-5 text-primary" />
+                    <h3 className="card-title d-flex align-items-center gap-2">
+                      <Building2 size={20} className="text-primary" />
                       {locale === 'ja' ? 'オフィス別状況' : '사무소별 현황'}
                     </h3>
                   </div>
@@ -2339,24 +2392,24 @@ export default function SalesTrackingPage() {
                       </ResponsiveContainer>
                     </div>
                   </div>
-                </div>
+                </div></div>
               </div>
 
               {/* Contact Attempt Statistics */}
               <div className="card">
                 <div className="card-header">
-                  <h3 className="card-title flex items-center gap-2">
-                    <Phone className="w-5 h-5 text-primary" />
+                  <h3 className="card-title d-flex align-items-center gap-2">
+                    <Phone size={20} className="text-primary" />
                     {locale === 'ja' ? '連絡試行統計' : '연락 시도 통계'}
                   </h3>
-                  <div className="flex items-center gap-4">
+                  <div className="d-flex align-items-center gap-4">
                     {/* 년도 필터 버튼 */}
-                    <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                    <div className="d-flex align-items-center gap-1 bg-gray-100 rounded-lg p-1">
                       <button
                         onClick={() => setContactStatsYearFilter('all')}
                         className={`px-3 py-1 text-xs rounded ${
                           contactStatsYearFilter === 'all'
-                            ? 'bg-white shadow text-gray-900 font-semibold'
+                            ? 'bg-white shadow text-gray-900 fw-semibold'
                             : 'text-gray-600 hover:bg-gray-50'
                         }`}
                       >
@@ -2366,7 +2419,7 @@ export default function SalesTrackingPage() {
                         onClick={() => setContactStatsYearFilter(2024)}
                         className={`px-3 py-1 text-xs rounded ${
                           contactStatsYearFilter === 2024
-                            ? 'bg-purple-500 text-white font-semibold'
+                            ? 'bg-purple-500 text-white fw-semibold'
                             : 'text-gray-600 hover:bg-gray-50'
                         }`}
                       >
@@ -2376,7 +2429,7 @@ export default function SalesTrackingPage() {
                         onClick={() => setContactStatsYearFilter(2025)}
                         className={`px-3 py-1 text-xs rounded ${
                           contactStatsYearFilter === 2025
-                            ? 'bg-blue-500 text-white font-semibold'
+                            ? 'bg-blue-500 text-white fw-semibold'
                             : 'text-gray-600 hover:bg-gray-50'
                         }`}
                       >
@@ -2386,7 +2439,7 @@ export default function SalesTrackingPage() {
                         onClick={() => setContactStatsYearFilter(2026)}
                         className={`px-3 py-1 text-xs rounded ${
                           contactStatsYearFilter === 2026
-                            ? 'bg-green-500 text-white font-semibold'
+                            ? 'bg-green-500 text-white fw-semibold'
                             : 'text-gray-600 hover:bg-gray-50'
                         }`}
                       >
@@ -2394,17 +2447,17 @@ export default function SalesTrackingPage() {
                       </button>
                     </div>
                     {/* 년도별 총계 - 메일/문의 구분 (같은 행) */}
-                    <div className="flex items-center gap-4 text-sm flex-nowrap">
-                      <span className="text-purple-600 font-semibold whitespace-nowrap">2024: {contactAttemptStats.yearlyStats[2024]?.total || 0}{locale === 'ja' ? '回' : '회'} <span className="text-xs text-gray-500">([{CONTACT_TYPE_LABELS.mail[locale]}]{contactAttemptStats.yearlyStats[2024]?.byType.mail || 0}+[{CONTACT_TYPE_LABELS.inquiry[locale]}]{contactAttemptStats.yearlyStats[2024]?.byType.inquiry || 0})</span></span>
-                      <span className="text-blue-600 font-semibold whitespace-nowrap">2025: {contactAttemptStats.yearlyStats[2025]?.total || 0}{locale === 'ja' ? '回' : '회'} <span className="text-xs text-gray-500">([{CONTACT_TYPE_LABELS.mail[locale]}]{contactAttemptStats.yearlyStats[2025]?.byType.mail || 0}+[{CONTACT_TYPE_LABELS.inquiry[locale]}]{contactAttemptStats.yearlyStats[2025]?.byType.inquiry || 0})</span></span>
-                      <span className="text-green-600 font-semibold whitespace-nowrap">2026: {contactAttemptStats.yearlyStats[2026]?.total || 0}{locale === 'ja' ? '回' : '회'} <span className="text-xs text-gray-500">([{CONTACT_TYPE_LABELS.mail[locale]}]{contactAttemptStats.yearlyStats[2026]?.byType.mail || 0}+[{CONTACT_TYPE_LABELS.inquiry[locale]}]{contactAttemptStats.yearlyStats[2026]?.byType.inquiry || 0})</span></span>
+                    <div className="d-flex align-items-center gap-4 text-sm flex-nowrap">
+                      <span className="text-purple-600 fw-semibold whitespace-nowrap">2024: {contactAttemptStats.yearlyStats[2024]?.total || 0}{locale === 'ja' ? '回' : '회'} <span className="text-xs text-gray-500">([{CONTACT_TYPE_LABELS.mail[locale]}]{contactAttemptStats.yearlyStats[2024]?.byType.mail || 0}+[{CONTACT_TYPE_LABELS.inquiry[locale]}]{contactAttemptStats.yearlyStats[2024]?.byType.inquiry || 0})</span></span>
+                      <span className="text-blue-600 fw-semibold whitespace-nowrap">2025: {contactAttemptStats.yearlyStats[2025]?.total || 0}{locale === 'ja' ? '回' : '회'} <span className="text-xs text-gray-500">([{CONTACT_TYPE_LABELS.mail[locale]}]{contactAttemptStats.yearlyStats[2025]?.byType.mail || 0}+[{CONTACT_TYPE_LABELS.inquiry[locale]}]{contactAttemptStats.yearlyStats[2025]?.byType.inquiry || 0})</span></span>
+                      <span className="text-green-600 fw-semibold whitespace-nowrap">2026: {contactAttemptStats.yearlyStats[2026]?.total || 0}{locale === 'ja' ? '回' : '회'} <span className="text-xs text-gray-500">([{CONTACT_TYPE_LABELS.mail[locale]}]{contactAttemptStats.yearlyStats[2026]?.byType.mail || 0}+[{CONTACT_TYPE_LABELS.inquiry[locale]}]{contactAttemptStats.yearlyStats[2026]?.byType.inquiry || 0})</span></span>
                     </div>
                   </div>
                 </div>
                 <div className="card-body">
                   {/* Monthly Chart */}
                   <div className="mb-6">
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">
+                    <h4 className="text-sm fw-medium text-gray-700 mb-3">
                       {locale === 'ja' ? '月別連絡回数' : '월별 연락 횟수'}
                     </h4>
                     <div className="h-48">
@@ -2435,39 +2488,39 @@ export default function SalesTrackingPage() {
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
-                    <div className="flex flex-wrap items-center justify-center gap-4 mt-2 text-xs">
+                    <div className="d-flex flex-wrap align-items-center justify-content-center gap-4 mt-2 text-xs">
                       {/* 2024 */}
-                      <div className="flex items-center gap-2">
+                      <div className="d-flex align-items-center gap-2">
                         <span className="font-medium text-purple-700">2024:</span>
-                        <div className="flex items-center gap-1">
+                        <div className="d-flex align-items-center gap-1">
                           <div className="w-3 h-3 rounded" style={{ backgroundColor: '#7c3aed' }} />
                           <span>{locale === 'ja' ? 'メール' : '메일'}</span>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="d-flex align-items-center gap-1">
                           <div className="w-3 h-3 rounded" style={{ backgroundColor: '#c4b5fd' }} />
                           <span>{locale === 'ja' ? '問合せ' : '문의'}</span>
                         </div>
                       </div>
                       {/* 2025 */}
-                      <div className="flex items-center gap-2">
+                      <div className="d-flex align-items-center gap-2">
                         <span className="font-medium text-blue-700">2025:</span>
-                        <div className="flex items-center gap-1">
+                        <div className="d-flex align-items-center gap-1">
                           <div className="w-3 h-3 rounded" style={{ backgroundColor: '#2563eb' }} />
                           <span>{locale === 'ja' ? 'メール' : '메일'}</span>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="d-flex align-items-center gap-1">
                           <div className="w-3 h-3 rounded" style={{ backgroundColor: '#93c5fd' }} />
                           <span>{locale === 'ja' ? '問合せ' : '문의'}</span>
                         </div>
                       </div>
                       {/* 2026 */}
-                      <div className="flex items-center gap-2">
+                      <div className="d-flex align-items-center gap-2">
                         <span className="font-medium text-green-700">2026:</span>
-                        <div className="flex items-center gap-1">
+                        <div className="d-flex align-items-center gap-1">
                           <div className="w-3 h-3 rounded" style={{ backgroundColor: '#16a34a' }} />
                           <span>{locale === 'ja' ? 'メール' : '메일'}</span>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="d-flex align-items-center gap-1">
                           <div className="w-3 h-3 rounded" style={{ backgroundColor: '#86efac' }} />
                           <span>{locale === 'ja' ? '問合せ' : '문의'}</span>
                         </div>
@@ -2476,26 +2529,25 @@ export default function SalesTrackingPage() {
                   </div>
 
                   {/* Region & Office Breakdown */}
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="row g-4">
                     {/* By Region */}
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-3">
+                    <div className="col-6">
+                      <h4 className="fw-medium mb-3" style={{ fontSize: '0.875rem', color: '#374151' }}>
                         {locale === 'ja' ? '地域別連絡回数 (Top 10)' : '지역별 연락 횟수 (상위 10)'}
                       </h4>
-                      <div className="space-y-2">
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         {regionContactChartData.map((item, idx) => {
                           const maxCount = regionContactChartData[0]?.count || 1
                           const percentage = Math.round((item.count / maxCount) * 100)
                           return (
-                            <div key={idx} className="flex items-center gap-2">
-                              <span className="text-xs text-gray-600 w-24 truncate">{item.region}</span>
-                              <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">
+                            <div key={idx} className="d-flex align-items-center gap-2">
+                              <span style={{ fontSize: '0.75rem', color: '#4b5563', width: '80px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.region}</span>
+                              <div className="flex-fill overflow-hidden" style={{ height: '16px', backgroundColor: '#f3f4f6', borderRadius: '4px' }}>
                                 <div
-                                  className="h-full bg-blue-500 rounded-full"
-                                  style={{ width: `${percentage}%` }}
+                                  style={{ width: `${percentage}%`, height: '100%', backgroundColor: '#3b82f6', borderRadius: '4px', transition: 'width 0.3s' }}
                                 />
                               </div>
-                              <span className="text-xs font-medium text-gray-700 w-10 text-right">{item.count}</span>
+                              <span className="fw-medium text-end" style={{ fontSize: '0.75rem', color: '#374151', width: '36px' }}>{item.count}</span>
                             </div>
                           )
                         })}
@@ -2503,24 +2555,23 @@ export default function SalesTrackingPage() {
                     </div>
 
                     {/* By Office */}
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-3">
+                    <div className="col-6">
+                      <h4 className="fw-medium mb-3" style={{ fontSize: '0.875rem', color: '#374151' }}>
                         {locale === 'ja' ? '管轄オフィス別連絡回数' : '관할구역별 연락 횟수'}
                       </h4>
-                      <div className="space-y-2">
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         {officeContactChartData.map((item, idx) => {
                           const maxCount = officeContactChartData[0]?.count || 1
                           const percentage = Math.round((item.count / maxCount) * 100)
                           return (
-                            <div key={idx} className="flex items-center gap-2">
-                              <span className="text-xs text-gray-600 w-24 truncate">{item.office}</span>
-                              <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">
+                            <div key={idx} className="d-flex align-items-center gap-2">
+                              <span style={{ fontSize: '0.75rem', color: '#4b5563', width: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.office}</span>
+                              <div className="flex-fill overflow-hidden" style={{ height: '16px', backgroundColor: '#f3f4f6', borderRadius: '4px' }}>
                                 <div
-                                  className="h-full rounded-full"
-                                  style={{ width: `${percentage}%`, backgroundColor: item.color }}
+                                  style={{ width: `${percentage}%`, height: '100%', backgroundColor: item.color, borderRadius: '4px', transition: 'width 0.3s' }}
                                 />
                               </div>
-                              <span className="text-xs font-medium text-gray-700 w-10 text-right">{item.count}</span>
+                              <span className="fw-medium text-end" style={{ fontSize: '0.75rem', color: '#374151', width: '36px' }}>{item.count}</span>
                             </div>
                           )
                         })}
@@ -2533,8 +2584,8 @@ export default function SalesTrackingPage() {
               {/* Region Details */}
               <div className="card">
                 <div className="card-header">
-                  <h3 className="card-title flex items-center gap-2">
-                    <MapPin className="w-5 h-5 text-primary" />
+                  <h3 className="card-title d-flex align-items-center gap-2">
+                    <MapPin size={20} className="text-primary" />
                     {locale === 'ja' ? '管轄オフィス・地域別詳細' : '관할 사무소/지역별 상세'}
                     <span className="text-sm font-normal text-gray-500">
                       {locale === 'ja'
@@ -2542,7 +2593,7 @@ export default function SalesTrackingPage() {
                         : `총 ${totalPipedriveLeads.toLocaleString()}건 / 유효리드 ${validLeadCount.toLocaleString()}건`}
                     </span>
                   </h3>
-                  <div className="flex items-center gap-2">
+                  <div className="d-flex align-items-center gap-2">
                     <button
                       onClick={() => {
                         setNegotiationFilter('all')
@@ -2550,7 +2601,7 @@ export default function SalesTrackingPage() {
                         setSelectedOffice(null)
                         setShowCompanyList(true)
                       }}
-                      className="text-sm bg-primary text-white px-3 py-1 rounded hover:bg-primary/90 transition-colors"
+                      className="btn btn-primary btn-sm"
                     >
                       {locale === 'ja' ? '全社リスト' : '전체 목록'}
                     </button>
@@ -2581,53 +2632,54 @@ export default function SalesTrackingPage() {
                       const officePipedriveTotal = officePipedrive?.totalCount || 0
 
                       return (
-                        <div key={officeCode} className="border-b border-gray-100 last:border-b-0">
+                        <div key={officeCode} className="border-bottom border-gray-100 last:border-bottom-0">
                           {/* Office Header */}
                           <div
                             onClick={() => toggleOffice(officeCode)}
-                            className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors"
+                            className="d-flex align-items-center justify-content-between px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors"
                           >
-                            <div className="flex items-center gap-3">
+                            <div className="d-flex align-items-center gap-3">
                               {isExpanded ? (
-                                <ChevronDown className="w-5 h-5 text-gray-400" />
+                                <ChevronDown size={20} className="text-gray-400" />
                               ) : (
-                                <ChevronRight className="w-5 h-5 text-gray-400" />
+                                <ChevronRight size={20} className="text-gray-400" />
                               )}
                               <div
-                                className="w-3 h-3 rounded-full"
+                                className="w-3 h-3 rounded-circle"
                                 style={{ backgroundColor: OFFICE_COLORS[officeCode] }}
                               />
                               <div>
                                 <span className="font-medium text-gray-900">
                                   {locale === 'ja' ? OFFICE_INFO[officeCode]?.nameJa : OFFICE_INFO[officeCode]?.nameKo}
                                 </span>
-                                <span className="text-sm text-gray-500 ml-2">
+                                <span className="text-sm text-gray-500 ms-2">
                                   ({officeRegions.length} {locale === 'ja' ? '地域' : '지역'})
                                 </span>
                               </div>
                             </div>
-                            <div className="flex items-center gap-6">
-                              <div className="text-right">
+                            <div className="d-flex align-items-center gap-6">
+                              <div className="text-end">
                                 {officePipedriveTotal > 0 && (
-                                  <span className="text-xs text-gray-400 mr-2">
+                                  <span className="text-xs text-gray-400 me-2">
                                     {locale === 'ja' ? '総' : '총'} {officePipedriveTotal} /
                                   </span>
                                 )}
-                                <span className="text-lg font-bold text-gray-900">{officeData.totalCompanies}</span>
-                                <span className="text-sm text-gray-500 ml-1">{locale === 'ja' ? '件' : '건'}</span>
+                                <span className="text-lg fw-bold text-gray-900">{officeData.totalCompanies}</span>
+                                <span className="text-sm text-gray-500 ms-1">{locale === 'ja' ? '件' : '건'}</span>
                               </div>
                               <div className="w-32">
-                                <div className="flex items-center gap-2">
-                                  <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div className="d-flex align-items-center gap-2">
+                                  <div className="flex-fill overflow-hidden" style={{ height: '8px', backgroundColor: '#e5e7eb', borderRadius: '4px' }}>
                                     <div
-                                      className="h-full rounded-full"
                                       style={{
                                         width: `${officeContactRate}%`,
+                                        height: '100%',
                                         backgroundColor: OFFICE_COLORS[officeCode],
+                                        borderRadius: '4px',
                                       }}
                                     />
                                   </div>
-                                  <span className="text-xs text-gray-500 w-10">{officeContactRate}%</span>
+                                  <span style={{ fontSize: '0.75rem', color: '#6b7280', width: '40px' }}>{officeContactRate}%</span>
                                 </div>
                               </div>
                             </div>
@@ -2646,20 +2698,20 @@ export default function SalesTrackingPage() {
                                       setSelectedOffice(null)
                                       setShowCompanyList(true)
                                     }}
-                                    className="flex items-center justify-between py-2 px-4 hover:bg-white rounded cursor-pointer transition-colors"
+                                    className="d-flex align-items-center justify-content-between py-2 px-4 hover:bg-white rounded cursor-pointer transition-colors"
                                   >
-                                    <div className="flex items-center gap-2">
-                                      <MapPin className="w-4 h-4 text-gray-400" />
+                                    <div className="d-flex align-items-center gap-2">
+                                      <MapPin size={16} className="text-gray-400" />
                                       <span className="text-gray-700">
                                         {locale === 'ja' ? region.region : region.regionKo}
                                       </span>
                                     </div>
-                                    <div className="flex items-center gap-4">
+                                    <div className="d-flex align-items-center gap-4">
                                       <span className="text-sm text-gray-600">
                                         {region.totalCompanies} {locale === 'ja' ? '件' : '건'}
                                       </span>
-                                      <div className="flex items-center gap-1">
-                                        <Phone className="w-3 h-3 text-gray-400" />
+                                      <div className="d-flex align-items-center gap-1">
+                                        <Phone size={12} className="text-gray-400" />
                                         <span className="text-sm text-gray-500">
                                           {region.contactedCount} ({regionContactRate}%)
                                         </span>
@@ -2680,8 +2732,8 @@ export default function SalesTrackingPage() {
               {showCompanyList && (
                 <div className="card">
                   <div className="card-header">
-                    <h3 className="card-title flex items-center gap-2">
-                      <Users className="w-5 h-5 text-primary" />
+                    <h3 className="card-title d-flex align-items-center gap-2">
+                      <Users size={20} className="text-primary" />
                       {negotiationFilter === 'all-leads'
                         ? (locale === 'ja' ? '全リード一覧' : '전체 리드 목록')
                         : negotiationFilter === 'negotiating'
@@ -2720,7 +2772,7 @@ export default function SalesTrackingPage() {
                         </span>
                       )}
                     </h3>
-                    <div className="flex items-center gap-3">
+                    <div className="d-flex align-items-center gap-3">
                       {negotiationFilter !== 'all' && (
                         <button
                           onClick={() => {
@@ -2731,12 +2783,12 @@ export default function SalesTrackingPage() {
                           {locale === 'ja' ? 'フィルタ解除' : '필터 해제'}
                         </button>
                       )}
-                      <div className="flex items-center gap-2">
-                        <Filter className="w-4 h-4 text-gray-400" />
+                      <div className="d-flex align-items-center gap-2">
+                        <Filter size={16} className="text-gray-400" />
                         <select
                           value={statusFilter}
                           onChange={(e) => setStatusFilter(e.target.value as ProgressStatus | 'all')}
-                          className="text-sm border border-gray-300 rounded px-2 py-1"
+                          className="form-select form-select-sm"
                         >
                           <option value="all">{locale === 'ja' ? '進捗: すべて' : '진척: 전체'}</option>
                           {Object.entries(STATUS_LABELS).map(([key, labels]) => (
@@ -2747,12 +2799,12 @@ export default function SalesTrackingPage() {
                         </select>
                       </div>
                       {/* 연락 횟수 필터 */}
-                      <div className="flex items-center gap-2">
-                        <Phone className="w-4 h-4 text-gray-400" />
+                      <div className="d-flex align-items-center gap-2">
+                        <Phone size={16} className="text-gray-400" />
                         <select
                           value={contactCountFilter}
                           onChange={(e) => setContactCountFilter(e.target.value as typeof contactCountFilter)}
-                          className="text-sm border border-gray-300 rounded px-2 py-1"
+                          className="form-select form-select-sm"
                         >
                           <option value="all">{locale === 'ja' ? '連絡回数: すべて' : '연락 횟수: 전체'}</option>
                           <option value="0">{locale === 'ja' ? '未連絡 (0回)' : '미연락 (0회)'}</option>
@@ -2765,9 +2817,9 @@ export default function SalesTrackingPage() {
                       </div>
                       <button
                         onClick={openNewCompanyModal}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-primary text-white text-sm rounded-lg hover:bg-primary/90 transition-colors"
+                        className="btn btn-primary btn-sm d-flex align-items-center gap-1"
                       >
-                        <Plus className="w-4 h-4" />
+                        <Plus size={16} />
                         {locale === 'ja' ? '新規追加' : '신규 추가'}
                       </button>
                       <button
@@ -2786,35 +2838,35 @@ export default function SalesTrackingPage() {
                     </div>
                   </div>
                   <div className="card-body p-0">
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead className="bg-gray-50 border-b border-gray-200">
+                    <div className="overflow-auto">
+                      <table className="table table-sm table-vcenter">
+                        <thead className="bg-gray-50 border-bottom border-gray-200">
                           <tr>
-                            <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                            <th className="text-left px-4 py-3 text-sm fw-medium text-gray-600">
                               {locale === 'ja' ? '会社名' : '회사명'}
                             </th>
-                            <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                            <th className="text-left px-4 py-3 text-sm fw-medium text-gray-600">
                               {locale === 'ja' ? '地域' : '지역'}
                             </th>
-                            <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                            <th className="text-left px-4 py-3 text-sm fw-medium text-gray-600">
                               {locale === 'ja' ? '進捗' : '진척'}
                             </th>
-                            <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                            <th className="text-left px-4 py-3 text-sm fw-medium text-gray-600">
                               {locale === 'ja' ? '連絡履歴' : '연락 이력'}
                             </th>
-                            <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                            <th className="text-left px-4 py-3 text-sm fw-medium text-gray-600">
                               {locale === 'ja' ? 'システム' : '시스템'}
                             </th>
-                            <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                            <th className="text-left px-4 py-3 text-sm fw-medium text-gray-600">
                               {locale === 'ja' ? '電話番号' : '전화번호'}
                             </th>
-                            <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                            <th className="text-left px-4 py-3 text-sm fw-medium text-gray-600">
                               {locale === 'ja' ? 'メール' : '이메일'}
                             </th>
-                            <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                            <th className="text-left px-4 py-3 text-sm fw-medium text-gray-600">
                               {locale === 'ja' ? 'HP問合せ' : 'HP 문의'}
                             </th>
-                            <th className="text-left px-4 py-3 text-sm font-medium text-gray-600 w-20">
+                            <th className="text-left px-4 py-3 text-sm fw-medium text-gray-600 w-20">
                               {locale === 'ja' ? '操作' : '액션'}
                             </th>
                           </tr>
@@ -2835,7 +2887,7 @@ export default function SalesTrackingPage() {
                                 <select
                                   value={company.status}
                                   onChange={(e) => quickStatusChange(company, e.target.value as ProgressStatus)}
-                                  className="text-xs font-medium px-2 py-1 rounded border-0 cursor-pointer appearance-none"
+                                  className="text-xs fw-medium px-2 py-1 rounded border-0 cursor-pointer appearance-none"
                                   style={{
                                     backgroundColor: `${STATUS_COLORS[company.status]}20`,
                                     color: STATUS_COLORS[company.status],
@@ -2850,7 +2902,7 @@ export default function SalesTrackingPage() {
                               </td>
                               <td className="px-4 py-3">
                                 {company.contactHistory.length > 0 ? (
-                                  <div className="flex flex-wrap gap-1">
+                                  <div className="d-flex flex-wrap gap-1">
                                     {company.contactHistory.slice(-3).map((contact, idx) => (
                                       <span
                                         key={idx}
@@ -2876,9 +2928,9 @@ export default function SalesTrackingPage() {
                                 {company.phone ? (
                                   <a
                                     href={`tel:${company.phone}`}
-                                    className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
+                                    className="d-flex align-items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
                                   >
-                                    <Phone className="w-3 h-3" />
+                                    <Phone size={12} />
                                     {company.phone}
                                   </a>
                                 ) : (
@@ -2889,9 +2941,9 @@ export default function SalesTrackingPage() {
                                 {company.email ? (
                                   <a
                                     href={`mailto:${company.email}`}
-                                    className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
+                                    className="d-flex align-items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
                                   >
-                                    <Mail className="w-3 h-3" />
+                                    <Mail size={12} />
                                     {company.email.length > 20 ? company.email.slice(0, 20) + '...' : company.email}
                                   </a>
                                 ) : (
@@ -2908,9 +2960,9 @@ export default function SalesTrackingPage() {
                                           href={company.contactUrl!.startsWith('http') ? company.contactUrl! : `https://${company.contactUrl!}`}
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
+                                          className="d-flex align-items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
                                         >
-                                          <ExternalLink className="w-3 h-3" />
+                                          <ExternalLink size={12} />
                                           HP
                                         </a>
                                       )
@@ -2922,7 +2974,7 @@ export default function SalesTrackingPage() {
                                 )}
                               </td>
                               <td className="px-4 py-3">
-                                <div className="flex items-center gap-1">
+                                <div className="d-flex align-items-center gap-1">
                                   {company.email && (
                                     <button
                                       onClick={() => handleCheckReply(company)}
@@ -2941,9 +2993,9 @@ export default function SalesTrackingPage() {
                                       }
                                     >
                                       {replyCheckLoading === company.id ? (
-                                        <RefreshCw className="w-4 h-4 animate-spin" />
+                                        <RefreshCw size={16} className="animate-spin" />
                                       ) : (
-                                        <Inbox className="w-4 h-4" />
+                                        <Inbox size={16} />
                                       )}
                                     </button>
                                   )}
@@ -2955,9 +3007,9 @@ export default function SalesTrackingPage() {
                                       title={locale === 'ja' ? '問合せフォーム' : '문의폼 입력'}
                                     >
                                       {inquiryFormLoading === company.id ? (
-                                        <RefreshCw className="w-4 h-4 animate-spin" />
+                                        <RefreshCw size={16} className="animate-spin" />
                                       ) : (
-                                        <FileEdit className="w-4 h-4" />
+                                        <FileEdit size={16} />
                                       )}
                                     </button>
                                   )}
@@ -2966,14 +3018,14 @@ export default function SalesTrackingPage() {
                                     className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
                                     title={locale === 'ja' ? '編集' : '편집'}
                                   >
-                                    <Edit2 className="w-4 h-4" />
+                                    <Edit2 size={16} />
                                   </button>
                                   <button
                                     onClick={() => deleteCompany(company.id)}
                                     className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
                                     title={locale === 'ja' ? '削除' : '삭제'}
                                   >
-                                    <Trash2 className="w-4 h-4" />
+                                    <Trash2 size={16} />
                                   </button>
                                 </div>
                               </td>
@@ -2984,28 +3036,28 @@ export default function SalesTrackingPage() {
                     </div>
                     {/* Pagination Controls */}
                     {totalPages > 1 && (
-                      <div className="px-4 py-3 border-t flex items-center justify-between">
+                      <div className="px-4 py-3 border-top d-flex align-items-center justify-content-between">
                         <div className="text-sm text-gray-500">
                           {locale === 'ja'
                             ? `${filteredCompanies.length}件中 ${(currentPage - 1) * ITEMS_PER_PAGE + 1}-${Math.min(currentPage * ITEMS_PER_PAGE, filteredCompanies.length)}件を表示`
                             : `${filteredCompanies.length}건 중 ${(currentPage - 1) * ITEMS_PER_PAGE + 1}-${Math.min(currentPage * ITEMS_PER_PAGE, filteredCompanies.length)}건 표시`}
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="d-flex align-items-center gap-2">
                           <button
                             onClick={() => setCurrentPage(1)}
                             disabled={currentPage === 1}
-                            className="px-2 py-1 text-sm border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="btn btn-outline-secondary btn-sm disabled:opacity-50"
                           >
                             {'<<'}
                           </button>
                           <button
                             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                             disabled={currentPage === 1}
-                            className="px-3 py-1 text-sm border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="btn btn-outline-secondary btn-sm disabled:opacity-50"
                           >
                             {locale === 'ja' ? '前へ' : '이전'}
                           </button>
-                          <div className="flex items-center gap-1">
+                          <div className="d-flex align-items-center gap-1">
                             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                               let pageNum: number
                               if (totalPages <= 5) {
@@ -3021,10 +3073,10 @@ export default function SalesTrackingPage() {
                                 <button
                                   key={pageNum}
                                   onClick={() => setCurrentPage(pageNum)}
-                                  className={`w-8 h-8 text-sm rounded ${
+                                  className={`btn btn-sm ${
                                     currentPage === pageNum
-                                      ? 'bg-primary text-white'
-                                      : 'border hover:bg-gray-50'
+                                      ? 'btn-primary'
+                                      : 'btn-outline-secondary'
                                   }`}
                                 >
                                   {pageNum}
@@ -3035,14 +3087,14 @@ export default function SalesTrackingPage() {
                           <button
                             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                             disabled={currentPage === totalPages}
-                            className="px-3 py-1 text-sm border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="btn btn-outline-secondary btn-sm disabled:opacity-50"
                           >
                             {locale === 'ja' ? '次へ' : '다음'}
                           </button>
                           <button
                             onClick={() => setCurrentPage(totalPages)}
                             disabled={currentPage === totalPages}
-                            className="px-2 py-1 text-sm border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="btn btn-outline-secondary btn-sm disabled:opacity-50"
                           >
                             {'>>'}
                           </button>
@@ -3054,8 +3106,8 @@ export default function SalesTrackingPage() {
               )}
 
               {/* Data Source Info */}
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-2">
-                <FileSpreadsheet className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg d-flex align-items-start gap-2">
+                <FileSpreadsheet size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
                 <div className="text-sm text-blue-800">
                   <strong>{locale === 'ja' ? 'データソース' : '데이터 출처'}:</strong>{' '}
                   {locale === 'ja'
@@ -3072,12 +3124,12 @@ export default function SalesTrackingPage() {
         // =======================================
         <div className="space-y-6">
           {/* Header with Month Selector */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="d-flex align-items-center justify-content-between">
+            <div className="d-flex align-items-center gap-4">
               <select
                 value={coldEmailMonth}
                 onChange={(e) => setColdEmailMonth(e.target.value)}
-                className="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer"
+                className="form-select form-select-sm"
               >
                 {['2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10', '2026-11', '2026-12'].map((month) => (
                   <option key={month} value={month}>{formatColdEmailMonth(month)}</option>
@@ -3087,49 +3139,49 @@ export default function SalesTrackingPage() {
             <button
               onClick={saveColdEmailData}
               disabled={coldEmailSaving}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+              className="btn btn-primary d-flex align-items-center gap-2 disabled:opacity-50"
             >
-              <Save className="w-4 h-4" />
+              <Save size={16} />
               {coldEmailSaved ? (locale === 'ja' ? '保存完了' : '저장 완료') : (locale === 'ja' ? '保存' : '저장')}
             </button>
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="card">
+          <div className="row g-3">
+            <div className="col-md-4"><div className="card">
               <div className="card-body text-center">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <Mail className="w-5 h-5 text-blue-500" />
+                <div className="d-flex align-items-center justify-content-center gap-2 mb-2">
+                  <Mail size={20} className="text-blue-500" />
                   <span className="text-sm text-gray-500">{locale === 'ja' ? 'メール送信' : '메일 발송'}</span>
                 </div>
-                <p className="text-3xl font-bold text-blue-600">{coldEmailTotals.totalEmail}</p>
+                <p className="text-3xl fw-bold text-blue-600">{coldEmailTotals.totalEmail}</p>
               </div>
-            </div>
-            <div className="card">
+            </div></div>
+            <div className="col-md-4"><div className="card">
               <div className="card-body text-center">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <Phone className="w-5 h-5 text-green-500" />
+                <div className="d-flex align-items-center justify-content-center gap-2 mb-2">
+                  <Phone size={20} className="text-green-500" />
                   <span className="text-sm text-gray-500">{locale === 'ja' ? 'お問い合わせ' : '문의'}</span>
                 </div>
-                <p className="text-3xl font-bold text-green-600">{coldEmailTotals.totalInquiry}</p>
+                <p className="text-3xl fw-bold text-green-600">{coldEmailTotals.totalInquiry}</p>
               </div>
-            </div>
-            <div className="card">
+            </div></div>
+            <div className="col-md-4"><div className="card">
               <div className="card-body text-center">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <TrendingUp className="w-5 h-5 text-purple-500" />
+                <div className="d-flex align-items-center justify-content-center gap-2 mb-2">
+                  <TrendingUp size={20} className="text-purple-500" />
                   <span className="text-sm text-gray-500">{locale === 'ja' ? '合計アウトリーチ' : '총 아웃리치'}</span>
                 </div>
-                <p className="text-3xl font-bold text-purple-600">{coldEmailTotals.total}</p>
+                <p className="text-3xl fw-bold text-purple-600">{coldEmailTotals.total}</p>
               </div>
-            </div>
+            </div></div>
           </div>
 
           {/* Region Table */}
           <div className="card">
             <div className="card-header">
-              <h3 className="card-title flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-primary" />
+              <h3 className="card-title d-flex align-items-center gap-2">
+                <MapPin size={20} className="text-primary" />
                 {locale === 'ja' ? '地域別コールドメール実績' : '지역별 콜드메일 실적'}
                 <span className="text-sm font-normal text-gray-500">
                   ({formatColdEmailMonth(coldEmailMonth)})
@@ -3137,22 +3189,22 @@ export default function SalesTrackingPage() {
               </h3>
             </div>
             <div className="card-body p-0">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
+              <table className="table table-sm table-vcenter">
+                <thead className="bg-gray-50 border-bottom border-gray-200">
                   <tr>
-                    <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                    <th className="text-left px-4 py-3 text-sm fw-medium text-gray-600">
                       {locale === 'ja' ? '担当' : '담당'}
                     </th>
-                    <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                    <th className="text-left px-4 py-3 text-sm fw-medium text-gray-600">
                       {locale === 'ja' ? '地域' : '지역'}
                     </th>
-                    <th className="text-center px-4 py-3 text-sm font-medium text-gray-600">
+                    <th className="text-center px-4 py-3 text-sm fw-medium text-gray-600">
                       {locale === 'ja' ? 'メール送信' : '메일 발송'}
                     </th>
-                    <th className="text-center px-4 py-3 text-sm font-medium text-gray-600">
+                    <th className="text-center px-4 py-3 text-sm fw-medium text-gray-600">
                       {locale === 'ja' ? 'お問い合わせ' : '문의'}
                     </th>
-                    <th className="text-center px-4 py-3 text-sm font-medium text-gray-600">
+                    <th className="text-center px-4 py-3 text-sm fw-medium text-gray-600">
                       {locale === 'ja' ? '合計' : '합계'}
                     </th>
                   </tr>
@@ -3167,8 +3219,8 @@ export default function SalesTrackingPage() {
                     return (
                       <tr key={record.regionCode} className="hover:bg-gray-50">
                         <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: officeColor }} />
+                          <div className="d-flex align-items-center gap-2">
+                            <div className="w-2 h-2 rounded-circle" style={{ backgroundColor: officeColor }} />
                             <span className="text-sm text-gray-600">{officeName}</span>
                           </div>
                         </td>
@@ -3183,7 +3235,7 @@ export default function SalesTrackingPage() {
                             min="0"
                             value={record.emailCount}
                             onChange={(e) => updateColdEmailRecord(record.regionCode, 'emailCount', parseInt(e.target.value) || 0)}
-                            className="w-20 text-center border border-gray-200 rounded px-2 py-1 text-sm"
+                            className="form-control form-control-sm text-center"
                           />
                         </td>
                         <td className="px-4 py-3">
@@ -3192,7 +3244,7 @@ export default function SalesTrackingPage() {
                             min="0"
                             value={record.inquiryCount}
                             onChange={(e) => updateColdEmailRecord(record.regionCode, 'inquiryCount', parseInt(e.target.value) || 0)}
-                            className="w-20 text-center border border-gray-200 rounded px-2 py-1 text-sm"
+                            className="form-control form-control-sm text-center"
                           />
                         </td>
                         <td className="px-4 py-3 text-center">
@@ -3204,14 +3256,14 @@ export default function SalesTrackingPage() {
                     )
                   })}
                 </tbody>
-                <tfoot className="bg-gray-50 border-t border-gray-200">
+                <tfoot className="bg-gray-50 border-top border-gray-200">
                   <tr>
-                    <td colSpan={2} className="px-4 py-3 text-sm font-semibold text-gray-700">
+                    <td colSpan={2} className="px-4 py-3 text-sm fw-semibold text-gray-700">
                       {locale === 'ja' ? '合計' : '합계'}
                     </td>
-                    <td className="px-4 py-3 text-center font-bold text-blue-600">{coldEmailTotals.totalEmail}</td>
-                    <td className="px-4 py-3 text-center font-bold text-green-600">{coldEmailTotals.totalInquiry}</td>
-                    <td className="px-4 py-3 text-center font-bold text-purple-600">{coldEmailTotals.total}</td>
+                    <td className="px-4 py-3 text-center fw-bold text-blue-600">{coldEmailTotals.totalEmail}</td>
+                    <td className="px-4 py-3 text-center fw-bold text-green-600">{coldEmailTotals.totalInquiry}</td>
+                    <td className="px-4 py-3 text-center fw-bold text-purple-600">{coldEmailTotals.total}</td>
                   </tr>
                 </tfoot>
               </table>
@@ -3219,8 +3271,8 @@ export default function SalesTrackingPage() {
           </div>
 
           {/* Info */}
-          <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg flex items-start gap-2">
-            <Info className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
+          <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg d-flex align-items-start gap-2">
+            <Info size={20} className="text-purple-600 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-purple-800">
               {locale === 'ja'
                 ? 'データはブラウザのローカルストレージに保存されます。月を選択して実績を入力し、保存ボタンを押してください。'
@@ -3284,46 +3336,46 @@ export default function SalesTrackingPage() {
 
       {/* Company Add/Edit Modal */}
       {showCompanyModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="text-lg font-semibold">
+        <div className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center">
+          <div className="bg-white rounded-lg shadow-xl w-100 max-w-lg mx-4">
+            <div className="d-flex align-items-center justify-content-between p-3 border-bottom">
+              <h3 className="text-lg fw-semibold">
                 {editingCompany
                   ? (locale === 'ja' ? '会社情報を編集' : '업체 정보 수정')
                   : (locale === 'ja' ? '新規会社を追加' : '신규 업체 추가')}
               </h3>
               <button
                 onClick={() => setShowCompanyModal(false)}
-                className="p-1 hover:bg-gray-100 rounded"
+                className="btn-close"
               >
-                <X className="w-5 h-5" />
+                <X size={20} />
               </button>
             </div>
-            <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
+            <div className="p-3 space-y-4 overflow-auto" style={{ maxHeight: '70vh' }}>
               {/* Company Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm fw-medium text-gray-700 mb-1">
                   {locale === 'ja' ? '会社名' : '회사명'} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={companyForm.companyName}
                   onChange={(e) => setCompanyForm({ ...companyForm, companyName: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  className="form-control"
                   placeholder={locale === 'ja' ? '例: ABCレンタカー' : '예: ABC렌터카'}
                 />
               </div>
 
               {/* Prefecture & Region */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="row g-3">
+                <div className="col-6">
+                  <label className="block text-sm fw-medium text-gray-700 mb-1">
                     {locale === 'ja' ? '都道府県' : '도도부현'}
                   </label>
                   <select
                     value={PREFECTURE_OPTIONS.includes(companyForm.prefecture) ? companyForm.prefecture : ''}
                     onChange={(e) => setCompanyForm({ ...companyForm, prefecture: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    className="form-select"
                   >
                     <option value="">{locale === 'ja' ? '選択してください' : '선택해주세요'}</option>
                     {PREFECTURE_OPTIONS.filter(Boolean).map((p) => (
@@ -3331,14 +3383,14 @@ export default function SalesTrackingPage() {
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="col-6">
+                  <label className="block text-sm fw-medium text-gray-700 mb-1">
                     {locale === 'ja' ? '地域' : '지역'} <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={companyForm.region}
                     onChange={(e) => setCompanyForm({ ...companyForm, region: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    className="form-select"
                   >
                     {REGION_OPTIONS.map((r) => (
                       <option key={r.value} value={r.value}>
@@ -3351,52 +3403,52 @@ export default function SalesTrackingPage() {
 
               {/* Contact Info */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm fw-medium text-gray-700 mb-1">
                   {locale === 'ja' ? '電話番号' : '전화번호'}
                 </label>
                 <input
                   type="text"
                   value={companyForm.phone}
                   onChange={(e) => setCompanyForm({ ...companyForm, phone: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  className="form-control"
                   placeholder="03-1234-5678"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm fw-medium text-gray-700 mb-1">
                   {locale === 'ja' ? 'メールアドレス' : '이메일'}
                 </label>
                 <input
                   type="email"
                   value={companyForm.email}
                   onChange={(e) => setCompanyForm({ ...companyForm, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  className="form-control"
                   placeholder="info@example.com"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm fw-medium text-gray-700 mb-1">
                   {locale === 'ja' ? 'HP問合せURL' : 'HP 문의 URL'}
                 </label>
                 <input
                   type="text"
                   value={companyForm.hpContact}
                   onChange={(e) => setCompanyForm({ ...companyForm, hpContact: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  className="form-control"
                   placeholder="https://example.com/contact"
                 />
               </div>
 
               {/* Status & System */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="row g-3">
+                <div className="col-6">
+                  <label className="block text-sm fw-medium text-gray-700 mb-1">
                     {locale === 'ja' ? '進捗状況' : '진척 상황'}
                   </label>
                   <select
                     value={companyForm.status}
                     onChange={(e) => setCompanyForm({ ...companyForm, status: e.target.value as ProgressStatus })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    className="form-select"
                   >
                     {Object.entries(STATUS_LABELS).map(([key, labels]) => (
                       <option key={key} value={key}>
@@ -3405,15 +3457,15 @@ export default function SalesTrackingPage() {
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="col-6">
+                  <label className="block text-sm fw-medium text-gray-700 mb-1">
                     {locale === 'ja' ? '使用システム' : '사용 시스템'}
                   </label>
                   <input
                     type="text"
                     value={companyForm.systemInUse}
                     onChange={(e) => setCompanyForm({ ...companyForm, systemInUse: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    className="form-control"
                     placeholder={locale === 'ja' ? '例: レンタカー侍' : '예: 렌터카 사무라이'}
                   />
                 </div>
@@ -3421,13 +3473,13 @@ export default function SalesTrackingPage() {
 
               {/* Notes */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm fw-medium text-gray-700 mb-1">
                   {locale === 'ja' ? '備考' : '비고'}
                 </label>
                 <textarea
                   value={companyForm.notes}
                   onChange={(e) => setCompanyForm({ ...companyForm, notes: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  className="form-control"
                   rows={2}
                   placeholder={locale === 'ja' ? 'メモを入力...' : '메모를 입력...'}
                 />
@@ -3435,10 +3487,10 @@ export default function SalesTrackingPage() {
 
               {/* Contact Records - Manual Logging */}
               {editingCompany && (
-                <div className="border-t pt-4 mt-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Phone className="w-4 h-4 text-blue-500" />
-                    <label className="block text-sm font-semibold text-gray-700">
+                <div className="border-top pt-4 mt-4">
+                  <div className="d-flex align-items-center gap-2 mb-3">
+                    <Phone size={16} className="text-blue-500" />
+                    <label className="block text-sm fw-semibold text-gray-700">
                       {locale === 'ja' ? '連絡履歴' : '연락 이력'}
                     </label>
                     <span className="text-xs text-gray-400">
@@ -3448,49 +3500,49 @@ export default function SalesTrackingPage() {
 
                   {/* Add new contact */}
                   <div className="bg-blue-50 rounded-lg p-3 mb-3">
-                    <div className="grid grid-cols-3 gap-2 mb-2">
-                      <input
+                    <div className="row g-2 mb-2">
+                      <div className="col-md-4"><input
                         type="date"
                         value={newContact.date}
                         onChange={(e) => setNewContact({ ...newContact, date: e.target.value })}
-                        className="px-2 py-1.5 border border-gray-300 rounded text-sm"
-                      />
-                      <select
+                        className="form-control form-control-sm"
+                      /></div>
+                      <div className="col-md-4"><select
                         value={newContact.type}
                         onChange={(e) => setNewContact({ ...newContact, type: e.target.value })}
-                        className="px-2 py-1.5 border border-gray-300 rounded text-sm"
+                        className="form-select form-select-sm"
                       >
                         <option value="mail">{locale === 'ja' ? 'メール' : '메일'}</option>
                         <option value="inquiry">{locale === 'ja' ? '問合せフォーム' : '문의폼'}</option>
                         <option value="phone">{locale === 'ja' ? '電話' : '전화'}</option>
                         <option value="sns">SNS</option>
                         <option value="reply">{locale === 'ja' ? '返信受信' : '회신 수신'}</option>
-                      </select>
-                      <button
+                      </select></div>
+                      <div className="col-md-4"><button
                         onClick={addContactRecord}
                         disabled={isSavingContact || !newContact.date}
-                        className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                        className="btn btn-primary btn-sm disabled:opacity-50"
                       >
                         {isSavingContact
                           ? '...'
                           : locale === 'ja' ? '追加' : '추가'}
-                      </button>
+                      </button></div>
                     </div>
                     <input
                       type="text"
                       value={newContact.summary}
                       onChange={(e) => setNewContact({ ...newContact, summary: e.target.value })}
-                      className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                      className="form-control form-control-sm"
                       placeholder={locale === 'ja' ? 'メモ（任意）' : '메모 (선택)'}
                     />
                   </div>
 
                   {/* Existing records */}
                   {contactRecords.length > 0 && (
-                    <div className="max-h-32 overflow-y-auto space-y-1">
+                    <div className="overflow-auto space-y-1" style={{ maxHeight: '8rem' }}>
                       {contactRecords.map((r) => (
-                        <div key={r.id} className="flex items-center gap-2 text-xs text-gray-600 bg-gray-50 rounded px-2 py-1.5">
-                          <span className="font-mono text-gray-500">{r.contactDate}</span>
+                        <div key={r.id} className="d-flex align-items-center gap-2 text-xs text-gray-600 bg-gray-50 rounded px-2 py-1.5">
+                          <span className="font-monospace text-gray-500">{r.contactDate}</span>
                           <span className={`px-1.5 py-0.5 rounded text-white text-[10px] ${
                             r.contactType === 'mail' ? 'bg-blue-500' :
                             r.contactType === 'inquiry' ? 'bg-green-500' :
@@ -3504,12 +3556,12 @@ export default function SalesTrackingPage() {
                              r.contactType === 'reply' ? (locale === 'ja' ? '返信' : '회신') :
                              'SNS'}
                           </span>
-                          {r.summary && <span className="truncate flex-1">{r.summary}</span>}
+                          {r.summary && <span className="truncate flex-fill">{r.summary}</span>}
                           <button
                             onClick={() => deleteContactRecord(r.id)}
-                            className="text-red-400 hover:text-red-600 ml-auto shrink-0"
+                            className="text-red-400 hover:text-red-600 ms-auto flex-shrink-0"
                           >
-                            <X className="w-3 h-3" />
+                            <X size={12} />
                           </button>
                         </div>
                       ))}
@@ -3519,68 +3571,68 @@ export default function SalesTrackingPage() {
               )}
 
               {/* SNS Contacts */}
-              <div className="border-t pt-4 mt-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <MessageCircle className="w-4 h-4 text-green-500" />
-                  <label className="block text-sm font-semibold text-gray-700">
+              <div className="border-top pt-4 mt-4">
+                <div className="d-flex align-items-center gap-2 mb-3">
+                  <MessageCircle size={16} className="text-green-500" />
+                  <label className="block text-sm fw-semibold text-gray-700">
                     {locale === 'ja' ? 'SNS連絡先' : 'SNS 연락처'}
                   </label>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
+                <div className="row g-2">
+                  <div className="col-6">
                     <label className="block text-xs text-gray-500 mb-1">LINE ID</label>
                     <input
                       type="text"
                       value={(companyForm as Record<string, string>).lineId || ''}
                       onChange={(e) => setCompanyForm({ ...companyForm, lineId: e.target.value } as typeof companyForm)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      className="form-control form-control-sm"
                       placeholder="@line_id"
                     />
                   </div>
-                  <div>
+                  <div className="col-6">
                     <label className="block text-xs text-gray-500 mb-1">Instagram</label>
                     <input
                       type="text"
                       value={(companyForm as Record<string, string>).instagram || ''}
                       onChange={(e) => setCompanyForm({ ...companyForm, instagram: e.target.value } as typeof companyForm)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      className="form-control form-control-sm"
                       placeholder="@username"
                     />
                   </div>
-                  <div>
+                  <div className="col-6">
                     <label className="block text-xs text-gray-500 mb-1">Twitter/X</label>
                     <input
                       type="text"
                       value={(companyForm as Record<string, string>).twitter || ''}
                       onChange={(e) => setCompanyForm({ ...companyForm, twitter: e.target.value } as typeof companyForm)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      className="form-control form-control-sm"
                       placeholder="@handle"
                     />
                   </div>
-                  <div>
+                  <div className="col-6">
                     <label className="block text-xs text-gray-500 mb-1">Facebook</label>
                     <input
                       type="text"
                       value={(companyForm as Record<string, string>).facebook || ''}
                       onChange={(e) => setCompanyForm({ ...companyForm, facebook: e.target.value } as typeof companyForm)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      className="form-control form-control-sm"
                       placeholder="facebook.com/..."
                     />
                   </div>
                 </div>
               </div>
             </div>
-            <div className="flex items-center justify-end gap-3 p-4 border-t bg-gray-50">
+            <div className="d-flex align-items-center justify-content-end gap-3 p-4 border-top bg-gray-50">
               <button
                 onClick={() => setShowCompanyModal(false)}
-                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                className="btn btn-ghost-secondary"
               >
                 {locale === 'ja' ? 'キャンセル' : '취소'}
               </button>
               <button
                 onClick={saveCompany}
                 disabled={!companyForm.companyName}
-                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                className="btn btn-primary disabled:opacity-50"
               >
                 {locale === 'ja' ? '保存' : '저장'}
               </button>
@@ -3591,17 +3643,17 @@ export default function SalesTrackingPage() {
 
       {/* Inquiry Form Screenshot Modal */}
       {inquiryFormResult?.screenshot && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="text-lg font-semibold">
+        <div className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center">
+          <div className="bg-white rounded-lg shadow-xl w-100 max-w-2xl mx-4">
+            <div className="d-flex align-items-center justify-content-between p-3 border-bottom">
+              <h3 className="text-lg fw-semibold">
                 {locale === 'ja' ? '問合せフォーム入力結果' : '문의폼 입력 결과'}
               </h3>
               <button
                 onClick={() => setInquiryFormResult(null)}
-                className="p-1 hover:bg-gray-100 rounded"
+                className="btn-close"
               >
-                <X className="w-5 h-5" />
+                <X size={20} />
               </button>
             </div>
             <div className="p-4">
@@ -3610,12 +3662,12 @@ export default function SalesTrackingPage() {
               <img
                 src={inquiryFormResult.screenshot}
                 alt="Form screenshot"
-                className="w-full rounded border"
+                className="w-100 rounded border"
               />
-              <div className="flex justify-end gap-3 mt-4">
+              <div className="d-flex justify-content-end gap-3 mt-4">
                 <button
                   onClick={() => setInquiryFormResult(null)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50"
+                  className="btn btn-outline-secondary btn-sm"
                 >
                   {locale === 'ja' ? '閉じる' : '닫기'}
                 </button>
@@ -3633,7 +3685,7 @@ export default function SalesTrackingPage() {
                       })
                       setInquiryFormResult(null)
                     }}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700"
+                    className="btn btn-success btn-sm"
                   >
                     {locale === 'ja' ? '送信済みにする' : '전송 완료 처리'}
                   </button>

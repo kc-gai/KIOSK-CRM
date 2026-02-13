@@ -99,14 +99,14 @@ export default function SEOReportPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="d-flex align-items-center justify-content-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <FileText className="w-6 h-6 text-primary" />
+          <h1 className="text-2xl fw-bold text-gray-900 d-flex align-items-center gap-2">
+            <FileText size={24} className="text-primary" />
             {locale === 'ja' ? 'SEO分析レポート' : 'SEO 분석 리포트'}
           </h1>
-          <p className="text-gray-500 mt-1 flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
+          <p className="text-gray-500 mt-1 d-flex align-items-center gap-2">
+            <Calendar size={16} />
             {locale === 'ja' ? '分析期間' : '분석 기간'}: {reportData.period}
           </p>
         </div>
@@ -116,21 +116,21 @@ export default function SEOReportPage() {
       </div>
 
       {/* Executive Summary */}
-      <div className="card bg-gradient-to-r from-red-50 to-orange-50 border-red-200">
+      <div className="card bg-red-50 border-red-200">
         <div className="card-header">
-          <h2 className="card-title text-red-800 flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5" />
+          <h2 className="card-title text-red-800 d-flex align-items-center gap-2">
+            <AlertTriangle size={20} />
             {locale === 'ja' ? '最重要課題' : '최중요 과제'}
           </h2>
         </div>
         <div className="card-body">
-          <p className="text-lg font-semibold text-red-700 mb-4">
+          <p className="text-lg fw-semibold text-red-700 mb-3">
             {reportData.mainIssue[l]}
           </p>
           <div className="space-y-2">
             {reportData.causes.map((cause, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <span className="text-red-500 font-bold">{locale === 'ja' ? '原因' : '원인'}{i + 1}:</span>
+              <div key={i} className="d-flex align-items-start gap-2">
+                <span className="text-red-500 fw-bold">{locale === 'ja' ? '原因' : '원인'}{i + 1}:</span>
                 <span className="text-gray-700">{cause[l]}</span>
               </div>
             ))}
@@ -139,43 +139,51 @@ export default function SEOReportPage() {
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="stat-card">
-          <p className="stat-label">{locale === 'ja' ? '検索露出' : '검색 노출'}</p>
-          <p className="stat-value">{reportData.summary.impressions.value.toLocaleString()}</p>
-          <span className="badge badge-success">+{reportData.summary.impressions.trend}%</span>
+      <div className="row g-3">
+        <div className="col-12 col-md-6 col-lg-3">
+          <div className="stat-card">
+            <p className="stat-label">{locale === 'ja' ? '検索露出' : '검색 노출'}</p>
+            <p className="stat-value">{reportData.summary.impressions.value.toLocaleString()}</p>
+            <span className="badge badge-success">+{reportData.summary.impressions.trend}%</span>
+          </div>
         </div>
-        <div className="stat-card">
-          <p className="stat-label">{locale === 'ja' ? 'クリック数' : '클릭수'}</p>
-          <p className="stat-value">{reportData.summary.clicks.value.toLocaleString()}</p>
-          <span className="badge badge-warning">{reportData.summary.clicks.trend}%</span>
+        <div className="col-12 col-md-6 col-lg-3">
+          <div className="stat-card">
+            <p className="stat-label">{locale === 'ja' ? 'クリック数' : '클릭수'}</p>
+            <p className="stat-value">{reportData.summary.clicks.value.toLocaleString()}</p>
+            <span className="badge badge-warning">{reportData.summary.clicks.trend}%</span>
+          </div>
         </div>
-        <div className="stat-card">
-          <p className="stat-label">CTR</p>
-          <p className="stat-value text-red-600">{reportData.summary.ctr.value}%</p>
-          <span className="badge badge-danger">{reportData.summary.ctr.trend}%</span>
+        <div className="col-12 col-md-6 col-lg-3">
+          <div className="stat-card">
+            <p className="stat-label">CTR</p>
+            <p className="stat-value text-red-600">{reportData.summary.ctr.value}%</p>
+            <span className="badge badge-danger">{reportData.summary.ctr.trend}%</span>
+          </div>
         </div>
-        <div className="stat-card">
-          <p className="stat-label">{locale === 'ja' ? '平均順位' : '평균 순위'}</p>
-          <p className="stat-value">{reportData.summary.position.value}{locale === 'ja' ? '位' : '위'}</p>
-          <span className="badge badge-warning">{locale === 'ja' ? '悪化傾向' : '악화 추세'}</span>
+        <div className="col-12 col-md-6 col-lg-3">
+          <div className="stat-card">
+            <p className="stat-label">{locale === 'ja' ? '平均順位' : '평균 순위'}</p>
+            <p className="stat-value">{reportData.summary.position.value}{locale === 'ja' ? '位' : '위'}</p>
+            <span className="badge badge-warning">{locale === 'ja' ? '悪化傾向' : '악화 추세'}</span>
+          </div>
         </div>
       </div>
 
       {/* Selected Strategy */}
       <div className="card bg-green-50 border-green-200">
         <div className="card-header">
-          <h2 className="card-title text-green-800 flex items-center gap-2">
-            <Target className="w-5 h-5" />
+          <h2 className="card-title text-green-800 d-flex align-items-center gap-2">
+            <Target size={20} />
             {locale === 'ja' ? '選定された戦略方向性' : '선정된 전략 방향성'}
           </h2>
         </div>
         <div className="card-body">
-          <p className="text-lg font-bold text-green-700 mb-4">{reportData.strategy[l]}</p>
+          <p className="text-lg fw-bold text-green-700 mb-3">{reportData.strategy[l]}</p>
           <ul className="space-y-2">
             {reportData.strategy.details.map((detail, i) => (
-              <li key={i} className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-green-500" />
+              <li key={i} className="d-flex align-items-center gap-2">
+                <span className="rounded-full bg-green-500" style={{ width: 8, height: 8, display: 'inline-block' }} />
                 <span className="text-gray-700">{detail[l]}</span>
               </li>
             ))}
@@ -191,26 +199,26 @@ export default function SEOReportPage() {
           </h2>
         </div>
         <div className="card-body overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="table table-sm table-hover">
             <thead>
-              <tr className="border-b">
-                <th className="text-left p-2">{locale === 'ja' ? '検索クエリ' : '검색 쿼리'}</th>
-                <th className="text-right p-2">{locale === 'ja' ? 'クリック' : '클릭'}</th>
-                <th className="text-right p-2">{locale === 'ja' ? '表示回数' : '노출수'}</th>
-                <th className="text-right p-2">CTR</th>
-                <th className="text-right p-2">{locale === 'ja' ? '順位' : '순위'}</th>
-                <th className="text-center p-2">{locale === 'ja' ? '評価' : '평가'}</th>
+              <tr>
+                <th className="text-start">{locale === 'ja' ? '検索クエリ' : '검색 쿼리'}</th>
+                <th className="text-end">{locale === 'ja' ? 'クリック' : '클릭'}</th>
+                <th className="text-end">{locale === 'ja' ? '表示回数' : '노출수'}</th>
+                <th className="text-end">CTR</th>
+                <th className="text-end">{locale === 'ja' ? '順位' : '순위'}</th>
+                <th className="text-center">{locale === 'ja' ? '評価' : '평가'}</th>
               </tr>
             </thead>
             <tbody>
               {reportData.topKeywords.map((kw, i) => (
-                <tr key={i} className="border-b hover:bg-gray-50">
-                  <td className="p-2 font-medium">{kw.keyword}</td>
-                  <td className="p-2 text-right">{kw.clicks}</td>
-                  <td className="p-2 text-right">{kw.impressions.toLocaleString()}</td>
-                  <td className="p-2 text-right">{kw.ctr}%</td>
-                  <td className="p-2 text-right">{kw.position}</td>
-                  <td className="p-2 text-center">
+                <tr key={i}>
+                  <td className="fw-medium">{kw.keyword}</td>
+                  <td className="text-end">{kw.clicks}</td>
+                  <td className="text-end">{kw.impressions.toLocaleString()}</td>
+                  <td className="text-end">{kw.ctr}%</td>
+                  <td className="text-end">{kw.position}</td>
+                  <td className="text-center">
                     {kw.evaluation === 'top' && <span className="badge badge-warning">🏆</span>}
                     {kw.evaluation === 'highCtr' && <span className="badge badge-success">💎 High CTR</span>}
                     {kw.evaluation === 'good' && <span className="badge badge-info">✅</span>}
@@ -230,26 +238,26 @@ export default function SEOReportPage() {
           </h2>
         </div>
         <div className="card-body overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="table table-sm table-hover">
             <thead>
-              <tr className="border-b">
-                <th className="text-left p-2">{locale === 'ja' ? '検索クエリ' : '검색 쿼리'}</th>
-                <th className="text-right p-2">{locale === 'ja' ? 'クリック' : '클릭'}</th>
-                <th className="text-right p-2">{locale === 'ja' ? '表示回数' : '노출수'}</th>
-                <th className="text-right p-2">CTR</th>
-                <th className="text-right p-2">{locale === 'ja' ? '順位' : '순위'}</th>
-                <th className="text-left p-2">{locale === 'ja' ? '課題' : '과제'}</th>
+              <tr>
+                <th className="text-start">{locale === 'ja' ? '検索クエリ' : '검색 쿼리'}</th>
+                <th className="text-end">{locale === 'ja' ? 'クリック' : '클릭'}</th>
+                <th className="text-end">{locale === 'ja' ? '表示回数' : '노출수'}</th>
+                <th className="text-end">CTR</th>
+                <th className="text-end">{locale === 'ja' ? '順位' : '순위'}</th>
+                <th className="text-start">{locale === 'ja' ? '課題' : '과제'}</th>
               </tr>
             </thead>
             <tbody>
               {reportData.improvementKeywords.map((kw, i) => (
-                <tr key={i} className="border-b hover:bg-gray-50">
-                  <td className="p-2 font-medium">{kw.keyword}</td>
-                  <td className="p-2 text-right">{kw.clicks}</td>
-                  <td className="p-2 text-right">{kw.impressions.toLocaleString()}</td>
-                  <td className="p-2 text-right text-orange-600">{kw.ctr}%</td>
-                  <td className="p-2 text-right">{kw.position}</td>
-                  <td className="p-2 text-orange-700">{kw.issue[l]}</td>
+                <tr key={i}>
+                  <td className="fw-medium">{kw.keyword}</td>
+                  <td className="text-end">{kw.clicks}</td>
+                  <td className="text-end">{kw.impressions.toLocaleString()}</td>
+                  <td className="text-end text-orange-600">{kw.ctr}%</td>
+                  <td className="text-end">{kw.position}</td>
+                  <td className="text-orange-700">{kw.issue[l]}</td>
                 </tr>
               ))}
             </tbody>
@@ -258,89 +266,93 @@ export default function SEOReportPage() {
       </div>
 
       {/* Device & Region Analysis */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="row g-4">
         {/* Device */}
-        <div className="card">
-          <div className="card-header">
-            <h2 className="card-title flex items-center gap-2">
-              <Smartphone className="w-5 h-5 text-primary" />
-              {locale === 'ja' ? 'デバイス別分析' : '디바이스별 분석'}
-            </h2>
-          </div>
-          <div className="card-body space-y-4">
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span>{locale === 'ja' ? 'モバイル' : '모바일'}</span>
-                <span>{reportData.deviceAnalysis.mobile.percentage}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-4">
-                <div
-                  className="bg-blue-500 h-4 rounded-full"
-                  style={{ width: `${reportData.deviceAnalysis.mobile.percentage}%` }}
-                />
-              </div>
+        <div className="col-12 col-lg-6">
+          <div className="card">
+            <div className="card-header">
+              <h2 className="card-title d-flex align-items-center gap-2">
+                <Smartphone size={20} className="text-primary" />
+                {locale === 'ja' ? 'デバイス別分析' : '디바이스별 분석'}
+              </h2>
             </div>
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span>{locale === 'ja' ? 'デスクトップ' : '데스크톱'}</span>
-                <span>{reportData.deviceAnalysis.desktop.percentage}%</span>
+            <div className="card-body space-y-4">
+              <div>
+                <div className="d-flex justify-content-between text-sm mb-1">
+                  <span>{locale === 'ja' ? 'モバイル' : '모바일'}</span>
+                  <span>{reportData.deviceAnalysis.mobile.percentage}%</span>
+                </div>
+                <div className="progress" style={{ height: '1rem' }}>
+                  <div
+                    className="progress-bar bg-primary"
+                    style={{ width: `${reportData.deviceAnalysis.mobile.percentage}%` }}
+                  />
+                </div>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-4">
-                <div
-                  className="bg-green-500 h-4 rounded-full"
-                  style={{ width: `${reportData.deviceAnalysis.desktop.percentage}%` }}
-                />
+              <div>
+                <div className="d-flex justify-content-between text-sm mb-1">
+                  <span>{locale === 'ja' ? 'デスクトップ' : '데스크톱'}</span>
+                  <span>{reportData.deviceAnalysis.desktop.percentage}%</span>
+                </div>
+                <div className="progress" style={{ height: '1rem' }}>
+                  <div
+                    className="progress-bar bg-success"
+                    style={{ width: `${reportData.deviceAnalysis.desktop.percentage}%` }}
+                  />
+                </div>
               </div>
+              <div>
+                <div className="d-flex justify-content-between text-sm mb-1">
+                  <span>{locale === 'ja' ? 'タブレット' : '태블릿'}</span>
+                  <span>{reportData.deviceAnalysis.tablet.percentage}%</span>
+                </div>
+                <div className="progress" style={{ height: '1rem' }}>
+                  <div
+                    className="progress-bar bg-purple-500"
+                    style={{ width: `${reportData.deviceAnalysis.tablet.percentage}%` }}
+                  />
+                </div>
+              </div>
+              <p className="text-sm text-blue-600 mt-3">
+                {locale === 'ja'
+                  ? '💡 モバイルが過半数 → モバイルファースト対応が必須'
+                  : '💡 모바일이 과반수 → 모바일 퍼스트 대응 필수'}
+              </p>
             </div>
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span>{locale === 'ja' ? 'タブレット' : '태블릿'}</span>
-                <span>{reportData.deviceAnalysis.tablet.percentage}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-4">
-                <div
-                  className="bg-purple-500 h-4 rounded-full"
-                  style={{ width: `${reportData.deviceAnalysis.tablet.percentage}%` }}
-                />
-              </div>
-            </div>
-            <p className="text-sm text-blue-600 mt-4">
-              {locale === 'ja'
-                ? '💡 モバイルが過半数 → モバイルファースト対応が必須'
-                : '💡 모바일이 과반수 → 모바일 퍼스트 대응 필수'}
-            </p>
           </div>
         </div>
 
         {/* Region */}
-        <div className="card">
-          <div className="card-header">
-            <h2 className="card-title flex items-center gap-2">
-              <Globe className="w-5 h-5 text-primary" />
-              {locale === 'ja' ? '国・地域別分析' : '국가/지역별 분석'}
-            </h2>
-          </div>
-          <div className="card-body">
-            <div className="space-y-3">
-              {reportData.regionAnalysis.map((region, i) => (
-                <div key={i} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{region.flag}</span>
-                    <span className="font-medium">{region.name[l]}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-semibold">{region.clicks}</span>
-                    <span className="text-gray-500 text-sm ml-2">({region.percentage}%)</span>
-                  </div>
-                </div>
-              ))}
+        <div className="col-12 col-lg-6">
+          <div className="card">
+            <div className="card-header">
+              <h2 className="card-title d-flex align-items-center gap-2">
+                <Globe size={20} className="text-primary" />
+                {locale === 'ja' ? '国・地域別分析' : '국가/지역별 분석'}
+              </h2>
             </div>
-            <div className="mt-4 p-3 bg-yellow-50 rounded-lg">
-              <p className="text-sm text-yellow-800">
-                {locale === 'ja'
-                  ? '🎯 重要発見: 日本以外からのアクセスが3.7%存在 → インバウンドコンテンツの拡充機会'
-                  : '🎯 중요 발견: 일본 외 접속이 3.7% 존재 → 인바운드 콘텐츠 확충 기회'}
-              </p>
+            <div className="card-body">
+              <div className="space-y-3">
+                {reportData.regionAnalysis.map((region, i) => (
+                  <div key={i} className="d-flex align-items-center justify-content-between">
+                    <div className="d-flex align-items-center gap-2">
+                      <span className="text-lg">{region.flag}</span>
+                      <span className="fw-medium">{region.name[l]}</span>
+                    </div>
+                    <div className="text-end">
+                      <span className="fw-semibold">{region.clicks}</span>
+                      <span className="text-gray-500 text-sm ms-2">({region.percentage}%)</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 p-2 bg-yellow-50 rounded-lg">
+                <p className="text-sm text-yellow-800">
+                  {locale === 'ja'
+                    ? '🎯 重要発見: 日本以外からのアクセスが3.7%存在 → インバウンドコンテンツの拡充機会'
+                    : '🎯 중요 발견: 일본 외 접속이 3.7% 존재 → 인바운드 콘텐츠 확충 기회'}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -349,72 +361,78 @@ export default function SEOReportPage() {
       {/* KPI Targets */}
       <div className="card">
         <div className="card-header">
-          <h2 className="card-title flex items-center gap-2">
-            <Target className="w-5 h-5 text-primary" />
+          <h2 className="card-title d-flex align-items-center gap-2">
+            <Target size={20} className="text-primary" />
             {locale === 'ja' ? 'KPI目標設定' : 'KPI 목표 설정'}
           </h2>
         </div>
         <div className="card-body">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="row g-4">
             {/* Short term */}
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <h3 className="font-semibold text-blue-800 mb-3">
-                {locale === 'ja' ? '📅 短期（3ヶ月後）' : '📅 단기 (3개월 후)'}
-              </h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span>CTR</span>
-                  <span>{reportData.kpiTargets.short.ctr.current}% → <strong>{reportData.kpiTargets.short.ctr.target}%</strong></span>
-                </div>
-                <div className="flex justify-between">
-                  <span>{locale === 'ja' ? 'クリック/月' : '클릭/월'}</span>
-                  <span>{reportData.kpiTargets.short.clicks.current} → <strong>{reportData.kpiTargets.short.clicks.target}</strong></span>
-                </div>
-                <div className="flex justify-between">
-                  <span>{locale === 'ja' ? '平均順位' : '평균 순위'}</span>
-                  <span>{reportData.kpiTargets.short.position.current} → <strong>{reportData.kpiTargets.short.position.target}</strong></span>
+            <div className="col-12 col-md-4">
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <h3 className="fw-semibold text-blue-800 mb-2">
+                  {locale === 'ja' ? '📅 短期（3ヶ月後）' : '📅 단기 (3개월 후)'}
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="d-flex justify-content-between">
+                    <span>CTR</span>
+                    <span>{reportData.kpiTargets.short.ctr.current}% → <strong>{reportData.kpiTargets.short.ctr.target}%</strong></span>
+                  </div>
+                  <div className="d-flex justify-content-between">
+                    <span>{locale === 'ja' ? 'クリック/月' : '클릭/월'}</span>
+                    <span>{reportData.kpiTargets.short.clicks.current} → <strong>{reportData.kpiTargets.short.clicks.target}</strong></span>
+                  </div>
+                  <div className="d-flex justify-content-between">
+                    <span>{locale === 'ja' ? '平均順位' : '평균 순위'}</span>
+                    <span>{reportData.kpiTargets.short.position.current} → <strong>{reportData.kpiTargets.short.position.target}</strong></span>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Mid term */}
-            <div className="p-4 bg-green-50 rounded-lg">
-              <h3 className="font-semibold text-green-800 mb-3">
-                {locale === 'ja' ? '📅 中期（6ヶ月後）' : '📅 중기 (6개월 후)'}
-              </h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span>CTR</span>
-                  <span>{reportData.kpiTargets.mid.ctr.current}% → <strong>{reportData.kpiTargets.mid.ctr.target}%</strong></span>
-                </div>
-                <div className="flex justify-between">
-                  <span>{locale === 'ja' ? 'クリック/月' : '클릭/월'}</span>
-                  <span>{reportData.kpiTargets.mid.clicks.current} → <strong>{reportData.kpiTargets.mid.clicks.target}</strong></span>
-                </div>
-                <div className="flex justify-between">
-                  <span>{locale === 'ja' ? '平均順位' : '평균 순위'}</span>
-                  <span>{reportData.kpiTargets.mid.position.current} → <strong>{reportData.kpiTargets.mid.position.target}</strong></span>
+            <div className="col-12 col-md-4">
+              <div className="p-3 bg-green-50 rounded-lg">
+                <h3 className="fw-semibold text-green-800 mb-2">
+                  {locale === 'ja' ? '📅 中期（6ヶ月後）' : '📅 중기 (6개월 후)'}
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="d-flex justify-content-between">
+                    <span>CTR</span>
+                    <span>{reportData.kpiTargets.mid.ctr.current}% → <strong>{reportData.kpiTargets.mid.ctr.target}%</strong></span>
+                  </div>
+                  <div className="d-flex justify-content-between">
+                    <span>{locale === 'ja' ? 'クリック/月' : '클릭/월'}</span>
+                    <span>{reportData.kpiTargets.mid.clicks.current} → <strong>{reportData.kpiTargets.mid.clicks.target}</strong></span>
+                  </div>
+                  <div className="d-flex justify-content-between">
+                    <span>{locale === 'ja' ? '平均順位' : '평균 순위'}</span>
+                    <span>{reportData.kpiTargets.mid.position.current} → <strong>{reportData.kpiTargets.mid.position.target}</strong></span>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Long term */}
-            <div className="p-4 bg-purple-50 rounded-lg">
-              <h3 className="font-semibold text-purple-800 mb-3">
-                {locale === 'ja' ? '📅 長期（12ヶ月後）' : '📅 장기 (12개월 후)'}
-              </h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span>CTR</span>
-                  <span>{reportData.kpiTargets.long.ctr.current}% → <strong>{reportData.kpiTargets.long.ctr.target}%</strong></span>
-                </div>
-                <div className="flex justify-between">
-                  <span>{locale === 'ja' ? 'クリック/月' : '클릭/월'}</span>
-                  <span>{reportData.kpiTargets.long.clicks.current} → <strong>{reportData.kpiTargets.long.clicks.target}</strong></span>
-                </div>
-                <div className="flex justify-between">
-                  <span>{locale === 'ja' ? '平均順位' : '평균 순위'}</span>
-                  <span>{reportData.kpiTargets.long.position.current} → <strong>{reportData.kpiTargets.long.position.target}</strong></span>
+            <div className="col-12 col-md-4">
+              <div className="p-3 bg-purple-50 rounded-lg">
+                <h3 className="fw-semibold text-purple-800 mb-2">
+                  {locale === 'ja' ? '📅 長期（12ヶ月後）' : '📅 장기 (12개월 후)'}
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="d-flex justify-content-between">
+                    <span>CTR</span>
+                    <span>{reportData.kpiTargets.long.ctr.current}% → <strong>{reportData.kpiTargets.long.ctr.target}%</strong></span>
+                  </div>
+                  <div className="d-flex justify-content-between">
+                    <span>{locale === 'ja' ? 'クリック/月' : '클릭/월'}</span>
+                    <span>{reportData.kpiTargets.long.clicks.current} → <strong>{reportData.kpiTargets.long.clicks.target}</strong></span>
+                  </div>
+                  <div className="d-flex justify-content-between">
+                    <span>{locale === 'ja' ? '平均順位' : '평균 순위'}</span>
+                    <span>{reportData.kpiTargets.long.position.current} → <strong>{reportData.kpiTargets.long.position.target}</strong></span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -423,46 +441,50 @@ export default function SEOReportPage() {
       </div>
 
       {/* AEO/GEO Section */}
-      <div className="card bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+      <div className="card bg-purple-50 border-purple-200">
         <div className="card-header">
           <h2 className="card-title text-purple-800">
             {locale === 'ja' ? '🤖 AI検索時代の対応戦略：AEO / GEO' : '🤖 AI 검색 시대 대응 전략: AEO / GEO'}
           </h2>
         </div>
         <div className="card-body">
-          <div className="mb-4 p-4 bg-white/50 rounded-lg">
-            <p className="text-purple-700 font-medium">
+          <div className="mb-3 p-3 bg-white\/50 rounded-lg">
+            <p className="text-purple-700 fw-medium">
               {locale === 'ja'
                 ? '重要な洞察: CTR低下は、タイトル・メタ説明の問題だけでなく、AI検索によるゼロクリック検索が影響している可能性が高い'
                 : '중요한 인사이트: CTR 저하는 제목/메타 설명 문제뿐만 아니라, AI 검색으로 인한 제로클릭 검색이 영향을 미칠 가능성이 높음'}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 bg-white rounded-lg">
-              <h3 className="font-semibold text-gray-800 mb-2">AEO (Answer Engine Optimization)</h3>
-              <ul className="text-sm space-y-1 text-gray-600">
-                <li>• FAQ{locale === 'ja' ? '形式の導入' : ' 형식 도입'}</li>
-                <li>• {locale === 'ja' ? '構造化データ（Schema）' : '구조화 데이터(Schema)'}</li>
-                <li>• {locale === 'ja' ? '簡潔な回答文' : '간결한 답변문'}</li>
-                <li>• Featured Snippet{locale === 'ja' ? '狙い' : ' 노리기'}</li>
-              </ul>
+          <div className="row g-3">
+            <div className="col-12 col-md-6">
+              <div className="p-3 bg-white rounded-lg">
+                <h3 className="fw-semibold text-gray-800 mb-2">AEO (Answer Engine Optimization)</h3>
+                <ul className="text-sm space-y-1 text-gray-600">
+                  <li>• FAQ{locale === 'ja' ? '形式の導入' : ' 형식 도입'}</li>
+                  <li>• {locale === 'ja' ? '構造化データ（Schema）' : '구조화 데이터(Schema)'}</li>
+                  <li>• {locale === 'ja' ? '簡潔な回答文' : '간결한 답변문'}</li>
+                  <li>• Featured Snippet{locale === 'ja' ? '狙い' : ' 노리기'}</li>
+                </ul>
+              </div>
             </div>
-            <div className="p-4 bg-white rounded-lg">
-              <h3 className="font-semibold text-gray-800 mb-2">GEO (Generative Engine Optimization)</h3>
-              <ul className="text-sm space-y-1 text-gray-600">
-                <li>• E-E-A-T{locale === 'ja' ? '強化' : ' 강화'}</li>
-                <li>• {locale === 'ja' ? '一次情報の提供' : '1차 정보 제공'}</li>
-                <li>• {locale === 'ja' ? '明確な出典表記' : '명확한 출처 표기'}</li>
-                <li>• {locale === 'ja' ? '定期的な更新' : '정기적인 업데이트'}</li>
-              </ul>
+            <div className="col-12 col-md-6">
+              <div className="p-3 bg-white rounded-lg">
+                <h3 className="fw-semibold text-gray-800 mb-2">GEO (Generative Engine Optimization)</h3>
+                <ul className="text-sm space-y-1 text-gray-600">
+                  <li>• E-E-A-T{locale === 'ja' ? '強化' : ' 강화'}</li>
+                  <li>• {locale === 'ja' ? '一次情報の提供' : '1차 정보 제공'}</li>
+                  <li>• {locale === 'ja' ? '明確な出典表記' : '명확한 출처 표기'}</li>
+                  <li>• {locale === 'ja' ? '定期的な更新' : '정기적인 업데이트'}</li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="text-center text-sm text-gray-500 py-4">
+      <div className="text-center text-sm text-gray-500 py-3">
         {locale === 'ja'
           ? 'レポート作成: マーケティングチーム | 次回レビュー: 2026年3月1日'
           : '리포트 작성: 마케팅팀 | 다음 리뷰: 2026년 3월 1일'}

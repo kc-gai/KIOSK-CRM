@@ -24,13 +24,13 @@ import { useTranslation } from '@/lib/translations'
 type NavItem = {
   name: string
   href: string
-  icon: React.ComponentType<{ className?: string }>
+  icon: React.ComponentType<{ size?: number; className?: string }>
   badge?: 'pending' | 'new' | 'beta'
   menuKey?: string
   subItems?: {
     name: string
     href: string
-    icon: React.ComponentType<{ className?: string }>
+    icon: React.ComponentType<{ size?: number; className?: string }>
     description?: string
   }[]
 }
@@ -118,22 +118,22 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
+    <aside className="d-flex flex-column bg-white border-end" style={{ width: '16rem' }}>
       {/* Logo */}
-      <div className="h-16 flex items-center px-6 border-b border-gray-200">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <BarChart3 className="w-5 h-5 text-white" />
+      <div className="d-flex align-items-center px-4 border-bottom" style={{ height: '4rem' }}>
+        <div className="d-flex align-items-center gap-2">
+          <div className="d-flex align-items-center justify-content-center bg-primary rounded-lg" style={{ width: '2rem', height: '2rem' }}>
+            <BarChart3 size={20} className="text-white" />
           </div>
           <div>
-            <div className="text-sm font-bold text-gray-900">SEO Marketing</div>
+            <div className="text-sm fw-bold text-gray-900">SEO Marketing</div>
             <div className="text-xs text-gray-500">KAFLIX CLOUD</div>
           </div>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-fill p-3 space-y-1">
         {navigation.map((item) => {
           const isActive = isItemActive(item)
           const hasSubItems = item.subItems && item.subItems.length > 0
@@ -146,22 +146,22 @@ export default function Sidebar() {
                 {/* Parent menu item */}
                 <button
                   onClick={() => toggleMenu(menuKey)}
-                  className={`nav-item w-full justify-between ${isActive ? 'active' : ''}`}
+                  className={`nav-item w-100 justify-content-between ${isActive ? 'active' : ''}`}
                 >
-                  <div className="flex items-center gap-3">
-                    <item.icon className="w-5 h-5" />
+                  <div className="d-flex align-items-center gap-2">
+                    <item.icon size={20} />
                     <span>{item.name}</span>
                   </div>
                   {isExpanded ? (
-                    <ChevronDown className="w-4 h-4" />
+                    <ChevronDown size={16} />
                   ) : (
-                    <ChevronRight className="w-4 h-4" />
+                    <ChevronRight size={16} />
                   )}
                 </button>
 
                 {/* Sub menu items */}
                 {isExpanded && (
-                  <div className="ml-4 mt-1 space-y-1 border-l-2 border-gray-100 pl-3">
+                  <div className="ms-3 mt-1 space-y-1 border-start border-2 ps-2">
                     {item.subItems?.map((subItem) => {
                       const isSubActive = subItem.href === '/marketing'
                         ? pathname === '/marketing'
@@ -170,14 +170,14 @@ export default function Sidebar() {
                         <Link
                           key={subItem.href}
                           href={subItem.href}
-                          className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
+                          className={`d-flex align-items-center gap-2 px-2 py-1 text-sm rounded-lg transition-colors ${
                             isSubActive
-                              ? 'bg-primary/10 text-primary font-medium'
+                              ? 'bg-primary-lt text-primary fw-medium'
                               : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                           }`}
                         >
-                          <subItem.icon className="w-4 h-4" />
-                          <div className="flex flex-col">
+                          <subItem.icon size={16} />
+                          <div className="d-flex flex-column">
                             <span>{subItem.name}</span>
                             {subItem.description && (
                               <span className="text-xs text-gray-400">{subItem.description}</span>
@@ -198,7 +198,7 @@ export default function Sidebar() {
               href={item.href}
               className={`nav-item ${isActive ? 'active' : ''}`}
             >
-              <item.icon className="w-5 h-5" />
+              <item.icon size={20} />
               <span>{item.name}</span>
               {item.badge === 'pending' && (
                 <span className="w-2 h-2 rounded-full bg-yellow-400 ml-auto" title="保留 / 보류" />
@@ -215,18 +215,18 @@ export default function Sidebar() {
       </nav>
 
       {/* Module Switch */}
-      <div className="p-3 border-t border-gray-200">
+      <div className="p-2 border-top">
         <Link
           href="/dashboard"
-          className="flex items-center gap-2 px-3 py-2 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+          className="d-flex align-items-center gap-2 px-2 py-1 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
         >
-          <LayoutDashboard className="w-4 h-4" />
-          <span>← Kiosk CRM</span>
+          <LayoutDashboard size={16} />
+          <span>&larr; Kiosk CRM</span>
         </Link>
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-3 border-top">
         <div className="text-xs text-gray-500 text-center">
           {t.analysisPeriod}: 2025/11/1 〜 2026/2/2
         </div>

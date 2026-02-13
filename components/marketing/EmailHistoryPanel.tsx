@@ -175,20 +175,20 @@ export default function EmailHistoryPanel() {
   ).size
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200">
+    <div className="card">
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+        className="w-100 p-3 d-flex align-items-center justify-content-between hover:bg-gray-50 transition-colors"
       >
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
-            <Clock className="w-4 h-4 text-indigo-600" />
+        <div className="d-flex align-items-center gap-2">
+          <div className="bg-indigo-100 rounded-lg d-flex align-items-center justify-content-center" style={{ width: '2rem', height: '2rem' }}>
+            <Clock size={16} className="text-indigo-600" />
           </div>
-          <div className="text-left">
-            <h3 className="font-semibold text-gray-900">
+          <div className="text-start">
+            <h3 className="fw-semibold text-gray-900 mb-0">
               {locale === 'ja' ? 'メール履歴（会社別タイムライン）' : '이메일 이력 (회사별 타임라인)'}
             </h3>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 mb-0">
               {locale === 'ja'
                 ? `送信: ${sentCount}件 / 返信: ${replyCount}件 / 返信あり企業: ${companiesWithReplies}社`
                 : `발신: ${sentCount}건 / 회신: ${replyCount}건 / 회신 업체: ${companiesWithReplies}사`}
@@ -196,39 +196,40 @@ export default function EmailHistoryPanel() {
           </div>
         </div>
         {isCollapsed ? (
-          <ChevronRight className="w-5 h-5 text-gray-400" />
+          <ChevronRight size={20} className="text-gray-400" />
         ) : (
-          <ChevronDown className="w-5 h-5 text-gray-400" />
+          <ChevronDown size={20} className="text-gray-400" />
         )}
       </button>
 
       {!isCollapsed && (
-        <div className="border-t border-gray-200">
+        <div className="border-top">
           {/* Search + Refresh */}
-          <div className="p-4 flex items-center gap-3">
-            <div className="flex-1 relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <div className="p-3 d-flex align-items-center gap-2">
+            <div className="flex-fill position-relative">
+              <Search size={16} className="position-absolute text-gray-400 pe-none" style={{ left: '0.75rem', top: '50%', transform: 'translateY(-50%)' }} />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder={locale === 'ja' ? '会社名で検索...' : '업체명으로 검색...'}
-                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm"
+                className="form-control form-control-sm"
+                style={{ paddingLeft: '2.25rem' }}
               />
             </div>
             <button
               onClick={fetchHistory}
               disabled={loading}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
+              className="btn btn-ghost-secondary btn-sm"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
             </button>
           </div>
 
           {/* Timeline List */}
-          <div className="max-h-96 overflow-y-auto">
+          <div style={{ maxHeight: '24rem', overflowY: 'auto' }}>
             {filteredTimelines.length === 0 && (
-              <div className="p-8 text-center text-gray-500 text-sm">
+              <div className="p-5 text-center text-gray-500 text-sm">
                 {loading
                   ? (locale === 'ja' ? '読み込み中...' : '로딩 중...')
                   : (locale === 'ja' ? 'メール履歴がありません' : '이메일 이력이 없습니다')}
@@ -243,63 +244,63 @@ export default function EmailHistoryPanel() {
               const replyEvents = timeline.events.filter(e => e.type === 'reply')
 
               return (
-                <div key={timeline.companyName} className="border-t border-gray-100">
+                <div key={timeline.companyName} className="border-top">
                   <button
                     onClick={() => toggleCompany(timeline.companyName)}
-                    className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 text-left"
+                    className="w-100 px-3 py-2 d-flex align-items-center gap-2 hover:bg-gray-50 text-start"
                   >
-                    <Building2 className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm text-gray-900 truncate">
+                    <Building2 size={16} className="text-gray-400 flex-shrink-0" />
+                    <div className="flex-fill" style={{ minWidth: 0 }}>
+                      <div className="d-flex align-items-center gap-2">
+                        <span className="fw-medium text-sm text-gray-900 truncate">
                           {timeline.companyName}
                         </span>
                         {hasReply && (
-                          <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">
+                          <span className="text-xs bg-green-100 text-green-700 px-1 py-0 rounded">
                             {locale === 'ja' ? '返信あり' : '회신 있음'}
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-3 text-xs text-gray-500 mt-0.5">
-                        <span className="flex items-center gap-1">
-                          <Send className="w-3 h-3" /> {sentEvents.length}
+                      <div className="d-flex align-items-center gap-2 text-xs text-gray-500 mt-0">
+                        <span className="d-flex align-items-center gap-1">
+                          <Send size={12} /> {sentEvents.length}
                         </span>
-                        <span className="flex items-center gap-1">
-                          <Inbox className="w-3 h-3" /> {replyEvents.length}
+                        <span className="d-flex align-items-center gap-1">
+                          <Inbox size={12} /> {replyEvents.length}
                         </span>
                         <span>{formatDate(latestEvent?.date || '')}</span>
                       </div>
                     </div>
                     {isExpanded ? (
-                      <ChevronDown className="w-4 h-4 text-gray-400" />
+                      <ChevronDown size={16} className="text-gray-400" />
                     ) : (
-                      <ChevronRight className="w-4 h-4 text-gray-400" />
+                      <ChevronRight size={16} className="text-gray-400" />
                     )}
                   </button>
 
                   {isExpanded && (
-                    <div className="px-4 pb-3 ml-7">
+                    <div className="px-3 pb-2 ms-4">
                       {timeline.events.map((event, idx) => (
                         <div
                           key={idx}
-                          className={`flex items-start gap-2 py-2 ${
-                            idx < timeline.events.length - 1 ? 'border-b border-gray-50' : ''
+                          className={`d-flex align-items-start gap-2 py-1 ${
+                            idx < timeline.events.length - 1 ? 'border-bottom' : ''
                           }`}
                         >
-                          <div className={`mt-0.5 p-1 rounded ${
+                          <div className={`mt-0 p-1 rounded ${
                             event.type === 'sent'
                               ? 'bg-blue-100 text-blue-600'
                               : 'bg-green-100 text-green-600'
                           }`}>
                             {event.type === 'sent' ? (
-                              <Send className="w-3 h-3" />
+                              <Send size={12} />
                             ) : (
-                              <Mail className="w-3 h-3" />
+                              <Mail size={12} />
                             )}
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className={`text-xs font-medium ${
+                          <div className="flex-fill" style={{ minWidth: 0 }}>
+                            <div className="d-flex align-items-center gap-2">
+                              <span className={`text-xs fw-medium ${
                                 event.type === 'sent' ? 'text-blue-700' : 'text-green-700'
                               }`}>
                                 {event.type === 'sent'
@@ -311,11 +312,11 @@ export default function EmailHistoryPanel() {
                                 {formatDate(event.date)}
                               </span>
                             </div>
-                            <p className="text-xs text-gray-600 truncate mt-0.5">
+                            <p className="text-xs text-gray-600 truncate mt-0 mb-0">
                               {event.subject}
                             </p>
                             {event.preview && (
-                              <p className="text-xs text-gray-400 truncate mt-0.5">
+                              <p className="text-xs text-gray-400 truncate mt-0 mb-0">
                                 {event.preview}
                               </p>
                             )}

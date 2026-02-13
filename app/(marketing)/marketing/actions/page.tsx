@@ -70,49 +70,57 @@ export default function ActionsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="d-flex align-items-center justify-content-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl fw-bold text-gray-900">
             🔄 {locale === 'ja' ? 'コンテンツ最適化' : '콘텐츠 최적화'}
           </h1>
           <p className="text-gray-500 mt-1">
             {locale === 'ja' ? '既存コンテンツのリライト管理' : '기존 콘텐츠 리라이팅 관리'}
           </p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
-          <Plus className="w-4 h-4" />
+        <button className="btn btn-primary d-flex align-items-center gap-2">
+          <Plus size={16} />
           {t.newTask}
         </button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-4 gap-4">
-        <div className="stat-card">
-          <div className="flex items-center gap-2">
-            <RefreshCw className="w-5 h-5 text-gray-400" />
-            <p className="stat-label">{t.allTasks}</p>
+      <div className="row g-3">
+        <div className="col-md-3">
+          <div className="stat-card">
+            <div className="d-flex align-items-center gap-2">
+              <RefreshCw size={20} className="text-gray-400" />
+              <p className="stat-label">{t.allTasks}</p>
+            </div>
+            <p className="stat-value">{stats.total}</p>
           </div>
-          <p className="stat-value">{stats.total}</p>
         </div>
-        <div className="stat-card">
-          <p className="stat-label">{t.notStarted}</p>
-          <p className="stat-value text-gray-500">{stats.pending}</p>
+        <div className="col-md-3">
+          <div className="stat-card">
+            <p className="stat-label">{t.notStarted}</p>
+            <p className="stat-value text-gray-500">{stats.pending}</p>
+          </div>
         </div>
-        <div className="stat-card">
-          <p className="stat-label">{t.inProgress}</p>
-          <p className="stat-value text-blue-500">{stats.inProgress}</p>
+        <div className="col-md-3">
+          <div className="stat-card">
+            <p className="stat-label">{t.inProgress}</p>
+            <p className="stat-value text-blue-500">{stats.inProgress}</p>
+          </div>
         </div>
-        <div className="stat-card">
-          <p className="stat-label">{locale === 'ja' ? '完了' : '완료'}</p>
-          <p className="stat-value text-green-500">{stats.done}</p>
+        <div className="col-md-3">
+          <div className="stat-card">
+            <p className="stat-label">{locale === 'ja' ? '完了' : '완료'}</p>
+            <p className="stat-value text-green-500">{stats.done}</p>
+          </div>
         </div>
       </div>
 
       {/* Progress Bar */}
       <div className="card">
         <div className="card-body">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">{t.progressRate}</span>
+          <div className="d-flex align-items-center justify-content-between mb-2">
+            <span className="text-sm fw-medium text-gray-700">{t.progressRate}</span>
             <span className="text-sm text-gray-500">{Math.round((stats.done / stats.total) * 100)}%</span>
           </div>
           <div className="progress h-3">
@@ -129,17 +137,17 @@ export default function ActionsPage() {
       </div>
 
       {/* Filter */}
-      <div className="flex items-center gap-2">
-        <Filter className="w-4 h-4 text-gray-500" />
-        <div className="flex gap-2">
+      <div className="d-flex align-items-center gap-2">
+        <Filter size={16} className="text-gray-500" />
+        <div className="d-flex gap-2">
           {(['all', 'pending', 'in_progress', 'done'] as const).map((status) => (
             <button
               key={status}
               onClick={() => setFilter(status)}
-              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+              className={`btn btn-sm ${
                 filter === status
-                  ? 'bg-primary text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'btn-primary'
+                  : 'btn-outline-secondary'
               }`}
             >
               {status === 'all' ? t.all : statusConfig[status].label}
@@ -151,8 +159,8 @@ export default function ActionsPage() {
       {/* Task List */}
       <div className="card">
         <div className="card-header bg-blue-50">
-          <div className="flex items-center gap-3">
-            <RefreshCw className="w-5 h-5 text-blue-600" />
+          <div className="d-flex align-items-center gap-2">
+            <RefreshCw size={20} className="text-blue-600" />
             <div>
               <h3 className="card-title">{locale === 'ja' ? 'リライト対象タスク' : '리라이팅 대상 태스크'}</h3>
               <p className="text-xs text-gray-500">
@@ -166,7 +174,7 @@ export default function ActionsPage() {
         </div>
         <div className="card-body p-0">
           {filteredActions.length === 0 ? (
-            <div className="px-4 py-8 text-center text-gray-400">
+            <div className="px-3 py-5 text-center text-gray-400">
               {locale === 'ja' ? '該当するタスクがありません' : '해당하는 태스크가 없습니다'}
             </div>
           ) : (
@@ -178,26 +186,27 @@ export default function ActionsPage() {
                 return (
                   <div
                     key={action.id}
-                    className="px-4 py-3 flex items-center gap-4 hover:bg-gray-50 transition-colors"
+                    className="px-3 py-2 d-flex align-items-center gap-3 hover:bg-gray-50 transition-colors"
                   >
                     <button
                       onClick={() => toggleStatus(action.id)}
                       className="flex-shrink-0"
                     >
                       <StatusIcon
-                        className={`w-5 h-5 ${statusConfig[action.status].color}`}
+                        size={20}
+                        className={statusConfig[action.status].color}
                       />
                     </button>
-                    <div className="flex-1 min-w-0">
-                      <p className={`font-medium ${action.status === 'done' ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                    <div className="flex-fill min-w-0">
+                      <p className={`fw-medium ${action.status === 'done' ? 'text-gray-400 text-decoration-line-through' : 'text-gray-900'}`}>
                         {action.title[locale]}
                       </p>
-                      <div className="flex items-center gap-3 mt-1">
+                      <div className="d-flex align-items-center gap-2 mt-1">
                         <span className={`text-xs px-2 py-0.5 rounded ${priority.color}`}>
                           {priority.label}
                         </span>
-                        <span className="text-xs text-gray-500 flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
+                        <span className="text-xs text-gray-500 d-flex align-items-center gap-1">
+                          <Calendar size={12} />
                           {action.dueDate}
                         </span>
                         <span className="text-xs text-gray-400">{action.tag[locale]}</span>
@@ -215,7 +224,7 @@ export default function ActionsPage() {
       </div>
 
       {/* Tips */}
-      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      <div className="alert alert-info">
         <p className="text-sm text-blue-800">
           <strong>💡 {locale === 'ja' ? 'ヒント' : '힌트'}:</strong>{' '}
           {locale === 'ja'
@@ -225,7 +234,7 @@ export default function ActionsPage() {
       </div>
 
       {/* Analysis Period Info */}
-      <div className="text-xs text-gray-400 text-right">
+      <div className="text-xs text-gray-400 text-end">
         {locale === 'ja' ? '分析期間' : '분석기간'}: 2025/11/1 ~ 2026/2/2
       </div>
     </div>

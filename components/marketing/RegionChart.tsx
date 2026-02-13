@@ -34,7 +34,7 @@ export default function RegionChart() {
         <span className="badge badge-info">{totalOverseas}クリック (3.7%)</span>
       </div>
       <div className="card-body">
-        <div className="h-64">
+        <div style={{ height: '16rem' }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={overseasData}
@@ -56,18 +56,18 @@ export default function RegionChart() {
           </ResponsiveContainer>
         </div>
         {/* 범례 추가 */}
-        <div className="mt-3 flex flex-wrap gap-3 justify-center text-xs">
+        <div className="mt-2 d-flex flex-wrap gap-2 justify-content-center text-xs">
           {overseasData.map((entry) => (
-            <div key={entry.name} className="flex items-center gap-1">
+            <div key={entry.name} className="d-flex align-items-center gap-1">
               <div
-                className="w-3 h-3 rounded"
-                style={{ backgroundColor: REGION_COLORS[entry.name] }}
+                className="rounded"
+                style={{ width: '0.75rem', height: '0.75rem', backgroundColor: REGION_COLORS[entry.name] }}
               />
               <span>{entry.name.replace(/🇹🇼|🇰🇷|🇺🇸|🇭🇰|🇬🇧|🇲🇾/g, '').trim()}</span>
             </div>
           ))}
         </div>
-        <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+        <div className="mt-2 p-2 bg-blue-50 rounded-lg">
           <p className="text-sm text-blue-800">
             <strong>インサイト:</strong> 中華圏（台湾+香港）から月約50クリック、
             韓国から月約30クリックの潜在需要あり

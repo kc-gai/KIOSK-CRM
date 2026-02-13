@@ -77,38 +77,40 @@ export default function StrategyPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">🎯 {t.strategyTitle}</h1>
+        <h1 className="text-2xl fw-bold text-gray-900">🎯 {t.strategyTitle}</h1>
         <p className="text-gray-500 mt-1">
           {t.strategySubtitle}: A + B + AEO/GEO {locale === 'ja' ? 'の組み合わせ' : ' 조합'}
         </p>
       </div>
 
       {/* Strategy Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="row g-4">
         {strategies.map((strategy) => (
-          <div key={strategy.id} className="card">
-            <div className={`h-2 bg-${strategy.color === 'blue' ? 'primary' : strategy.color === 'green' ? 'success' : 'purple'}`} />
-            <div className="card-body">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="font-bold text-gray-900">{strategy.title}</h3>
-                  <p className="text-sm text-gray-500">{strategy.subtitle}</p>
+          <div key={strategy.id} className="col-12 col-md-4">
+            <div className="card">
+              <div className={`h-2 bg-${strategy.color === 'blue' ? 'primary' : strategy.color === 'green' ? 'success' : 'purple'}`} />
+              <div className="card-body">
+                <div className="d-flex align-items-start justify-content-between mb-3">
+                  <div>
+                    <h3 className="fw-bold text-gray-900">{strategy.title}</h3>
+                    <p className="text-sm text-gray-500">{strategy.subtitle}</p>
+                  </div>
+                  <div className={`p-2 rounded-lg bg-${strategy.color === 'blue' ? 'blue' : strategy.color === 'green' ? 'green' : 'purple'}-50`}>
+                    <strategy.icon size={20} className={`text-${strategy.color === 'blue' ? 'primary' : strategy.color}`} />
+                  </div>
                 </div>
-                <div className={`p-2 rounded-lg bg-${strategy.color === 'blue' ? 'blue' : strategy.color === 'green' ? 'green' : 'purple'}-50`}>
-                  <strategy.icon className={`w-5 h-5 text-${strategy.color === 'blue' ? 'primary' : strategy.color}`} />
+                <ul className="space-y-2 mb-3">
+                  {strategy.items.map((item, idx) => (
+                    <li key={idx} className="d-flex align-items-center gap-2 text-sm text-gray-600">
+                      <span className="w-1.5 h-1.5 bg-gray-400 rounded-full" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <div className="pt-2 border-t border-gray-100">
+                  <span className="text-xs text-gray-500">{t.linkedProduct}:</span>
+                  <span className="ml-2 badge badge-info">{strategy.product}</span>
                 </div>
-              </div>
-              <ul className="space-y-2 mb-4">
-                {strategy.items.map((item, idx) => (
-                  <li key={idx} className="flex items-center gap-2 text-sm text-gray-600">
-                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <div className="pt-3 border-t border-gray-100">
-                <span className="text-xs text-gray-500">{t.linkedProduct}:</span>
-                <span className="ml-2 badge badge-info">{strategy.product}</span>
               </div>
             </div>
           </div>
@@ -118,13 +120,13 @@ export default function StrategyPage() {
       {/* Season Plan */}
       <div className="card">
         <div className="card-header">
-          <h3 className="card-title flex items-center gap-2">
-            <Calendar className="w-5 h-5" />
+          <h3 className="card-title d-flex align-items-center gap-2">
+            <Calendar size={20} />
             {t.seasonPlan}
           </h3>
         </div>
         <div className="card-body">
-          <div className="overflow-x-auto">
+          <div className="overflow-auto">
             <table className="table">
               <thead>
                 <tr>
@@ -136,7 +138,7 @@ export default function StrategyPage() {
               <tbody>
                 {seasonPlan.map((item, idx) => (
                   <tr key={idx}>
-                    <td className="font-medium">{item.season}</td>
+                    <td className="fw-medium">{item.season}</td>
                     <td>{item.publish}</td>
                     <td>
                       {item.status === 'active' && (
@@ -163,16 +165,18 @@ export default function StrategyPage() {
           <h3 className="card-title">{t.quarterlyTheme}</h3>
         </div>
         <div className="card-body">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="row g-3">
             {quarterlyPlan.map((item) => (
-              <div key={item.q} className="p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-lg font-bold text-primary">{item.q}</span>
-                  <span className="text-sm text-gray-500">{item.period}</span>
-                </div>
-                <p className="text-sm text-gray-700 mb-2">{item.theme}</p>
-                <div className="flex items-center gap-1 text-xs text-gray-500">
-                  <span>{item.highlight}</span>
+              <div key={item.q} className="col-12 col-md-3">
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  <div className="d-flex align-items-center gap-2 mb-2">
+                    <span className="text-lg fw-bold text-primary">{item.q}</span>
+                    <span className="text-sm text-gray-500">{item.period}</span>
+                  </div>
+                  <p className="text-sm text-gray-700 mb-2">{item.theme}</p>
+                  <div className="d-flex align-items-center gap-1 text-xs text-gray-500">
+                    <span>{item.highlight}</span>
+                  </div>
                 </div>
               </div>
             ))}
@@ -186,15 +190,17 @@ export default function StrategyPage() {
           <h3 className="card-title">🔄 {t.dataInsights}</h3>
         </div>
         <div className="card-body">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="row g-3">
             {insights.map((item, idx) => (
-              <div key={idx} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-700">{item.finding}</p>
-                  <p className="text-sm text-primary mt-1 flex items-center gap-1">
-                    <ArrowRight className="w-3 h-3" />
-                    {item.action}
-                  </p>
+              <div key={idx} className="col-12 col-md-6">
+                <div className="d-flex align-items-start gap-2 p-2 bg-gray-50 rounded-lg">
+                  <div className="flex-fill">
+                    <p className="text-sm fw-medium text-gray-700">{item.finding}</p>
+                    <p className="text-sm text-primary mt-1 d-flex align-items-center gap-1">
+                      <ArrowRight size={12} />
+                      {item.action}
+                    </p>
+                  </div>
                 </div>
               </div>
             ))}

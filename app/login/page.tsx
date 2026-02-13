@@ -49,18 +49,18 @@ function LoginForm() {
     }
 
     return (
-        <div className="flex h-screen w-full items-center justify-center bg-gray-50">
-            <Card className="w-full max-w-sm">
+        <div className="d-flex vh-100 w-100 align-items-center justify-content-center bg-gray-50">
+            <Card className="w-100" style={{ maxWidth: '24rem' }}>
                 <CardHeader>
                     <CardTitle className="text-center text-xl">KC Unified CRM</CardTitle>
                 </CardHeader>
 
                 {/* Google 로그인 버튼 */}
-                <CardContent className="pb-2">
+                <CardContent className="pb-1">
                     <Button
                         type="button"
                         variant="outline"
-                        className="w-full flex items-center justify-center gap-2"
+                        className="w-100 d-flex align-items-center justify-content-center gap-2"
                         onClick={handleGoogleLogin}
                     >
                         <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -85,23 +85,23 @@ function LoginForm() {
                     </Button>
 
                     {errorMessage && (
-                        <p className="text-sm text-red-500 mt-3 text-center">{errorMessage}</p>
+                        <p className="text-sm text-red-500 mt-2 text-center">{errorMessage}</p>
                     )}
 
-                    <div className="relative my-4">
-                        <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t" />
+                    <div className="position-relative my-3">
+                        <div className="position-absolute inset-0 d-flex align-items-center">
+                            <span className="w-100 border-top" />
                         </div>
-                        <div className="relative flex justify-center text-xs uppercase">
+                        <div className="position-relative d-flex justify-content-center text-xs text-uppercase">
                             <span className="bg-white px-2 text-gray-500">또는</span>
                         </div>
                     </div>
                 </CardContent>
 
                 <form onSubmit={handleLogin}>
-                    <CardContent className="space-y-4 pt-0">
+                    <CardContent className="space-y-3 pt-0">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">ID</label>
+                            <label className="text-sm fw-medium">ID</label>
                             <Input
                                 type="text"
                                 value={email}
@@ -111,7 +111,7 @@ function LoginForm() {
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Password</label>
+                            <label className="text-sm fw-medium">Password</label>
                             <Input
                                 type="password"
                                 value={password}
@@ -122,7 +122,7 @@ function LoginForm() {
                         </div>
                     </CardContent>
                     <CardFooter>
-                        <Button type="submit" className="w-full">Sign In</Button>
+                        <Button type="submit" className="w-100">Sign In</Button>
                     </CardFooter>
                 </form>
             </Card>
@@ -133,7 +133,7 @@ function LoginForm() {
 export default function LoginPage() {
     return (
         <Suspense fallback={
-            <div className="flex h-screen w-full items-center justify-center bg-gray-50">
+            <div className="d-flex vh-100 w-100 align-items-center justify-content-center bg-gray-50">
                 <div>Loading...</div>
             </div>
         }>

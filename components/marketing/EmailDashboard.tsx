@@ -167,8 +167,8 @@ export default function EmailDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Clock className="w-5 h-5 animate-spin mr-2 text-gray-400" />
+      <div className="d-flex align-items-center justify-content-center py-5">
+        <Clock size={20} className="animate-spin me-2 text-gray-400" />
         <span className="text-gray-500">{txt.loading}</span>
       </div>
     )
@@ -176,8 +176,8 @@ export default function EmailDashboard() {
 
   if (error || !stats) {
     return (
-      <div className="flex items-center justify-center py-20 text-red-500">
-        <AlertCircle className="w-5 h-5 mr-2" />
+      <div className="d-flex align-items-center justify-content-center py-5 text-red-500">
+        <AlertCircle size={20} className="me-2" />
         <span>{error || txt.errorLoading}</span>
       </div>
     )
@@ -201,163 +201,175 @@ export default function EmailDashboard() {
   return (
     <div className="space-y-6">
       {/* Stats Cards Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="row g-3">
         {/* Today */}
-        <div className="stat-card">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <p className="stat-label">{txt.today}</p>
-              <p className="stat-value mt-1">
-                {stats.today} / {stats.dailyLimit}
-              </p>
-              <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className={`h-2 rounded-full transition-all ${
-                    todayPercent >= 90
-                      ? 'bg-red-500'
-                      : todayPercent >= 70
-                        ? 'bg-orange-500'
-                        : 'bg-blue-500'
-                  }`}
-                  style={{ width: `${Math.min(todayPercent, 100)}%` }}
-                />
+        <div className="col-12 col-sm-6 col-lg-3">
+          <div className="stat-card">
+            <div className="d-flex align-items-start justify-content-between">
+              <div className="flex-fill">
+                <p className="stat-label">{txt.today}</p>
+                <p className="stat-value mt-1">
+                  {stats.today} / {stats.dailyLimit}
+                </p>
+                <div className="mt-2 progress" style={{ height: '0.5rem' }}>
+                  <div
+                    className={`progress-bar ${
+                      todayPercent >= 90
+                        ? 'bg-danger'
+                        : todayPercent >= 70
+                          ? 'bg-warning'
+                          : 'bg-primary'
+                    }`}
+                    style={{ width: `${Math.min(todayPercent, 100)}%` }}
+                  />
+                </div>
               </div>
-            </div>
-            <div className="p-3 rounded-lg bg-blue-50 text-primary ml-3">
-              <Mail className="w-6 h-6" />
+              <div className="p-2 rounded-lg bg-blue-50 text-primary ms-2">
+                <Mail size={24} />
+              </div>
             </div>
           </div>
         </div>
 
         {/* This Week */}
-        <div className="stat-card">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="stat-label">{txt.thisWeek}</p>
-              <p className="stat-value mt-1">{stats.week}</p>
-            </div>
-            <div className="p-3 rounded-lg bg-green-50 text-success">
-              <TrendingUp className="w-6 h-6" />
+        <div className="col-12 col-sm-6 col-lg-3">
+          <div className="stat-card">
+            <div className="d-flex align-items-start justify-content-between">
+              <div>
+                <p className="stat-label">{txt.thisWeek}</p>
+                <p className="stat-value mt-1">{stats.week}</p>
+              </div>
+              <div className="p-2 rounded-lg bg-green-50 text-success">
+                <TrendingUp size={24} />
+              </div>
             </div>
           </div>
         </div>
 
         {/* This Month */}
-        <div className="stat-card">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="stat-label">{txt.thisMonth}</p>
-              <p className="stat-value mt-1">{stats.month}</p>
-            </div>
-            <div className="p-3 rounded-lg bg-purple-50 text-purple">
-              <Calendar className="w-6 h-6" />
+        <div className="col-12 col-sm-6 col-lg-3">
+          <div className="stat-card">
+            <div className="d-flex align-items-start justify-content-between">
+              <div>
+                <p className="stat-label">{txt.thisMonth}</p>
+                <p className="stat-value mt-1">{stats.month}</p>
+              </div>
+              <div className="p-2 rounded-lg bg-purple-50 text-purple">
+                <Calendar size={24} />
+              </div>
             </div>
           </div>
         </div>
 
         {/* Follow-up Needed */}
-        <div className="stat-card">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="stat-label">{txt.followUpNeeded}</p>
-              <p className="stat-value mt-1 flex items-center gap-2">
-                {followUp?.count ?? 0}
-                {followUp && followUp.count > 0 && (
-                  <span className="badge bg-orange-100 text-orange-800 text-xs font-medium px-2 py-0.5 rounded">
-                    {followUp.count}
-                  </span>
-                )}
-              </p>
-            </div>
-            <div className="p-3 rounded-lg bg-orange-50 text-warning">
-              <Bell className="w-6 h-6" />
+        <div className="col-12 col-sm-6 col-lg-3">
+          <div className="stat-card">
+            <div className="d-flex align-items-start justify-content-between">
+              <div>
+                <p className="stat-label">{txt.followUpNeeded}</p>
+                <p className="stat-value mt-1 d-flex align-items-center gap-2">
+                  {followUp?.count ?? 0}
+                  {followUp && followUp.count > 0 && (
+                    <span className="badge bg-orange-100 text-orange-800 text-xs font-medium px-2 py-0.5 rounded">
+                      {followUp.count}
+                    </span>
+                  )}
+                </p>
+              </div>
+              <div className="p-2 rounded-lg bg-orange-50 text-warning">
+                <Bell size={24} />
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="row g-4">
         {/* Round Distribution PieChart */}
-        <div className="card">
-          <div className="card-header">
-            <h3 className="card-title flex items-center gap-2">
-              <BarChart3 className="w-4 h-4" />
-              {txt.roundDistribution}
-            </h3>
-          </div>
-          <div className="card-body">
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={roundChartData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={55}
-                    outerRadius={80}
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-                    {roundChartData.map((_entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={ROUND_COLORS[index % ROUND_COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value: number | undefined, name: string | undefined) => [
-                      `${value ?? 0} ${txt.count}`,
-                      name ?? '',
-                    ]}
-                  />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
+        <div className="col-12 col-lg-6">
+          <div className="card">
+            <div className="card-header">
+              <h3 className="card-title d-flex align-items-center gap-2">
+                <BarChart3 size={16} />
+                {txt.roundDistribution}
+              </h3>
+            </div>
+            <div className="card-body">
+              <div style={{ height: '16rem' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={roundChartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={55}
+                      outerRadius={80}
+                      paddingAngle={2}
+                      dataKey="value"
+                    >
+                      {roundChartData.map((_entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={ROUND_COLORS[index % ROUND_COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value: number | undefined, name: string | undefined) => [
+                        `${value ?? 0} ${txt.count}`,
+                        name ?? '',
+                      ]}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Daily Trend BarChart */}
-        <div className="card">
-          <div className="card-header">
-            <h3 className="card-title flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" />
-              {txt.dailyTrend}
-            </h3>
-          </div>
-          <div className="card-body">
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={stats.dailyTrend}
-                  margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis
-                    dataKey="date"
-                    tick={{ fontSize: 10 }}
-                    tickFormatter={(val: string) => {
-                      const d = new Date(val)
-                      return `${d.getMonth() + 1}/${d.getDate()}`
-                    }}
-                    interval="preserveStartEnd"
-                  />
-                  <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                  <Tooltip
-                    labelFormatter={(label) => {
-                      const d = new Date(String(label))
-                      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-                    }}
-                    formatter={(value: number | undefined) => [
-                      `${value ?? 0} ${txt.count}`,
-                      txt.today,
-                    ]}
-                  />
-                  <Bar dataKey="count" fill="#3b82f6" radius={[3, 3, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+        <div className="col-12 col-lg-6">
+          <div className="card">
+            <div className="card-header">
+              <h3 className="card-title d-flex align-items-center gap-2">
+                <TrendingUp size={16} />
+                {txt.dailyTrend}
+              </h3>
+            </div>
+            <div className="card-body">
+              <div style={{ height: '16rem' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={stats.dailyTrend}
+                    margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 10 }}
+                      tickFormatter={(val: string) => {
+                        const d = new Date(val)
+                        return `${d.getMonth() + 1}/${d.getDate()}`
+                      }}
+                      interval="preserveStartEnd"
+                    />
+                    <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                    <Tooltip
+                      labelFormatter={(label) => {
+                        const d = new Date(String(label))
+                        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+                      }}
+                      formatter={(value: number | undefined) => [
+                        `${value ?? 0} ${txt.count}`,
+                        txt.today,
+                      ]}
+                    />
+                    <Bar dataKey="count" fill="#3b82f6" radius={[3, 3, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
         </div>
@@ -367,22 +379,22 @@ export default function EmailDashboard() {
       {stats.statusBreakdown.length > 0 && (
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title flex items-center gap-2">
-              <AlertCircle className="w-4 h-4" />
+            <h3 className="card-title d-flex align-items-center gap-2">
+              <AlertCircle size={16} />
               {txt.statusBreakdown}
             </h3>
           </div>
           <div className="card-body">
-            <div className="flex flex-wrap gap-3">
+            <div className="d-flex flex-wrap gap-2">
               {stats.statusBreakdown.map((s) => (
                 <span
                   key={s.status}
-                  className={`badge inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium ${
+                  className={`badge d-inline-flex align-items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium ${
                     STATUS_COLORS[s.status] || 'bg-gray-100 text-gray-800'
                   }`}
                 >
                   {s.status}
-                  <span className="font-bold ml-1">{s.count}</span>
+                  <span className="fw-bold ms-1">{s.count}</span>
                 </span>
               ))}
             </div>
@@ -393,11 +405,11 @@ export default function EmailDashboard() {
       {/* Follow-up List */}
       <div className="card">
         <div className="card-header">
-          <h3 className="card-title flex items-center gap-2">
-            <Bell className="w-4 h-4" />
+          <h3 className="card-title d-flex align-items-center gap-2">
+            <Bell size={16} />
             {txt.followUpList}
             {followUp && followUp.count > 0 && (
-              <span className="badge bg-orange-100 text-orange-800 text-xs font-medium px-2 py-0.5 rounded ml-2">
+              <span className="badge bg-orange-100 text-orange-800 text-xs font-medium px-2 py-0.5 rounded ms-2">
                 {followUp.count}
               </span>
             )}
@@ -405,48 +417,48 @@ export default function EmailDashboard() {
         </div>
         <div className="card-body">
           {sortedFollowUps.length === 0 ? (
-            <div className="text-center py-10 text-gray-400">
-              <Mail className="w-10 h-10 mx-auto mb-3 opacity-30" />
+            <div className="text-center py-5 text-gray-400">
+              <Mail size={40} className="mx-auto mb-2 opacity-30" />
               <p>{txt.noFollowUp}</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+            <div className="overflow-auto">
+              <table className="table table-sm table-vcenter">
                 <thead>
-                  <tr className="border-b text-left text-gray-500">
-                    <th className="pb-2 pr-4 font-medium">{txt.company}</th>
-                    <th className="pb-2 pr-4 font-medium">{txt.email}</th>
-                    <th className="pb-2 pr-4 font-medium">{txt.lastSent}</th>
-                    <th className="pb-2 pr-4 font-medium">{txt.daysSince}</th>
-                    <th className="pb-2 pr-4 font-medium">{txt.round}</th>
-                    <th className="pb-2 font-medium">{txt.action}</th>
+                  <tr>
+                    <th>{txt.company}</th>
+                    <th>{txt.email}</th>
+                    <th>{txt.lastSent}</th>
+                    <th>{txt.daysSince}</th>
+                    <th>{txt.round}</th>
+                    <th>{txt.action}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {sortedFollowUps.map((c) => (
                     <tr
                       key={c.companyId}
-                      className="border-b last:border-0 hover:bg-gray-50 transition-colors"
+                      className="hover:bg-gray-50 transition-colors"
                     >
-                      <td className="py-2.5 pr-4 font-medium text-gray-800">
+                      <td className="fw-medium text-gray-800">
                         {c.companyName}
                         {c.region && (
-                          <span className="ml-1 text-xs text-gray-400">
+                          <span className="ms-1 text-xs text-gray-400">
                             ({c.region})
                           </span>
                         )}
                       </td>
-                      <td className="py-2.5 pr-4 text-gray-600 truncate max-w-[200px]">
+                      <td className="text-gray-600 truncate" style={{ maxWidth: '200px' }}>
                         {c.recipientEmail}
                       </td>
-                      <td className="py-2.5 pr-4 text-gray-500">
+                      <td className="text-gray-500">
                         {new Date(c.lastSentAt).toLocaleDateString(
                           locale === 'ja' ? 'ja-JP' : 'ko-KR'
                         )}
                       </td>
-                      <td className="py-2.5 pr-4">
+                      <td>
                         <span
-                          className={`font-medium ${
+                          className={`fw-medium ${
                             c.daysSince >= 14
                               ? 'text-red-600'
                               : c.daysSince >= 7
@@ -457,13 +469,13 @@ export default function EmailDashboard() {
                           {c.daysSince} {txt.days}
                         </span>
                       </td>
-                      <td className="py-2.5 pr-4">
+                      <td>
                         <span className="badge bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded">
                           {txt.roundLabel} {c.lastContactRound}
                         </span>
                       </td>
-                      <td className="py-2.5">
-                        <button className="text-xs px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                      <td>
+                        <button className="btn btn-primary btn-sm">
                           {txt.sendMail}
                         </button>
                       </td>

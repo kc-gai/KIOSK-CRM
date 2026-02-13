@@ -15,7 +15,7 @@ export default function DeviceChart() {
         <h3 className="card-title">📱 デバイス別分布</h3>
       </div>
       <div className="card-body">
-        <div className="h-64">
+        <div style={{ height: '16rem' }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -41,19 +41,19 @@ export default function DeviceChart() {
             </PieChart>
           </ResponsiveContainer>
         </div>
-        <div className="mt-4 space-y-2">
+        <div className="mt-3 space-y-2">
           {data.map((item) => (
-            <div key={item.name} className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+            <div key={item.name} className="d-flex align-items-center justify-content-between">
+              <div className="d-flex align-items-center gap-2">
                 <div
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: item.color }}
+                  className="rounded-circle"
+                  style={{ width: '0.75rem', height: '0.75rem', backgroundColor: item.color }}
                 />
                 <span className="text-sm text-gray-600">{item.name}</span>
               </div>
               <div className="text-sm">
-                <span className="font-medium">{item.percent}%</span>
-                <span className="text-gray-400 ml-2">({item.value.toLocaleString()})</span>
+                <span className="fw-medium">{item.percent}%</span>
+                <span className="text-gray-400 ms-2">({item.value.toLocaleString()})</span>
               </div>
             </div>
           ))}

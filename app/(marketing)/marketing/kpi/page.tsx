@@ -199,21 +199,21 @@ export default function KPIPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="d-flex align-items-center justify-content-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">📈 {locale === 'ja' ? 'KPI統計' : 'KPI통계'}</h1>
+          <h1 className="text-2xl fw-bold text-gray-900">📈 {locale === 'ja' ? 'KPI統計' : 'KPI통계'}</h1>
           <p className="text-gray-500 mt-1">
             {locale === 'ja' ? `${selectedYear}年 月別KPI追跡` : `${selectedYear}년 월별 KPI 추적`}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="d-flex align-items-center gap-2">
           {/* Year Selector */}
-          <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2">
-            <Calendar className="w-4 h-4 text-gray-500" />
+          <div className="d-flex align-items-center gap-2 bg-white border rounded-lg px-2 py-2">
+            <Calendar size={16} className="text-gray-500" />
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="bg-transparent border-0 text-gray-700 font-medium focus:outline-none cursor-pointer"
+              className="form-select form-select-sm border-0 bg-transparent"
             >
               {AVAILABLE_YEARS.map(year => (
                 <option key={year} value={year}>
@@ -226,10 +226,10 @@ export default function KPIPage() {
           <button
             onClick={fetchAllMonthsData}
             disabled={loading || selectedYear !== currentYear}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn btn-primary d-flex align-items-center gap-2"
             title={selectedYear !== currentYear ? (locale === 'ja' ? '過去のデータは更新できません' : '과거 데이터는 새로고침할 수 없습니다') : ''}
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
             {locale === 'ja' ? '更新' : '새로고침'}
           </button>
         </div>
@@ -237,8 +237,8 @@ export default function KPIPage() {
 
       {/* Year Info Banner */}
       {selectedYear !== currentYear && (
-        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-sm text-yellow-800">
+        <div className="alert alert-warning">
+          <p className="text-sm text-yellow-800 mb-0">
             <strong>📅 {locale === 'ja' ? '過去データ' : '과거 데이터'}:</strong>{' '}
             {locale === 'ja'
               ? `${selectedYear}年の確定データを表示しています。リアルタイム更新は現在年度のみ対応しています。`
@@ -249,34 +249,35 @@ export default function KPIPage() {
       )}
 
       {/* Monthly KPI Tracking Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="card overflow-hidden">
         <button
           onClick={() => toggleSection('monthly')}
-          className="w-full px-6 py-4 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
+          className="w-100 px-4 py-3 d-flex align-items-center justify-content-between bg-light hover\:bg-gray-100 transition-colors"
         >
-          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <h2 className="text-lg fw-semibold text-gray-900 d-flex align-items-center gap-2 mb-0">
             📊 {locale === 'ja' ? `${selectedYear}年 月別KPI追跡テーブル` : `${selectedYear}년 월별 KPI 추적 테이블`}
           </h2>
-          {expandedSections.monthly ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+          {expandedSections.monthly ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
         </button>
 
         {expandedSections.monthly && (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="table table-sm w-100">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="sticky left-0 bg-gray-100 px-4 py-3 text-left font-semibold text-gray-700 min-w-[200px]">
+                  <th className="position-sticky start-0 bg-gray-100 px-3 py-2 text-start fw-semibold text-gray-700" style={{ left: 0, minWidth: '200px' }}>
                     {locale === 'ja' ? '指標' : '지표'}
                   </th>
-                  <th className="px-3 py-3 text-left font-semibold text-gray-700 min-w-[80px]">
+                  <th className="px-2 py-2 text-start fw-semibold text-gray-700" style={{ minWidth: '80px' }}>
                     {locale === 'ja' ? '項目' : '항목'}
                   </th>
                   {months.map(month => (
                     <th
                       key={month}
-                      className={`px-3 py-3 text-center font-semibold min-w-[80px] ${
+                      className={`px-2 py-2 text-center fw-semibold ${
                         selectedYear === currentYear && month === currentMonth ? 'bg-blue-100 text-blue-700' : 'text-gray-700'
                       }`}
+                      style={{ minWidth: '80px' }}
                     >
                       {month}{locale === 'ja' ? '月' : '월'}
                     </th>
@@ -294,8 +295,8 @@ export default function KPIPage() {
                       {/* Section Header for Google Metrics */}
                       {isFirstGoogleMetric && (
                         <tr>
-                          <td colSpan={14} className="bg-blue-600 px-4 py-2">
-                            <span className="text-white font-semibold text-sm flex items-center gap-2">
+                          <td colSpan={14} className="bg-blue-600 px-3 py-2">
+                            <span className="text-white fw-semibold text-sm d-flex align-items-center gap-2">
                               🔍 Google {locale === 'ja' ? '指標' : '지표'} (Search Console / Analytics)
                             </span>
                           </td>
@@ -304,36 +305,36 @@ export default function KPIPage() {
                       {/* Section Header for Conversion Metrics */}
                       {isFirstConversionMetric && (
                         <tr>
-                          <td colSpan={14} className="bg-purple-600 px-4 py-2">
-                            <span className="text-white font-semibold text-sm flex items-center gap-2">
+                          <td colSpan={14} className="bg-purple-600 px-3 py-2">
+                            <span className="text-white fw-semibold text-sm d-flex align-items-center gap-2">
                               💼 KC{locale === 'ja' ? 'コーポレーションサイト' : ' 코퍼레이션 사이트'} ({locale === 'ja' ? 'デモ・問い合わせ・リード' : '데모·문의·리드'})
                             </span>
                           </td>
                         </tr>
                       )}
                       {/* Target Row */}
-                      <tr key={`${metric.id}-target`} className="border-t border-gray-100">
-                        <td rowSpan={4} className="sticky left-0 bg-white px-4 py-2 font-medium text-gray-900 border-r border-gray-200">
-                          <div className="flex items-center gap-2">
-                            <span className={`w-2 h-2 rounded-full ${categoryInfo.color}`}></span>
+                      <tr key={`${metric.id}-target`} className="border-top">
+                        <td rowSpan={4} className="position-sticky start-0 bg-white px-3 py-2 fw-medium text-gray-900 border-end" style={{ left: 0 }}>
+                          <div className="d-flex align-items-center gap-2">
+                            <span className={`rounded-full ${categoryInfo.color}`} style={{ width: 8, height: 8, display: 'inline-block' }}></span>
                             {getMetricName(metric)}
                           </div>
                         </td>
-                        <td className="px-3 py-2 text-gray-500 bg-gray-50">Target</td>
+                        <td className="px-2 py-2 text-gray-500 bg-gray-50">Target</td>
                         {months.map(month => (
-                          <td key={month} className={`px-3 py-2 text-center ${selectedYear === currentYear && month === currentMonth ? 'bg-blue-50' : ''}`}>
+                          <td key={month} className={`px-2 py-2 text-center ${selectedYear === currentYear && month === currentMonth ? 'bg-blue-50' : ''}`}>
                             {formatNumber(metric.months[month]?.target)}
                           </td>
                         ))}
                       </tr>
                       {/* Actual Row */}
                       <tr key={`${metric.id}-actual`} className="bg-white">
-                        <td className="px-3 py-2 text-gray-500 bg-gray-50">Actual</td>
+                        <td className="px-2 py-2 text-gray-500 bg-gray-50">Actual</td>
                         {months.map(month => {
                           const actual = getActualValue(metric, month)
                           const isCurrentMonth = selectedYear === currentYear && month === currentMonth
                           return (
-                            <td key={month} className={`px-3 py-2 text-center font-medium ${isCurrentMonth ? 'bg-blue-50' : ''}`}>
+                            <td key={month} className={`px-2 py-2 text-center fw-medium ${isCurrentMonth ? 'bg-blue-50' : ''}`}>
                               {formatNumber(actual)}
                             </td>
                           )
@@ -341,7 +342,7 @@ export default function KPIPage() {
                       </tr>
                       {/* Achievement Rate Row */}
                       <tr key={`${metric.id}-rate`} className="bg-white">
-                        <td className="px-3 py-2 text-gray-500 bg-gray-50">
+                        <td className="px-2 py-2 text-gray-500 bg-gray-50">
                           {locale === 'ja' ? '達成率' : '달성률'}
                         </td>
                         {months.map(month => {
@@ -351,21 +352,21 @@ export default function KPIPage() {
                           const colorClass = actual ? getAchievementColor(rate) : ''
                           const isCurrentMonth = selectedYear === currentYear && month === currentMonth
                           return (
-                            <td key={month} className={`px-3 py-2 text-center ${isCurrentMonth ? 'bg-blue-50' : ''}`}>
+                            <td key={month} className={`px-2 py-2 text-center ${isCurrentMonth ? 'bg-blue-50' : ''}`}>
                               {actual !== undefined ? (
-                                <span className={`px-2 py-1 rounded text-xs font-medium ${colorClass}`}>
+                                <span className={`px-2 py-1 rounded text-xs fw-medium ${colorClass}`}>
                                   {formatPercent(rate)}
                                 </span>
                               ) : (
-                                <span className="text-gray-300">-</span>
+                                <span className="text-gray-400">-</span>
                               )}
                             </td>
                           )
                         })}
                       </tr>
                       {/* Difference Row */}
-                      <tr key={`${metric.id}-diff`} className="bg-white border-b border-gray-200">
-                        <td className="px-3 py-2 text-gray-500 bg-gray-50">
+                      <tr key={`${metric.id}-diff`} className="bg-white border-bottom">
+                        <td className="px-2 py-2 text-gray-500 bg-gray-50">
                           {locale === 'ja' ? '差異' : '차이'}
                         </td>
                         {months.map(month => {
@@ -375,13 +376,13 @@ export default function KPIPage() {
                           const isPositive = diff >= 0
                           const isCurrentMonth = selectedYear === currentYear && month === currentMonth
                           return (
-                            <td key={month} className={`px-3 py-2 text-center ${isCurrentMonth ? 'bg-blue-50' : ''}`}>
+                            <td key={month} className={`px-2 py-2 text-center ${isCurrentMonth ? 'bg-blue-50' : ''}`}>
                               {actual !== undefined ? (
-                                <span className={`text-xs font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                                <span className={`text-xs fw-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
                                   {isPositive ? '+' : ''}{formatNumber(diff)}
                                 </span>
                               ) : (
-                                <span className="text-gray-300">-</span>
+                                <span className="text-gray-400">-</span>
                               )}
                             </td>
                           )
@@ -397,47 +398,43 @@ export default function KPIPage() {
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-4 text-sm">
-        <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-full bg-blue-500"></span>
+      <div className="d-flex flex-wrap gap-3 text-sm">
+        <div className="d-flex align-items-center gap-2">
+          <span className="rounded-full bg-blue-500" style={{ width: 12, height: 12, display: 'inline-block' }}></span>
           <span>Search Console</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-full bg-green-500"></span>
+        <div className="d-flex align-items-center gap-2">
+          <span className="rounded-full bg-green-500" style={{ width: 12, height: 12, display: 'inline-block' }}></span>
           <span>Google Analytics</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-full bg-purple-500"></span>
+        <div className="d-flex align-items-center gap-2">
+          <span className="rounded-full bg-purple-500" style={{ width: 12, height: 12, display: 'inline-block' }}></span>
           <span>{locale === 'ja' ? 'コンバージョン' : '전환'}</span>
         </div>
-        <div className="flex items-center gap-2 ml-4">
-          <span className="px-2 py-0.5 rounded text-xs bg-green-50 text-green-600">≥100%</span>
-          <span className="px-2 py-0.5 rounded text-xs bg-yellow-50 text-yellow-600">≥80%</span>
-          <span className="px-2 py-0.5 rounded text-xs bg-red-50 text-red-600">&lt;80%</span>
+        <div className="d-flex align-items-center gap-2 ms-3">
+          <span className="px-2 py-1 rounded text-xs bg-green-50 text-green-600">≥100%</span>
+          <span className="px-2 py-1 rounded text-xs bg-yellow-50 text-yellow-600">≥80%</span>
+          <span className="px-2 py-1 rounded text-xs bg-red-50 text-red-600">&lt;80%</span>
         </div>
       </div>
 
       {/* Slack Data Details Section (2026년부터만 표시) */}
       {selectedYear >= 2026 && (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="card overflow-hidden">
           <button
             onClick={() => toggleSection('slackDetails')}
-            className="w-full px-6 py-4 flex items-center justify-between bg-purple-50 hover:bg-purple-100 transition-colors"
+            className="w-100 px-4 py-3 d-flex align-items-center justify-content-between bg-purple-50 hover\:bg-purple-100 transition-colors"
           >
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <h2 className="text-lg fw-semibold text-gray-900 d-flex align-items-center gap-2 mb-0">
               💬 Slack {locale === 'ja' ? 'リード詳細' : '리드 상세'}
-              {slackLoading && <RefreshCw className="w-4 h-4 animate-spin text-purple-500" />}
-              <span className="relative group">
-                <Info className="w-4 h-4 text-gray-400 cursor-help" />
-                <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none">
-                  {locale === 'ja'
-                    ? '💡 カウント条件: Slackに新規投稿 + スレッド返信1件以上'
-                    : '💡 카운트 조건: Slack에 신규 게시 + 스레드 댓글 1건 이상'}
-                  <span className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></span>
-                </span>
+              {slackLoading && <RefreshCw size={16} className="animate-spin text-purple-600" />}
+              <span title={locale === 'ja'
+                ? 'カウント条件: Slackに新規投稿 + スレッド返信1件以上'
+                : '카운트 조건: Slack에 신규 게시 + 스레드 댓글 1건 이상'}>
+                <Info size={16} className="text-gray-400" style={{ cursor: 'help' }} />
               </span>
             </h2>
-            <div className="flex items-center gap-3">
+            <div className="d-flex align-items-center gap-2">
               {slackError ? (
                 <span className="text-xs text-red-500">{locale === 'ja' ? '接続エラー' : '연결 오류'}</span>
               ) : Object.keys(slackData).length > 0 ? (
@@ -447,101 +444,99 @@ export default function KPIPage() {
               ) : (
                 <span className="text-xs text-gray-500">{locale === 'ja' ? '未設定' : '미설정'}</span>
               )}
-              {expandedSections.slackDetails ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+              {expandedSections.slackDetails ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
             </div>
           </button>
 
           {expandedSections.slackDetails && (
-            <div className="p-6">
+            <div className="p-4">
               {slackError ? (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-800">
+                <div className="alert alert-danger">
+                  <p className="text-sm text-red-800 mb-0">
                     <strong>⚠️ {locale === 'ja' ? 'エラー' : '오류'}:</strong> {slackError}
                   </p>
-                  <p className="text-xs text-red-600 mt-2">
+                  <p className="text-xs text-red-600 mt-2 mb-0">
                     {locale === 'ja'
                       ? '環境変数 SLACK_BOT_TOKEN, SLACK_DEMO_CHANNEL_ID, SLACK_INQUIRY_CHANNEL_ID を設定してください。'
                       : '환경변수 SLACK_BOT_TOKEN, SLACK_DEMO_CHANNEL_ID, SLACK_INQUIRY_CHANNEL_ID를 설정해주세요.'}
                   </p>
                 </div>
               ) : Object.keys(slackData).length === 0 ? (
-                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-sm text-yellow-800">
+                <div className="alert alert-warning">
+                  <p className="text-sm text-yellow-800 mb-0">
                     {locale === 'ja'
                       ? 'Slack連動が設定されていません。環境変数を設定してください。'
                       : 'Slack 연동이 설정되지 않았습니다. 환경변수를 설정해주세요.'}
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="row g-4">
                   {/* デモ申し込み Details */}
-                  <div className="border border-gray-200 rounded-lg overflow-hidden">
-                    <div className="px-4 py-3 bg-blue-50 border-b border-gray-200">
-                      <h3 className="font-medium text-gray-900 flex items-center gap-2">
-                        📅 {locale === 'ja' ? 'デモ申し込み' : '데모 신청'}
-                        <span className="text-blue-600">
-                          ({slackData[currentMonth]?.demoCount || 0}{locale === 'ja' ? '件' : '건'})
-                        </span>
-                        <span className="relative group">
-                          <Info className="w-3.5 h-3.5 text-gray-400 cursor-help" />
-                          <span className="absolute left-0 bottom-full mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                            {locale === 'ja' ? 'TimeRexからの予定追加 + 返信1件以上' : 'TimeRex 예약 + 댓글 1건 이상'}
+                  <div className="col-12 col-lg-6">
+                    <div className="border rounded-lg overflow-hidden">
+                      <div className="px-3 py-2 bg-blue-50 border-bottom">
+                        <h3 className="fw-medium text-gray-900 d-flex align-items-center gap-2 mb-0">
+                          📅 {locale === 'ja' ? 'デモ申し込み' : '데모 신청'}
+                          <span className="text-blue-600">
+                            ({slackData[currentMonth]?.demoCount || 0}{locale === 'ja' ? '件' : '건'})
                           </span>
-                        </span>
-                      </h3>
-                      <p className="text-xs text-gray-500">#07_デモ依頼</p>
-                    </div>
-                    <div className="max-h-64 overflow-y-auto">
-                      {slackData[currentMonth]?.demoDetails?.length > 0 ? (
-                        <ul className="divide-y divide-gray-100">
-                          {slackData[currentMonth].demoDetails.map((item, idx) => (
-                            <li key={idx} className="px-4 py-2 text-sm">
-                              <span className="text-gray-500">{item.date}</span>
-                              {item.company && <span className="ml-2 font-medium">{item.company}</span>}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="px-4 py-6 text-center text-gray-400 text-sm">
-                          {locale === 'ja' ? '今月のデータはありません' : '이번달 데이터가 없습니다'}
-                        </p>
-                      )}
+                          <span title={locale === 'ja' ? 'TimeRexからの予定追加 + 返信1件以上' : 'TimeRex 예약 + 댓글 1건 이상'}>
+                            <Info size={14} className="text-gray-400" style={{ cursor: 'help' }} />
+                          </span>
+                        </h3>
+                        <p className="text-xs text-gray-500 mb-0">#07_デモ依頼</p>
+                      </div>
+                      <div style={{ maxHeight: '16rem', overflowY: 'auto' }}>
+                        {slackData[currentMonth]?.demoDetails?.length > 0 ? (
+                          <ul className="list-unstyled divide-y mb-0">
+                            {slackData[currentMonth].demoDetails.map((item, idx) => (
+                              <li key={idx} className="px-3 py-2 text-sm">
+                                <span className="text-gray-500">{item.date}</span>
+                                {item.company && <span className="ms-2 fw-medium">{item.company}</span>}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="px-3 py-4 text-center text-gray-400 text-sm mb-0">
+                            {locale === 'ja' ? '今月のデータはありません' : '이번달 데이터가 없습니다'}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
 
                   {/* お問合せ Details */}
-                  <div className="border border-gray-200 rounded-lg overflow-hidden">
-                    <div className="px-4 py-3 bg-green-50 border-b border-gray-200">
-                      <h3 className="font-medium text-gray-900 flex items-center gap-2">
-                        📧 {locale === 'ja' ? 'お問合せ' : '문의'}
-                        <span className="text-green-600">
-                          ({slackData[currentMonth]?.inquiryCount || 0}{locale === 'ja' ? '件' : '건'})
-                        </span>
-                        <span className="relative group">
-                          <Info className="w-3.5 h-3.5 text-gray-400 cursor-help" />
-                          <span className="absolute left-0 bottom-full mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                            {locale === 'ja' ? 'Jotformフォーム送信 + 返信1件以上' : 'Jotform 양식 제출 + 댓글 1건 이상'}
+                  <div className="col-12 col-lg-6">
+                    <div className="border rounded-lg overflow-hidden">
+                      <div className="px-3 py-2 bg-green-50 border-bottom">
+                        <h3 className="fw-medium text-gray-900 d-flex align-items-center gap-2 mb-0">
+                          📧 {locale === 'ja' ? 'お問合せ' : '문의'}
+                          <span className="text-green-600">
+                            ({slackData[currentMonth]?.inquiryCount || 0}{locale === 'ja' ? '件' : '건'})
                           </span>
-                        </span>
-                      </h3>
-                      <p className="text-xs text-gray-500">#08_お問い合わせ</p>
-                    </div>
-                    <div className="max-h-64 overflow-y-auto">
-                      {slackData[currentMonth]?.inquiryDetails?.length > 0 ? (
-                        <ul className="divide-y divide-gray-100">
-                          {slackData[currentMonth].inquiryDetails.map((item, idx) => (
-                            <li key={idx} className="px-4 py-2 text-sm">
-                              <span className="text-gray-500">{item.date}</span>
-                              {item.person && <span className="ml-2 font-medium">{item.person}</span>}
-                              {item.company && <span className="ml-1 text-gray-400">({item.company})</span>}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="px-4 py-6 text-center text-gray-400 text-sm">
-                          {locale === 'ja' ? '今月のデータはありません' : '이번달 데이터가 없습니다'}
-                        </p>
-                      )}
+                          <span title={locale === 'ja' ? 'Jotformフォーム送信 + 返信1件以上' : 'Jotform 양식 제출 + 댓글 1건 이상'}>
+                            <Info size={14} className="text-gray-400" style={{ cursor: 'help' }} />
+                          </span>
+                        </h3>
+                        <p className="text-xs text-gray-500 mb-0">#08_お問い合わせ</p>
+                      </div>
+                      <div style={{ maxHeight: '16rem', overflowY: 'auto' }}>
+                        {slackData[currentMonth]?.inquiryDetails?.length > 0 ? (
+                          <ul className="list-unstyled divide-y mb-0">
+                            {slackData[currentMonth].inquiryDetails.map((item, idx) => (
+                              <li key={idx} className="px-3 py-2 text-sm">
+                                <span className="text-gray-500">{item.date}</span>
+                                {item.person && <span className="ms-2 fw-medium">{item.person}</span>}
+                                {item.company && <span className="ms-1 text-gray-400">({item.company})</span>}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="px-3 py-4 text-center text-gray-400 text-sm mb-0">
+                            {locale === 'ja' ? '今月のデータはありません' : '이번달 데이터가 없습니다'}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -552,38 +547,42 @@ export default function KPIPage() {
       )}
 
       {/* Looker Studio Section (Collapsible) */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="card overflow-hidden">
         <button
           onClick={() => toggleSection('looker')}
-          className="w-full px-6 py-4 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
+          className="w-100 px-4 py-3 d-flex align-items-center justify-content-between bg-light hover\:bg-gray-100 transition-colors"
         >
-          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <h2 className="text-lg fw-semibold text-gray-900 d-flex align-items-center gap-2 mb-0">
             📈 Looker Studio {locale === 'ja' ? '詳細レポート' : '상세 리포트'}
           </h2>
-          {expandedSections.looker ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+          {expandedSections.looker ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
         </button>
 
         {expandedSections.looker && (
-          <div className="p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <LookerEmbed
-                title={`📊 GA4 ${locale === 'ja' ? 'レポート' : '리포트'}`}
-                embedUrl={LOOKER_KPI_URL}
-                height={800}
-              />
-              <LookerEmbed
-                title={`🔍 Search Console ${locale === 'ja' ? 'レポート' : '리포트'}`}
-                embedUrl={LOOKER_GSC_KPI_URL}
-                height={800}
-              />
+          <div className="p-4">
+            <div className="row g-3">
+              <div className="col-12 col-lg-6">
+                <LookerEmbed
+                  title={`📊 GA4 ${locale === 'ja' ? 'レポート' : '리포트'}`}
+                  embedUrl={LOOKER_KPI_URL}
+                  height={800}
+                />
+              </div>
+              <div className="col-12 col-lg-6">
+                <LookerEmbed
+                  title={`🔍 Search Console ${locale === 'ja' ? 'レポート' : '리포트'}`}
+                  embedUrl={LOOKER_GSC_KPI_URL}
+                  height={800}
+                />
+              </div>
             </div>
           </div>
         )}
       </div>
 
       {/* Info */}
-      <div className="p-4 bg-green-50 border border-green-200 rounded-lg space-y-2">
-        <p className="text-sm text-green-800">
+      <div className="alert alert-success space-y-2">
+        <p className="text-sm text-green-800 mb-0">
           <strong>✅ {locale === 'ja' ? '自動連動' : '자동 연동'}:</strong>{' '}
           {locale === 'ja'
             ? '現在年度の指標はAPIから自動取得されます。月別目標は lib/kpi-targets.ts で管理できます。'
@@ -591,7 +590,7 @@ export default function KPIPage() {
           }
         </p>
         {selectedYear >= 2026 && (
-          <p className="text-sm text-purple-800">
+          <p className="text-sm text-purple-800 mb-0">
             <strong>💬 Slack {locale === 'ja' ? '連動' : '연동'}:</strong>{' '}
             {locale === 'ja'
               ? 'デモ申し込み・お問合せは Slack チャンネルから自動カウントされます（スレッド1件以上が条件）'

@@ -36,9 +36,9 @@ function MarketingSidebar() {
             label: t.inboundMarketing,
             children: [
                 { icon: 'ti-target', label: t.contentStrategy, href: '/marketing/strategy', desc: t.contentStrategyDesc },
-                { icon: 'ti-pencil', label: t.contentProduction, href: '/marketing/actions/publishing', desc: t.contentProductionDesc },
+                { icon: 'ti-writing', label: t.contentProduction, href: '/marketing/actions/publishing', desc: t.contentProductionDesc },
                 { icon: 'ti-refresh', label: t.contentOptimizationMenu, href: '/marketing/content-optimization', desc: t.contentOptimizationMenuDesc },
-                { icon: 'ti-file-analytics', label: t.seoAnalysis, href: '/marketing/seo-report', desc: t.seoAnalysisDesc },
+                { icon: 'ti-chart-dots', label: t.seoAnalysis, href: '/marketing/seo-report', desc: t.seoAnalysisDesc },
             ],
         },
         {
@@ -53,18 +53,18 @@ function MarketingSidebar() {
             label: t.analyticsMenu,
             children: [
                 { icon: 'ti-trending-up', label: t.performanceStatus, href: '/marketing', desc: t.performanceStatusDesc },
-                { icon: 'ti-target', label: t.kpiTracking, href: '/marketing/kpi', desc: t.kpiTrackingDesc },
+                { icon: 'ti-bullseye', label: t.kpiTracking, href: '/marketing/kpi', desc: t.kpiTrackingDesc },
             ],
         },
         {
             key: 'dev-tasks',
-            icon: 'ti-code',
+            icon: 'ti-list-check',
             label: t.devTasks,
             href: '/marketing/dev-tasks',
         },
         {
             key: 'work-logs',
-            icon: 'ti-calendar-event',
+            icon: 'ti-clock-record',
             label: t.workLogs,
             href: '/marketing/work-logs',
         },

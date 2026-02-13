@@ -85,7 +85,7 @@ function formatDate(date: Date): string {
   return `${y}-${m}-${d}`
 }
 
-const CATEGORY_COLORS: Record<string, { bg: string; text: string; icon: React.FC<{ className?: string }> }> = {
+const CATEGORY_COLORS: Record<string, { bg: string; text: string; icon: React.FC<{ className?: string; size?: number }> }> = {
   coding: { bg: 'bg-green-100', text: 'text-green-700', icon: Code2 },
   manual: { bg: 'bg-yellow-100', text: 'text-yellow-700', icon: Wrench },
   meeting: { bg: 'bg-blue-100', text: 'text-blue-700', icon: Users },
@@ -136,26 +136,26 @@ function Calendar({
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
+    <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-3">
       {/* Month header */}
-      <div className="flex items-center justify-between mb-4">
-        <button onClick={prevMonth} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-          <ChevronLeft className="w-4 h-4 text-gray-500" />
+      <div className="d-flex align-items-center justify-content-between mb-3">
+        <button onClick={prevMonth} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
+          <ChevronLeft size={16} className="text-gray-500" />
         </button>
-        <span className="text-sm font-semibold text-gray-800">
+        <span className="text-sm fw-semibold text-gray-800">
           {year}{isJa ? '年' : '년'} {month + 1}{isJa ? '月' : '월'}
         </span>
-        <button onClick={nextMonth} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-          <ChevronRight className="w-4 h-4 text-gray-500" />
+        <button onClick={nextMonth} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
+          <ChevronRight size={16} className="text-gray-500" />
         </button>
       </div>
 
       {/* Day headers */}
-      <div className="grid grid-cols-7 gap-1 mb-1">
+      <div className="row g-1 mb-1">
         {dayHeaders.map((d, i) => (
           <div
             key={d}
-            className={`text-center text-xs font-medium py-1 ${
+            className={`col text-center text-xs fw-medium py-1 ${
               i === 0 ? 'text-red-400' : i === 6 ? 'text-blue-400' : 'text-gray-400'
             }`}
           >
@@ -165,9 +165,9 @@ function Calendar({
       </div>
 
       {/* Day cells */}
-      <div className="grid grid-cols-7 gap-1">
+      <div className="row g-1">
         {cells.map((day, idx) => {
-          if (day === null) return <div key={`empty-${idx}`} />
+          if (day === null) return <div key={`empty-${idx}`} className="col" />
 
           const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
           const isSelected = dateStr === selectedDate
@@ -176,41 +176,42 @@ function Calendar({
           const dayOfWeek = (firstDayOfWeek + day - 1) % 7
 
           return (
-            <button
-              key={dateStr}
-              onClick={() => onDateSelect(dateStr)}
-              className={`relative aspect-square flex flex-col items-center justify-center rounded-lg text-sm transition-all ${
-                isSelected
-                  ? 'bg-blue-600 text-white font-bold shadow-sm'
-                  : isToday
-                    ? 'bg-blue-50 text-blue-700 font-semibold ring-1 ring-blue-300'
-                    : 'hover:bg-gray-50 text-gray-700'
-              } ${dayOfWeek === 0 && !isSelected ? 'text-red-500' : ''} ${dayOfWeek === 6 && !isSelected ? 'text-blue-500' : ''}`}
-            >
-              <span className="text-xs">{day}</span>
-              {info && (
-                <div className="flex gap-0.5 mt-0.5">
-                  {info.categories.includes('coding') && (
-                    <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-green-300' : 'bg-green-500'}`} />
-                  )}
-                  {info.categories.some(c => c !== 'coding') && (
-                    <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-yellow-300' : 'bg-yellow-500'}`} />
-                  )}
-                </div>
-              )}
-            </button>
+            <div key={dateStr} className="col">
+              <button
+                onClick={() => onDateSelect(dateStr)}
+                className={`position-relative aspect-square d-flex flex-column align-items-center justify-content-center rounded-lg text-sm transition-all w-100 ${
+                  isSelected
+                    ? 'bg-blue-600 text-white fw-bold shadow-sm'
+                    : isToday
+                      ? 'bg-blue-50 text-blue-700 fw-semibold ring-1 ring-blue-300'
+                      : 'hover:bg-gray-50 text-gray-700'
+                } ${dayOfWeek === 0 && !isSelected ? 'text-red-500' : ''} ${dayOfWeek === 6 && !isSelected ? 'text-blue-500' : ''}`}
+              >
+                <span className="text-xs">{day}</span>
+                {info && (
+                  <div className="d-flex gap-1 mt-1" style={{ gap: '2px' }}>
+                    {info.categories.includes('coding') && (
+                      <span className={`rounded-full ${isSelected ? 'bg-green-300' : 'bg-green-500'}`} style={{ width: 6, height: 6 }} />
+                    )}
+                    {info.categories.some(c => c !== 'coding') && (
+                      <span className={`rounded-full ${isSelected ? 'bg-yellow-300' : 'bg-yellow-500'}`} style={{ width: 6, height: 6 }} />
+                    )}
+                  </div>
+                )}
+              </button>
+            </div>
           )
         })}
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 mt-4 pt-3 border-t border-gray-100">
-        <div className="flex items-center gap-1.5 text-xs text-gray-500">
-          <span className="w-2 h-2 rounded-full bg-green-500" />
+      <div className="d-flex align-items-center gap-3 mt-3 pt-2 border-t border-gray-100">
+        <div className="d-flex align-items-center gap-1 text-xs text-gray-500" style={{ gap: '6px' }}>
+          <span className="rounded-full bg-green-500" style={{ width: 8, height: 8 }} />
           {isJa ? 'コーディング' : '코딩'}
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-gray-500">
-          <span className="w-2 h-2 rounded-full bg-yellow-500" />
+        <div className="d-flex align-items-center gap-1 text-xs text-gray-500" style={{ gap: '6px' }}>
+          <span className="rounded-full bg-yellow-500" style={{ width: 8, height: 8 }} />
           {isJa ? 'その他' : '기타'}
         </div>
       </div>
@@ -323,79 +324,80 @@ function WorkLogModal({
   ]
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
+    <div className="position-fixed inset-0 z-50 d-flex align-items-center justify-content-center bg-black/50" onClick={onClose}>
       <div
-        className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4"
+        className="bg-white rounded-xl shadow-2xl w-100 overflow-auto m-3"
+        style={{ maxWidth: '42rem', maxHeight: '90vh' }}
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-bold text-gray-900">
+        <div className="d-flex align-items-center justify-content-between px-4 py-3 border-bottom border-gray-200">
+          <h3 className="text-lg fw-bold text-gray-900">
             {editLog
               ? (isJa ? '作業日誌を編集' : '작업일지 수정')
               : (isJa ? '作業日誌を追加' : '작업일지 추가')}
           </h3>
-          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg">
-            <X className="w-5 h-5 text-gray-500" />
+          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-lg">
+            <X size={20} className="text-gray-500" />
           </button>
         </div>
 
-        <div className="px-6 py-4 space-y-4">
+        <div className="px-4 py-3 space-y-4">
           {/* Title */}
           <div>
-            <label className="text-xs font-medium text-gray-600 block mb-1">
+            <label className="text-xs fw-medium text-gray-600 d-block mb-1">
               {isJa ? 'タイトル' : '제목'} *
             </label>
             <input
               value={title}
               onChange={e => setTitle(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="form-control form-control-sm"
               placeholder={isJa ? '作業内容を入力' : '작업 내용을 입력'}
             />
           </div>
 
           {/* Date + Time + Category row */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div>
-              <label className="text-xs font-medium text-gray-600 block mb-1">
+          <div className="row g-2">
+            <div className="col-6 col-sm-3">
+              <label className="text-xs fw-medium text-gray-600 d-block mb-1">
                 {isJa ? '日付' : '날짜'}
               </label>
               <input
                 type="date"
                 value={date}
                 onChange={e => setDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                className="form-control form-control-sm"
               />
             </div>
-            <div>
-              <label className="text-xs font-medium text-gray-600 block mb-1">
+            <div className="col-6 col-sm-3">
+              <label className="text-xs fw-medium text-gray-600 d-block mb-1">
                 {isJa ? '開始' : '시작'}
               </label>
               <input
                 type="time"
                 value={startTime}
                 onChange={e => setStartTime(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                className="form-control form-control-sm"
               />
             </div>
-            <div>
-              <label className="text-xs font-medium text-gray-600 block mb-1">
+            <div className="col-6 col-sm-3">
+              <label className="text-xs fw-medium text-gray-600 d-block mb-1">
                 {isJa ? '終了' : '종료'}
               </label>
               <input
                 type="time"
                 value={endTime}
                 onChange={e => setEndTime(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                className="form-control form-control-sm"
               />
             </div>
-            <div>
-              <label className="text-xs font-medium text-gray-600 block mb-1">
+            <div className="col-6 col-sm-3">
+              <label className="text-xs fw-medium text-gray-600 d-block mb-1">
                 {isJa ? '区分' : '구분'}
               </label>
               <select
                 value={category}
                 onChange={e => setCategory(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                className="form-select form-select-sm"
               >
                 {categories.map(c => (
                   <option key={c.value} value={c.value}>{c.label}</option>
@@ -405,37 +407,37 @@ function WorkLogModal({
           </div>
 
           {/* Author + Tools + Lines */}
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="text-xs font-medium text-gray-600 block mb-1">
+          <div className="row g-2">
+            <div className="col-md-4">
+              <label className="text-xs fw-medium text-gray-600 d-block mb-1">
                 {isJa ? '担当者' : '작성자'}
               </label>
               <input
                 value={author}
                 onChange={e => setAuthor(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                className="form-control form-control-sm"
               />
             </div>
-            <div>
-              <label className="text-xs font-medium text-gray-600 block mb-1">
+            <div className="col-md-4">
+              <label className="text-xs fw-medium text-gray-600 d-block mb-1">
                 {isJa ? 'ツール' : '도구'} (,{isJa ? '区切り' : '구분'})
               </label>
               <input
                 value={toolsStr}
                 onChange={e => setToolsStr(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                className="form-control form-control-sm"
                 placeholder="Next.js, TypeScript"
               />
             </div>
-            <div>
-              <label className="text-xs font-medium text-gray-600 block mb-1">
+            <div className="col-md-4">
+              <label className="text-xs fw-medium text-gray-600 d-block mb-1">
                 {isJa ? '変更行数' : '변경 줄 수'}
               </label>
               <input
                 type="number"
                 value={linesChanged}
                 onChange={e => setLinesChanged(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                className="form-control form-control-sm"
                 placeholder="0"
               />
             </div>
@@ -443,54 +445,54 @@ function WorkLogModal({
 
           {/* Description */}
           <div>
-            <label className="text-xs font-medium text-gray-600 block mb-1">
+            <label className="text-xs fw-medium text-gray-600 d-block mb-1">
               {isJa ? '説明' : '설명'}
             </label>
             <input
               value={description}
               onChange={e => setDescription(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+              className="form-control form-control-sm"
               placeholder={isJa ? '作業の概要' : '작업 개요'}
             />
           </div>
 
           {/* Completed Tasks */}
           <div>
-            <label className="text-xs font-medium text-gray-600 block mb-1">
+            <label className="text-xs fw-medium text-gray-600 d-block mb-1">
               {isJa ? '完了した作業' : '완료한 작업'} ({isJa ? '1行1件' : '한 줄에 하나씩'})
             </label>
             <textarea
               value={completedStr}
               onChange={e => setCompletedStr(e.target.value)}
               rows={4}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-mono"
+              className="form-control form-control-sm font-mono"
               placeholder={isJa ? '完了した作業を1行ずつ入力' : '완료한 작업을 한 줄씩 입력'}
             />
           </div>
 
           {/* Modified + Created Files */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-medium text-gray-600 block mb-1">
+          <div className="row g-2">
+            <div className="col-6">
+              <label className="text-xs fw-medium text-gray-600 d-block mb-1">
                 {isJa ? '修正ファイル' : '수정한 파일'} ({isJa ? '1行1件' : '한 줄에 하나씩'})
               </label>
               <textarea
                 value={modifiedStr}
                 onChange={e => setModifiedStr(e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-mono"
+                className="form-control form-control-sm font-mono"
                 placeholder="page.tsx"
               />
             </div>
-            <div>
-              <label className="text-xs font-medium text-gray-600 block mb-1">
+            <div className="col-6">
+              <label className="text-xs fw-medium text-gray-600 d-block mb-1">
                 {isJa ? '作成ファイル' : '생성한 파일'} ({isJa ? '1行1件' : '한 줄에 하나씩'})
               </label>
               <textarea
                 value={createdStr}
                 onChange={e => setCreatedStr(e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-mono"
+                className="form-control form-control-sm font-mono"
                 placeholder="new-file.tsx"
               />
             </div>
@@ -498,30 +500,30 @@ function WorkLogModal({
 
           {/* Next Tasks */}
           <div>
-            <label className="text-xs font-medium text-gray-600 block mb-1">
+            <label className="text-xs fw-medium text-gray-600 d-block mb-1">
               {isJa ? '次の作業' : '다음 작업'} ({isJa ? '1行1件' : '한 줄에 하나씩'})
             </label>
             <textarea
               value={nextStr}
               onChange={e => setNextStr(e.target.value)}
               rows={2}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-mono"
+              className="form-control form-control-sm font-mono"
               placeholder={isJa ? '次に取り組む作業' : '다음에 진행할 작업'}
             />
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200">
+        <div className="d-flex align-items-center justify-content-end gap-2 px-4 py-3 border-top border-gray-200">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            className="btn btn-sm btn-outline-secondary"
           >
             {isJa ? 'キャンセル' : '취소'}
           </button>
           <button
             onClick={handleSave}
             disabled={!title.trim() || saving}
-            className="px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50"
+            className="btn btn-sm btn-primary"
           >
             {saving
               ? (isJa ? '保存中...' : '저장 중...')
@@ -561,37 +563,37 @@ function WorkLogCard({
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="px-5 py-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
-              <CatIcon className={`w-4 h-4 ${catStyle.text}`} />
-              <h3 className="text-sm font-semibold text-gray-900 truncate">{log.title}</h3>
+      <div className="px-3 py-3">
+        <div className="d-flex align-items-start justify-content-between gap-2">
+          <div className="flex-fill" style={{ minWidth: 0 }}>
+            <div className="d-flex align-items-center gap-2 mb-2">
+              <CatIcon size={16} className={catStyle.text} />
+              <h3 className="text-sm fw-semibold text-gray-900 truncate">{log.title}</h3>
               {/* Progress bar */}
-              <div className="w-16 h-2 bg-gray-100 rounded-full flex-shrink-0 ml-auto">
+              <div className="bg-gray-100 rounded-full flex-shrink-0 ms-auto" style={{ width: '4rem', height: '0.5rem' }}>
                 <div className="h-2 bg-green-500 rounded-full" style={{ width: '100%' }} />
               </div>
             </div>
 
             {/* Meta row */}
-            <div className="flex items-center gap-3 flex-wrap text-xs text-gray-500">
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${catStyle.bg} ${catStyle.text}`}>
+            <div className="d-flex align-items-center gap-2 flex-wrap text-xs text-gray-500">
+              <span className={`px-2 py-0 rounded-full text-[10px] fw-medium ${catStyle.bg} ${catStyle.text}`}>
                 {log.author}
               </span>
               {log.module && log.module !== 'general' && (
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                <span className={`px-2 py-0 rounded-full text-[10px] fw-medium ${
                   log.module === 'kiosk' ? 'bg-indigo-100 text-indigo-700' : 'bg-cyan-100 text-cyan-700'
                 }`}>
                   {log.module === 'kiosk' ? 'Kiosk' : 'Marketing'}
                 </span>
               )}
               {log.startTime && log.endTime && (
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
+                <span className="d-flex align-items-center gap-1">
+                  <Clock size={12} />
                   {log.startTime} ~ {log.endTime}
                 </span>
               )}
-              <span className="font-medium">{log.workHours}{isJa ? '時間' : '시간'}</span>
+              <span className="fw-medium">{log.workHours}{isJa ? '時間' : '시간'}</span>
               {log.linesChanged && (
                 <span>{isJa ? '変更' : '변경'} {log.linesChanged}{isJa ? '行' : '줄'}</span>
               )}
@@ -599,10 +601,10 @@ function WorkLogCard({
 
             {/* Tools */}
             {tools.length > 0 && (
-              <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+              <div className="d-flex align-items-center gap-1 mt-2 flex-wrap" style={{ gap: '6px' }}>
                 <span className="text-xs text-gray-400">{isJa ? 'ツール:' : '도구:'}</span>
                 {tools.map((tool, i) => (
-                  <span key={i} className="px-2 py-0.5 text-[10px] bg-gray-100 text-gray-600 rounded font-medium">
+                  <span key={i} className="px-2 py-0 text-[10px] bg-gray-100 text-gray-600 rounded fw-medium">
                     {tool}
                   </span>
                 ))}
@@ -611,15 +613,15 @@ function WorkLogCard({
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <button onClick={onEdit} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-              <Pencil className="w-3.5 h-3.5 text-gray-400" />
+          <div className="d-flex align-items-center gap-1 flex-shrink-0">
+            <button onClick={onEdit} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
+              <Pencil size={14} className="text-gray-400" />
             </button>
-            <button onClick={onDelete} className="p-1.5 hover:bg-red-50 rounded-lg transition-colors">
-              <Trash2 className="w-3.5 h-3.5 text-gray-400 hover:text-red-500" />
+            <button onClick={onDelete} className="p-1 hover:bg-red-50 rounded-lg transition-colors">
+              <Trash2 size={14} className="text-gray-400 hover:text-red-500" />
             </button>
-            <button onClick={() => setExpanded(!expanded)} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-              {expanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+            <button onClick={() => setExpanded(!expanded)} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
+              {expanded ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
             </button>
           </div>
         </div>
@@ -627,7 +629,7 @@ function WorkLogCard({
 
       {/* Expanded content */}
       {expanded && (
-        <div className="border-t border-gray-100 px-5 py-4 space-y-3">
+        <div className="border-t border-gray-100 px-3 py-3 space-y-3">
           {log.description && (
             <p className="text-xs text-gray-500">{log.description}</p>
           )}
@@ -635,16 +637,16 @@ function WorkLogCard({
           {/* Completed tasks */}
           {completed.length > 0 && (
             <div>
-              <div className="flex items-center gap-1.5 mb-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-                <span className="text-xs font-semibold text-gray-700">
+              <div className="d-flex align-items-center gap-1 mb-2" style={{ gap: '6px' }}>
+                <CheckCircle2 size={14} className="text-green-500" />
+                <span className="text-xs fw-semibold text-gray-700">
                   {isJa ? '完了した作業' : '완료한 작업'} ({completed.length})
                 </span>
               </div>
-              <ul className="space-y-1 ml-5">
+              <ul className="space-y-1 ms-4">
                 {completed.map((task, i) => (
-                  <li key={i} className="text-xs text-gray-600 flex items-start gap-1.5">
-                    <span className="text-green-400 mt-0.5">•</span>
+                  <li key={i} className="text-xs text-gray-600 d-flex align-items-start gap-1" style={{ gap: '6px' }}>
+                    <span className="text-green-400 mt-1">&#8226;</span>
                     <span>{task}</span>
                   </li>
                 ))}
@@ -655,15 +657,15 @@ function WorkLogCard({
           {/* Modified files */}
           {modified.length > 0 && (
             <div>
-              <div className="flex items-center gap-1.5 mb-2">
-                <FileText className="w-3.5 h-3.5 text-blue-500" />
-                <span className="text-xs font-semibold text-gray-700">
+              <div className="d-flex align-items-center gap-1 mb-2" style={{ gap: '6px' }}>
+                <FileText size={14} className="text-blue-500" />
+                <span className="text-xs fw-semibold text-gray-700">
                   {isJa ? '修正したファイル' : '수정한 파일'} ({modified.length})
                 </span>
               </div>
-              <div className="flex flex-wrap gap-1.5 ml-5">
+              <div className="d-flex flex-wrap gap-1 ms-4" style={{ gap: '6px' }}>
                 {modified.map((file, i) => (
-                  <span key={i} className="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-700 rounded font-mono">
+                  <span key={i} className="text-[10px] px-2 py-0 bg-blue-50 text-blue-700 rounded font-mono">
                     {file}
                   </span>
                 ))}
@@ -674,15 +676,15 @@ function WorkLogCard({
           {/* Created files */}
           {created.length > 0 && (
             <div>
-              <div className="flex items-center gap-1.5 mb-2">
-                <FilePlus className="w-3.5 h-3.5 text-emerald-500" />
-                <span className="text-xs font-semibold text-gray-700">
+              <div className="d-flex align-items-center gap-1 mb-2" style={{ gap: '6px' }}>
+                <FilePlus size={14} className="text-emerald-500" />
+                <span className="text-xs fw-semibold text-gray-700">
                   {isJa ? '作成したファイル' : '생성한 파일'} ({created.length})
                 </span>
               </div>
-              <div className="flex flex-wrap gap-1.5 ml-5">
+              <div className="d-flex flex-wrap gap-1 ms-4" style={{ gap: '6px' }}>
                 {created.map((file, i) => (
-                  <span key={i} className="text-[10px] px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded font-mono">
+                  <span key={i} className="text-[10px] px-2 py-0 bg-emerald-50 text-emerald-700 rounded font-mono">
                     {file}
                   </span>
                 ))}
@@ -693,16 +695,16 @@ function WorkLogCard({
           {/* Next tasks */}
           {next.length > 0 && (
             <div>
-              <div className="flex items-center gap-1.5 mb-2">
-                <ListTodo className="w-3.5 h-3.5 text-amber-500" />
-                <span className="text-xs font-semibold text-gray-700">
+              <div className="d-flex align-items-center gap-1 mb-2" style={{ gap: '6px' }}>
+                <ListTodo size={14} className="text-amber-500" />
+                <span className="text-xs fw-semibold text-gray-700">
                   {isJa ? '次の作業' : '다음 작업'}
                 </span>
               </div>
-              <ul className="space-y-1 ml-5">
+              <ul className="space-y-1 ms-4">
                 {next.map((task, i) => (
-                  <li key={i} className="text-xs text-gray-600 flex items-start gap-1.5">
-                    <span className="text-amber-400 mt-0.5">•</span>
+                  <li key={i} className="text-xs text-gray-600 d-flex align-items-start gap-1" style={{ gap: '6px' }}>
+                    <span className="text-amber-400 mt-1">&#8226;</span>
                     <span>{task}</span>
                   </li>
                 ))}
@@ -798,17 +800,17 @@ export default function WorkLogsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="d-flex align-items-center justify-content-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <CalendarDays className="w-7 h-7 text-primary" />
+          <h1 className="text-2xl fw-bold text-gray-900 d-flex align-items-center gap-2">
+            <CalendarDays size={28} className="text-primary" />
             {isJa ? '作業日誌' : '작업 일지'}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
             {isJa ? '開発作業レポート自動集計' : '개발 작업 리포트 자동 집계'}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="d-flex align-items-center gap-2">
           {stats.totalEntries === 0 && (
             <button
               onClick={async () => {
@@ -818,78 +820,86 @@ export default function WorkLogsPage() {
                 alert(`${isJa ? 'インポート完了' : '불러오기 완료'}: ${data.migratedCount}${isJa ? '件 追加' : '건 추가'}, ${data.skippedCount}${isJa ? '件 スキップ' : '건 스킵'}`)
                 fetchLogs()
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white text-sm rounded-lg hover:bg-orange-600 transition-colors shadow-sm"
+              className="btn btn-warning d-flex align-items-center gap-2 text-sm shadow-sm"
             >
-              <TrendingUp className="w-4 h-4" />
+              <TrendingUp size={16} />
               {isJa ? '履歴インポート' : '이력 불러오기'}
             </button>
           )}
           <button
             onClick={() => { setEditLog(null); setModalOpen(true) }}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+            className="btn btn-primary d-flex align-items-center gap-2 text-sm shadow-sm"
           >
-            <Plus className="w-4 h-4" />
+            <Plus size={16} />
             {isJa ? '作業追加' : '작업 추가'}
           </button>
         </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-              <Clock className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <div className="text-xs text-gray-500">{isJa ? '選択日の作業時間' : '선택일 작업 시간'}</div>
-              <div className="text-2xl font-bold text-gray-900">
-                {dayStats.hours}<span className="text-sm font-normal text-gray-400">{isJa ? '時間' : '시간'}</span>
+      <div className="row g-3">
+        <div className="col-6 col-lg-3">
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-3">
+            <div className="d-flex align-items-center gap-2">
+              <div className="rounded-lg bg-blue-50 d-flex align-items-center justify-content-center" style={{ width: '2.5rem', height: '2.5rem' }}>
+                <Clock size={20} className="text-blue-600" />
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">{isJa ? '選択日の作業時間' : '선택일 작업 시간'}</div>
+                <div className="text-2xl fw-bold text-gray-900">
+                  {dayStats.hours}<span className="text-sm fw-normal text-gray-400">{isJa ? '時間' : '시간'}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-              <CheckCircle2 className="w-5 h-5 text-green-600" />
-            </div>
-            <div>
-              <div className="text-xs text-gray-500">{isJa ? '選択日の完了作業' : '선택일 완료 작업'}</div>
-              <div className="text-2xl font-bold text-gray-900">
-                {dayStats.completed}<span className="text-sm font-normal text-gray-400">{isJa ? '件' : '건'}</span>
+        <div className="col-6 col-lg-3">
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-3">
+            <div className="d-flex align-items-center gap-2">
+              <div className="rounded-lg bg-green-50 d-flex align-items-center justify-content-center" style={{ width: '2.5rem', height: '2.5rem' }}>
+                <CheckCircle2 size={20} className="text-green-600" />
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">{isJa ? '選択日の完了作業' : '선택일 완료 작업'}</div>
+                <div className="text-2xl fw-bold text-gray-900">
+                  {dayStats.completed}<span className="text-sm fw-normal text-gray-400">{isJa ? '件' : '건'}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center">
-              <CalendarDays className="w-5 h-5 text-orange-600" />
-            </div>
-            <div>
-              <div className="text-xs text-gray-500">{isJa ? '今月合計' : '이번 달 (합계)'}</div>
-              <div className="text-2xl font-bold text-gray-900">
-                {monthHours}<span className="text-sm font-normal text-gray-400">{isJa ? '時間' : '시간'}</span>
+        <div className="col-6 col-lg-3">
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-3">
+            <div className="d-flex align-items-center gap-2">
+              <div className="rounded-lg bg-orange-50 d-flex align-items-center justify-content-center" style={{ width: '2.5rem', height: '2.5rem' }}>
+                <CalendarDays size={20} className="text-orange-600" />
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">{isJa ? '今月合計' : '이번 달 (합계)'}</div>
+                <div className="text-2xl fw-bold text-gray-900">
+                  {monthHours}<span className="text-sm fw-normal text-gray-400">{isJa ? '時間' : '시간'}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-violet-50 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-violet-600" />
-            </div>
-            <div>
-              <div className="text-xs text-gray-500">{isJa ? '全体作業時間' : '전체 작업 시간'}</div>
-              <div className="text-2xl font-bold text-gray-900">
-                {stats.totalHours}<span className="text-sm font-normal text-gray-400">{isJa ? '時間' : '시간'}</span>
+        <div className="col-6 col-lg-3">
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-3">
+            <div className="d-flex align-items-center gap-2">
+              <div className="rounded-lg bg-violet-50 d-flex align-items-center justify-content-center" style={{ width: '2.5rem', height: '2.5rem' }}>
+                <TrendingUp size={20} className="text-violet-600" />
               </div>
-              <div className="text-[10px] text-gray-400">
-                {isJa ? 'コーディング' : '코딩'} {stats.codingHours} + {isJa ? '手作業' : '수작업'} {stats.manualHours}
+              <div>
+                <div className="text-xs text-gray-500">{isJa ? '全体作業時間' : '전체 작업 시간'}</div>
+                <div className="text-2xl fw-bold text-gray-900">
+                  {stats.totalHours}<span className="text-sm fw-normal text-gray-400">{isJa ? '時間' : '시간'}</span>
+                </div>
+                <div className="text-[10px] text-gray-400">
+                  {isJa ? 'コーディング' : '코딩'} {stats.codingHours} + {isJa ? '手作業' : '수작업'} {stats.manualHours}
+                </div>
               </div>
             </div>
           </div>
@@ -897,9 +907,9 @@ export default function WorkLogsPage() {
       </div>
 
       {/* Main content: Calendar + Details */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="row g-4">
         {/* Left: Calendar + Monthly Stats */}
-        <div className="lg:col-span-5 space-y-4">
+        <div className="col-lg-5 space-y-4">
           <Calendar
             year={calYear}
             month={calMonth}
@@ -911,44 +921,44 @@ export default function WorkLogsPage() {
           />
 
           {/* Monthly stats card */}
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
-            <h3 className="text-sm font-semibold text-gray-800 mb-3">
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-3">
+            <h3 className="text-sm fw-semibold text-gray-800 mb-2">
               {isJa ? '全体統計' : '전체 통계'}
             </h3>
             <div className="space-y-3">
-              <div className="flex justify-between items-center">
+              <div className="d-flex justify-content-between align-items-center">
                 <span className="text-xs text-gray-500">{isJa ? '総作業時間' : '총 작업 시간'}</span>
-                <span className="text-sm font-bold text-gray-900">{stats.totalHours}{isJa ? '時間' : '시간'}</span>
+                <span className="text-sm fw-bold text-gray-900">{stats.totalHours}{isJa ? '時間' : '시간'}</span>
               </div>
-              <div className="w-full bg-gray-100 rounded-full h-2">
-                <div className="flex h-2 rounded-full overflow-hidden">
+              <div className="w-100 bg-gray-100 rounded-full h-2">
+                <div className="d-flex h-2 rounded-full overflow-hidden">
                   <div className="bg-green-500 transition-all" style={{ width: stats.totalHours > 0 ? `${(stats.codingHours / stats.totalHours * 100)}%` : '0%' }} />
                   <div className="bg-yellow-400 transition-all" style={{ width: stats.totalHours > 0 ? `${(stats.manualHours / stats.totalHours * 100)}%` : '0%' }} />
                 </div>
               </div>
-              <div className="flex gap-4 text-xs text-gray-500">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-green-500" />
+              <div className="d-flex gap-3 text-xs text-gray-500">
+                <div className="d-flex align-items-center gap-1" style={{ gap: '6px' }}>
+                  <span className="rounded-full bg-green-500" style={{ width: 8, height: 8 }} />
                   {isJa ? 'コーディング' : '코딩/개발'} {stats.codingHours}h
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-yellow-400" />
+                <div className="d-flex align-items-center gap-1" style={{ gap: '6px' }}>
+                  <span className="rounded-full bg-yellow-400" style={{ width: 8, height: 8 }} />
                   {isJa ? '手作業' : '수작업'} {stats.manualHours}h
                 </div>
               </div>
 
               <div className="pt-2 border-t border-gray-100 space-y-2">
-                <div className="flex justify-between text-xs">
+                <div className="d-flex justify-content-between text-xs">
                   <span className="text-gray-500">{isJa ? '完了した作業' : '완료한 작업'}</span>
-                  <span className="font-medium text-gray-700">{stats.totalCompleted}{isJa ? '件' : '건'}</span>
+                  <span className="fw-medium text-gray-700">{stats.totalCompleted}{isJa ? '件' : '건'}</span>
                 </div>
-                <div className="flex justify-between text-xs">
+                <div className="d-flex justify-content-between text-xs">
                   <span className="text-gray-500">{isJa ? '修正ファイル' : '수정한 파일'}</span>
-                  <span className="font-medium text-gray-700">{stats.totalFiles}{isJa ? '個' : '개'}</span>
+                  <span className="fw-medium text-gray-700">{stats.totalFiles}{isJa ? '個' : '개'}</span>
                 </div>
-                <div className="flex justify-between text-xs">
+                <div className="d-flex justify-content-between text-xs">
                   <span className="text-gray-500">{isJa ? '作業レポート' : '작업 리포트'}</span>
-                  <span className="font-medium text-gray-700">{stats.totalEntries}{isJa ? '件' : '건'}</span>
+                  <span className="fw-medium text-gray-700">{stats.totalEntries}{isJa ? '件' : '건'}</span>
                 </div>
               </div>
             </div>
@@ -956,24 +966,24 @@ export default function WorkLogsPage() {
         </div>
 
         {/* Right: Work log details for selected date */}
-        <div className="lg:col-span-7">
+        <div className="col-lg-7">
           <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
             {/* Date header */}
-            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <CalendarDays className="w-4 h-4 text-gray-400" />
-                <span className="text-sm font-semibold text-gray-800">
+            <div className="px-3 py-3 border-bottom border-gray-100 d-flex align-items-center justify-content-between">
+              <div className="d-flex align-items-center gap-2">
+                <CalendarDays size={16} className="text-gray-400" />
+                <span className="text-sm fw-semibold text-gray-800">
                   {selectedDate} {isJa ? '作業内訳' : '작업 내역'}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="d-flex align-items-center gap-2">
                 {dayStats.completed > 0 && (
-                  <span className="text-xs px-2.5 py-1 bg-green-50 text-green-700 rounded-full font-medium">
+                  <span className="text-xs px-2 py-1 bg-green-50 text-green-700 rounded-full fw-medium">
                     {dayStats.completed}{isJa ? '件 完了' : '건 완료'}
                   </span>
                 )}
                 {dayStats.files > 0 && (
-                  <span className="text-xs px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full font-medium">
+                  <span className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full fw-medium">
                     {dayStats.files}{isJa ? 'ファイル' : '파일'}
                   </span>
                 )}
@@ -981,20 +991,20 @@ export default function WorkLogsPage() {
             </div>
 
             {/* Log entries */}
-            <div className="p-4 space-y-4">
+            <div className="p-3 space-y-4">
               {loading ? (
-                <div className="text-center py-12 text-gray-400 text-sm">
+                <div className="text-center py-4 text-gray-400 text-sm">
                   {isJa ? '読み込み中...' : '로딩중...'}
                 </div>
               ) : logs.length === 0 ? (
-                <div className="text-center py-12">
-                  <CalendarDays className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+                <div className="text-center py-4">
+                  <CalendarDays size={40} className="text-gray-200 mx-auto mb-2" />
                   <div className="text-sm text-gray-400">
                     {isJa ? 'この日の作業記録はありません' : '이 날의 작업 기록이 없습니다'}
                   </div>
                   <button
                     onClick={() => { setEditLog(null); setModalOpen(true) }}
-                    className="mt-3 text-xs text-blue-600 hover:text-blue-700 font-medium"
+                    className="mt-2 text-xs text-blue-600 hover:text-blue-700 fw-medium"
                   >
                     + {isJa ? '作業を追加' : '작업 추가'}
                   </button>

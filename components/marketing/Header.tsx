@@ -32,61 +32,61 @@ export default function Header() {
   })
 
   return (
-    <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
+    <header className="d-flex align-items-center justify-content-between px-4 bg-white border-bottom" style={{ height: '4rem' }}>
       {/* Left */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-          <Calendar className="w-4 h-4" />
+      <div className="d-flex align-items-center gap-3">
+        <div className="d-flex align-items-center gap-2 text-sm text-gray-500">
+          <Calendar size={16} />
           <span>{today}</span>
         </div>
       </div>
 
       {/* Right */}
-      <div className="flex items-center gap-3">
+      <div className="d-flex align-items-center gap-3">
         {/* Language Switcher */}
-        <div className="relative">
+        <div className="position-relative">
           <button
             onClick={() => setShowLangMenu(!showLangMenu)}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200"
+            className="btn btn-ghost-secondary btn-sm d-flex align-items-center gap-2"
           >
-            <Globe className="w-4 h-4" />
+            <Globe size={16} />
             <span>{localeFlags[locale]} {localeNames[locale]}</span>
           </button>
           {showLangMenu && (
-            <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[140px] z-50">
+            <div className="position-absolute end-0 top-100 mt-1 bg-white border rounded-lg shadow-lg py-1" style={{ minWidth: '140px', zIndex: 50 }}>
               {(Object.keys(localeNames) as Locale[]).map((loc) => (
                 <button
                   key={loc}
                   onClick={() => changeLocale(loc)}
-                  className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 ${
-                    locale === loc ? 'bg-primary/5 text-primary font-medium' : 'text-gray-700'
+                  className={`w-100 px-3 py-2 text-start text-sm hover:bg-gray-50 d-flex align-items-center gap-2 border-0 bg-transparent ${
+                    locale === loc ? 'bg-primary-lt text-primary fw-medium' : 'text-gray-700'
                   }`}
                 >
                   <span>{localeFlags[loc]}</span>
                   <span>{localeNames[loc]}</span>
-                  {locale === loc && <span className="ml-auto">✓</span>}
+                  {locale === loc && <span className="ms-auto">✓</span>}
                 </button>
               ))}
             </div>
           )}
         </div>
 
-        <button className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-          <RefreshCw className="w-4 h-4" />
+        <button className="btn btn-ghost-secondary btn-sm d-flex align-items-center gap-2">
+          <RefreshCw size={16} />
           <span>{t.update}</span>
         </button>
-        <button className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-          <Download className="w-4 h-4" />
+        <button className="btn btn-ghost-secondary btn-sm d-flex align-items-center gap-2">
+          <Download size={16} />
           <span>{t.export}</span>
         </button>
-        <div className="w-px h-6 bg-gray-200" />
-        <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg relative">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-danger rounded-full" />
+        <div className="vr mx-1" style={{ height: '1.5rem' }} />
+        <button className="btn btn-ghost-secondary btn-icon btn-sm position-relative">
+          <Bell size={20} />
+          <span className="badge bg-danger badge-notification badge-blink position-absolute" style={{ top: '4px', right: '4px', width: '8px', height: '8px', padding: 0 }} />
         </button>
-        <button className="flex items-center gap-2 p-1.5 hover:bg-gray-100 rounded-lg">
-          <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-            <User className="w-4 h-4 text-primary" />
+        <button className="btn btn-ghost-secondary btn-icon btn-sm">
+          <div className="d-flex align-items-center justify-content-center rounded-circle bg-primary-lt" style={{ width: '2rem', height: '2rem' }}>
+            <User size={16} className="text-primary" />
           </div>
         </button>
       </div>

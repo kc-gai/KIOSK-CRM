@@ -24,12 +24,16 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
-        {/* Tabler CSS/Icons → globals.css에서 npm 패키지 import */}
+        {/* Tabler CSS를 layer(base)로 로드 - 브라우저가 직접 CDN에서 fetch (PostCSS 우회) */}
+        <style dangerouslySetInnerHTML={{ __html: `@import url("https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta20/dist/css/tabler.min.css") layer(base);` }} />
+        {/* Tabler Icons */}
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
       </head>
       <body className="antialiased">
         <NextIntlClientProvider messages={messages}>
           <Providers>{children}</Providers>
         </NextIntlClientProvider>
+        <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta20/dist/js/tabler.min.js" defer></script>
       </body>
     </html>
   );

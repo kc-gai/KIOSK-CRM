@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Calendar, FileText, TrendingUp, BarChart2, ExternalLink, ChevronDown, PenTool, Info, List, RefreshCw } from 'lucide-react'
+import { Calendar, FileText, TrendingUp, BarChart2, ExternalLink, PenTool, Info, List, RefreshCw } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
 import { useTranslation } from '@/lib/translations'
 
@@ -94,12 +94,12 @@ export default function PublishingPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="d-flex align-items-center justify-content-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <PenTool className="w-6 h-6 text-primary" />
+          <h1 className="text-2xl fw-bold text-gray-900 d-flex align-items-center gap-2">
+            <PenTool size={24} className="text-primary" />
             {locale === 'ja' ? 'コンテンツ発行' : '콘텐츠 발행'}
-            <span className="text-sm font-normal text-gray-400 ml-1">
+            <span className="text-sm fw-normal text-gray-400 ms-1">
               {locale === 'ja' ? '(旧サイト: ブログ + ニュース)' : '(구 사이트: 블로그 + 뉴스)'}
             </span>
           </h1>
@@ -109,13 +109,13 @@ export default function PublishingPage() {
               : '사이트맵 기준 (2026년부터 사이트맵 기준 자동 추출)'}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="d-flex align-items-center gap-2">
           {/* 연도 선택기 */}
-          <div className="relative">
+          <div className="position-relative">
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer"
+              className="form-select form-select-sm"
             >
               {availableYears.map((year) => (
                 <option key={year} value={year}>
@@ -123,30 +123,29 @@ export default function PublishingPage() {
                 </option>
               ))}
             </select>
-            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
           </div>
           {/* 새로고침 버튼 */}
           <button
             onClick={fetchData}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+            className="btn btn-primary d-flex align-items-center gap-2"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
             {locale === 'ja' ? '更新' : '새로고침'}
           </button>
         </div>
       </div>
 
       {loading && !data ? (
-        <div className="flex items-center justify-center h-64">
-          <RefreshCw className="w-8 h-8 animate-spin text-primary" />
+        <div className="d-flex align-items-center justify-content-center" style={{ height: '16rem' }}>
+          <RefreshCw size={32} className="animate-spin text-primary" />
         </div>
       ) : error ? (
-        <div className="p-6 bg-red-50 border border-red-200 rounded-lg text-center">
+        <div className="alert alert-danger text-center">
           <p className="text-red-600">{error}</p>
           <button
             onClick={fetchData}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            className="btn btn-danger mt-3"
           >
             {locale === 'ja' ? '再試行' : '다시 시도'}
           </button>
@@ -154,56 +153,64 @@ export default function PublishingPage() {
       ) : data ? (
         <>
           {/* Stats Cards */}
-          <div className="grid grid-cols-4 gap-4">
-            <div className="stat-card">
-              <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-gray-400" />
-                <p className="stat-label">{selectedYear}{locale === 'ja' ? '年 発行合計' : '년 발행 합계'}</p>
+          <div className="row g-3">
+            <div className="col-md-3">
+              <div className="stat-card">
+                <div className="d-flex align-items-center gap-2">
+                  <FileText size={20} className="text-gray-400" />
+                  <p className="stat-label">{selectedYear}{locale === 'ja' ? '年 発行合計' : '년 발행 합계'}</p>
+                </div>
+                <p className="stat-value">{data.total}</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {locale === 'ja' ? `目標 ${data.target}件` : `목표 ${data.target}건`}
+                </p>
               </div>
-              <p className="stat-value">{data.total}</p>
-              <p className="text-xs text-gray-400 mt-1">
-                {locale === 'ja' ? `目標 ${data.target}件` : `목표 ${data.target}건`}
-              </p>
             </div>
-            <div className="stat-card">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-blue-400" />
-                <p className="stat-label">{locale === 'ja' ? '月平均' : '월 평균'}</p>
+            <div className="col-md-3">
+              <div className="stat-card">
+                <div className="d-flex align-items-center gap-2">
+                  <Calendar size={20} className="text-blue-400" />
+                  <p className="stat-label">{locale === 'ja' ? '月平均' : '월 평균'}</p>
+                </div>
+                <p className="stat-value text-blue-500">{monthlyAverage}</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {locale === 'ja' ? `目標 10件/月` : `목표 10건/월`}
+                </p>
               </div>
-              <p className="stat-value text-blue-500">{monthlyAverage}</p>
-              <p className="text-xs text-gray-400 mt-1">
-                {locale === 'ja' ? `目標 10件/月` : `목표 10건/월`}
-              </p>
             </div>
-            <div className="stat-card">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-green-400" />
-                <p className="stat-label">{locale === 'ja' ? '年間目標' : '연간 목표'}</p>
+            <div className="col-md-3">
+              <div className="stat-card">
+                <div className="d-flex align-items-center gap-2">
+                  <TrendingUp size={20} className="text-green-400" />
+                  <p className="stat-label">{locale === 'ja' ? '年間目標' : '연간 목표'}</p>
+                </div>
+                <p className="stat-value text-green-500">{data.target}</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {locale === 'ja' ? '10件 × 12ヶ月' : '10건 × 12개월'}
+                </p>
               </div>
-              <p className="stat-value text-green-500">{data.target}</p>
-              <p className="text-xs text-gray-400 mt-1">
-                {locale === 'ja' ? '10件 × 12ヶ月' : '10건 × 12개월'}
-              </p>
             </div>
-            <div className="stat-card">
-              <div className="flex items-center gap-2">
-                <BarChart2 className="w-5 h-5 text-purple-400" />
-                <p className="stat-label">{locale === 'ja' ? '年間達成率' : '연간 달성률'}</p>
+            <div className="col-md-3">
+              <div className="stat-card">
+                <div className="d-flex align-items-center gap-2">
+                  <BarChart2 size={20} className="text-purple-400" />
+                  <p className="stat-label">{locale === 'ja' ? '年間達成率' : '연간 달성률'}</p>
+                </div>
+                <p className={`stat-value ${yearlyAchievementRate >= 50 ? 'text-green-500' : 'text-orange-500'}`}>
+                  {yearlyAchievementRate}%
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {data.total}/{data.target}
+                </p>
               </div>
-              <p className={`stat-value ${yearlyAchievementRate >= 50 ? 'text-green-500' : 'text-orange-500'}`}>
-                {yearlyAchievementRate}%
-              </p>
-              <p className="text-xs text-gray-400 mt-1">
-                {data.total}/{data.target}
-              </p>
             </div>
           </div>
 
           {/* Monthly Chart */}
           <div className="card">
             <div className="card-header">
-              <h3 className="card-title flex items-center gap-2">
-                <BarChart2 className="w-5 h-5 text-primary" />
+              <h3 className="card-title d-flex align-items-center gap-2">
+                <BarChart2 size={20} className="text-primary" />
                 {selectedYear}{locale === 'ja' ? '年 月別発行統計' : '년 월별 발행 통계'}
               </h3>
               <span className="badge badge-info">
@@ -211,7 +218,7 @@ export default function PublishingPage() {
               </span>
             </div>
             <div className="card-body">
-              <div className="h-72">
+              <div style={{ height: '18rem' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={data.monthlyData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -228,20 +235,20 @@ export default function PublishingPage() {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-              <div className="mt-4 flex items-center justify-center gap-6 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-primary rounded" />
+              <div className="mt-3 d-flex align-items-center justify-content-center gap-4 text-sm">
+                <div className="d-flex align-items-center gap-2">
+                  <div className="bg-primary rounded" style={{ width: '0.75rem', height: '0.75rem' }} />
                   <span className="text-gray-600">{locale === 'ja' ? '発行実績' : '발행 실적'}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 border-2 border-green-500 border-dashed rounded" />
+                <div className="d-flex align-items-center gap-2">
+                  <div className="border-2 border-green-500 border-dashed rounded" style={{ width: '0.75rem', height: '0.75rem' }} />
                   <span className="text-gray-600">{locale === 'ja' ? '月間目標 (10件)' : '월간 목표 (10건)'}</span>
                 </div>
               </div>
               {/* 인사이트 */}
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+              <div className="mt-3 p-2 bg-blue-50 rounded-lg">
                 <p className="text-sm text-blue-800">
-                  <strong><TrendingUp className="w-4 h-4 inline mr-1" />{locale === 'ja' ? 'インサイト' : '인사이트'}:</strong>{' '}
+                  <strong><TrendingUp size={16} className="d-inline me-1" />{locale === 'ja' ? 'インサイト' : '인사이트'}:</strong>{' '}
                   {data.total === 0
                     ? (locale === 'ja'
                         ? `${selectedYear}年はまだ発行実績がありません。目標達成には月10件ペースが必要です`
@@ -258,13 +265,13 @@ export default function PublishingPage() {
           {/* Year Comparison */}
           <div className="card">
             <div className="card-header">
-              <h3 className="card-title flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-primary" />
+              <h3 className="card-title d-flex align-items-center gap-2">
+                <Calendar size={20} className="text-primary" />
                 {locale === 'ja' ? '年度別比較' : '연도별 비교'}
               </h3>
             </div>
             <div className="card-body">
-              <div className="grid grid-cols-3 gap-4">
+              <div className="row g-3">
                 {data.allYears.map((yearData) => {
                   const rate = Math.round((yearData.total / yearData.target) * 100)
                   const isSelected = yearData.year === selectedYear
@@ -274,44 +281,46 @@ export default function PublishingPage() {
                     : null
 
                   return (
-                    <div
-                      key={yearData.year}
-                      onClick={() => setSelectedYear(yearData.year)}
-                      className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                        isSelected
-                          ? 'border-primary bg-primary/5'
-                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className={`text-lg font-bold ${isSelected ? 'text-primary' : 'text-gray-700'}`}>
-                          {yearData.year}{locale === 'ja' ? '年' : '년'}
-                        </span>
-                        {growth !== null && growth !== 0 && (
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${
-                            growth > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                          }`}>
-                            {growth > 0 ? '+' : ''}{growth}%
+                    <div key={yearData.year} className="col-md-4">
+                      <div
+                        onClick={() => setSelectedYear(yearData.year)}
+                        className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                          isSelected
+                            ? 'border-primary bg-primary/5'
+                            : 'border-gray-200 hover:bg-gray-50'
+                        }`}
+                        style={{ borderWidth: '2px' }}
+                      >
+                        <div className="d-flex align-items-center justify-content-between mb-2">
+                          <span className={`text-lg fw-bold ${isSelected ? 'text-primary' : 'text-gray-700'}`}>
+                            {yearData.year}{locale === 'ja' ? '年' : '년'}
                           </span>
-                        )}
-                      </div>
-                      <div className="text-2xl font-bold text-gray-900 mb-1">
-                        {yearData.total}{locale === 'ja' ? '件' : '건'}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full ${rate >= 50 ? 'bg-green-500' : 'bg-orange-400'}`}
-                            style={{ width: `${Math.min(rate, 100)}%` }}
-                          />
+                          {growth !== null && growth !== 0 && (
+                            <span className={`text-xs px-2 rounded-full ${
+                              growth > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                            }`} style={{ paddingTop: '0.125rem', paddingBottom: '0.125rem' }}>
+                              {growth > 0 ? '+' : ''}{growth}%
+                            </span>
+                          )}
                         </div>
-                        <span className="text-xs text-gray-500">{rate}%</span>
+                        <div className="text-2xl fw-bold text-gray-900 mb-1">
+                          {yearData.total}{locale === 'ja' ? '件' : '건'}
+                        </div>
+                        <div className="d-flex align-items-center gap-2">
+                          <div className="progress flex-fill" style={{ height: '0.5rem' }}>
+                            <div
+                              className={`progress-bar ${rate >= 50 ? 'bg-green-500' : 'bg-orange-400'}`}
+                              style={{ width: `${Math.min(rate, 100)}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-gray-500">{rate}%</span>
+                        </div>
                       </div>
                     </div>
                   )
                 })}
               </div>
-              <div className="mt-4 text-center text-sm text-gray-500">
+              <div className="mt-3 text-center text-sm text-gray-500">
                 {locale === 'ja'
                   ? `累計発行数: ${data.totalPosts}件 (サイトマップ基準)`
                   : `누적 발행 수: ${data.totalPosts}건 (사이트맵 기준)`}
@@ -322,35 +331,35 @@ export default function PublishingPage() {
           {/* Content List */}
           <div className="card">
             <div className="card-header">
-              <h3 className="card-title flex items-center gap-2">
-                <List className="w-5 h-5 text-primary" />
+              <h3 className="card-title d-flex align-items-center gap-2">
+                <List size={20} className="text-primary" />
                 {locale === 'ja' ? 'コンテンツ一覧' : '콘텐츠 목록'}
-                <span className="text-sm font-normal text-gray-500">
+                <span className="text-sm fw-normal text-gray-500">
                   ({data.posts.length}{locale === 'ja' ? '件' : '건'})
                 </span>
               </h3>
             </div>
             <div className="card-body p-0">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
+              <table className="table table-hover mb-0">
+                <thead>
                   <tr>
-                    <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                    <th className="text-start px-3 py-2 text-sm fw-medium text-gray-600">
                       {locale === 'ja' ? 'URL / タイトル' : 'URL / 제목'}
                     </th>
-                    <th className="text-left px-4 py-3 text-sm font-medium text-gray-600 w-32">
+                    <th className="text-start px-3 py-2 text-sm fw-medium text-gray-600" style={{ width: '8rem' }}>
                       {locale === 'ja' ? '最終更新日' : '최종 수정일'}
                     </th>
-                    <th className="text-left px-4 py-3 text-sm font-medium text-gray-600 w-24">
+                    <th className="text-start px-3 py-2 text-sm fw-medium text-gray-600" style={{ width: '6rem' }}>
                       {locale === 'ja' ? '操作' : '액션'}
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody>
                   {data.posts.length === 0 ? (
                     <tr>
-                      <td colSpan={3} className="px-4 py-12 text-center">
+                      <td colSpan={3} className="px-3 py-5 text-center">
                         <div className="text-gray-400">
-                          <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                          <FileText size={48} className="mx-auto mb-2 opacity-50" />
                           <p className="text-sm">
                             {locale === 'ja'
                               ? `${selectedYear}年に発行されたコンテンツがありません`
@@ -361,28 +370,28 @@ export default function PublishingPage() {
                     </tr>
                   ) : (
                     data.posts.slice(0, 20).map((post, idx) => (
-                      <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3">
-                          <div className="font-medium text-gray-900 truncate max-w-md">
+                      <tr key={idx}>
+                        <td className="px-3 py-2">
+                          <div className="fw-medium text-gray-900 truncate max-w-md">
                             {extractTitleFromUrl(post.url)}
                           </div>
                           <p className="text-xs text-gray-400 truncate max-w-md">
                             {post.url}
                           </p>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-2">
                           <span className="text-sm text-gray-600">
                             {formatDate(post.lastmod)}
                           </span>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-2">
                           <a
                             href={post.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-primary hover:text-primary/80 flex items-center gap-1 text-sm"
+                            className="text-primary d-flex align-items-center gap-1 text-sm"
                           >
-                            <ExternalLink className="w-4 h-4" />
+                            <ExternalLink size={16} />
                             {locale === 'ja' ? '表示' : '보기'}
                           </a>
                         </td>
@@ -392,7 +401,7 @@ export default function PublishingPage() {
                 </tbody>
               </table>
               {data.posts.length > 20 && (
-                <div className="px-4 py-3 text-center text-sm text-gray-500 border-t">
+                <div className="px-3 py-2 text-center text-sm text-gray-500 border-top">
                   {locale === 'ja'
                     ? `他 ${data.posts.length - 20}件のコンテンツ`
                     : `외 ${data.posts.length - 20}개의 콘텐츠`}
@@ -402,9 +411,9 @@ export default function PublishingPage() {
           </div>
 
           {/* Data Source Info */}
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-2">
-            <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-blue-800">
+          <div className="alert alert-info d-flex align-items-start gap-2">
+            <Info size={20} className="text-blue-600 flex-shrink-0 mt-1" />
+            <p className="text-sm text-blue-800 mb-0">
               <strong>{locale === 'ja' ? 'データソース' : '데이터 출처'}:</strong>{' '}
               {locale === 'ja'
                 ? 'kaflixcloud.co.jp のサイトマップから自動取得。lastmod（最終更新日）を基準に集計しています。'

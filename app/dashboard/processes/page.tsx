@@ -129,9 +129,9 @@ export default function ProcessesPage() {
     }
 
     const getStatusIcon = (status?: string) => {
-        if (status === 'COMPLETED') return <CheckCircle2 className="h-4 w-4 text-green-500" />
-        if (status === 'IN_PROGRESS') return <Clock className="h-4 w-4 text-blue-500" />
-        return <Circle className="h-4 w-4 text-gray-300" />
+        if (status === 'COMPLETED') return <CheckCircle2 size={16} className="text-green-500" />
+        if (status === 'IN_PROGRESS') return <Clock size={16} className="text-blue-500" />
+        return <Circle size={16} className="text-gray-300" />
     }
 
     const getStageStatus = (process: Process, stageKey: string) => {
@@ -145,29 +145,30 @@ export default function ProcessesPage() {
     }
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold">{t('title')}</h1>
+        <div className="space-y-4">
+            <div className="d-flex justify-content-between align-items-center">
+                <h1 className="text-3xl fw-bold">{t('title')}</h1>
                 <Button onClick={() => setIsCreating(!isCreating)}>
-                    {isCreating ? tc('cancel') : <><Plus className="h-4 w-4 mr-2" />{t('newProcess')}</>}
+                    {isCreating ? tc('cancel') : <><Plus size={16} className="me-2" />{t('newProcess')}</>}
                 </Button>
             </div>
 
             {/* Search */}
-            <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <div className="position-relative">
+                <Search size={16} className="position-absolute text-gray-400" style={{ left: '0.75rem', top: '50%', transform: 'translateY(-50%)' }} />
                 <Input
                     placeholder={`${tc('search')}...`}
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
-                    className="pl-10 pr-10"
+                    className="ps-5 pe-5"
                 />
                 {searchQuery && (
                     <button
                         onClick={() => setSearchQuery('')}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        className="position-absolute text-gray-400 hover:text-gray-600"
+                        style={{ right: '0.75rem', top: '50%', transform: 'translateY(-50%)' }}
                     >
-                        <X className="h-4 w-4" />
+                        <X size={16} />
                     </button>
                 )}
             </div>
@@ -179,9 +180,9 @@ export default function ProcessesPage() {
                         <CardTitle>{t('newProcess')}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <form onSubmit={handleCreate} className="space-y-4">
+                        <form onSubmit={handleCreate} className="space-y-3">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">{t('processTitle')}</label>
+                                <label className="text-sm fw-medium">{t('processTitle')}</label>
                                 <Input
                                     placeholder={t('titlePlaceholder')}
                                     value={newTitle}
@@ -190,9 +191,9 @@ export default function ProcessesPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">{t('client')}</label>
+                                <label className="text-sm fw-medium">{t('client')}</label>
                                 <select
-                                    className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                                    className="form-select"
                                     value={newClientId}
                                     onChange={e => setNewClientId(e.target.value)}
                                 >
@@ -211,10 +212,10 @@ export default function ProcessesPage() {
             {isLoading ? (
                 <div>{tc('loading')}</div>
             ) : (
-                <div className="grid gap-4">
+                <div className="space-y-3">
                     {filteredProcesses.length === 0 ? (
                         <Card>
-                            <CardContent className="py-8 text-center text-gray-500">
+                            <CardContent className="py-5 text-center text-gray-500">
                                 {searchQuery ? t('noSearchResults', { query: searchQuery }) : t('noProcess')}
                             </CardContent>
                         </Card>
@@ -222,14 +223,14 @@ export default function ProcessesPage() {
                         filteredProcesses.map(process => (
                             <Card
                                 key={process.id}
-                                className={`cursor-pointer transition-all hover:shadow-md ${selectedProcess?.id === process.id ? 'ring-2 ring-blue-500' : ''}`}
+                                className={`cursor-pointer hover:shadow-md ${selectedProcess?.id === process.id ? 'border border-2 border-primary' : ''}`}
                                 onClick={() => setSelectedProcess(selectedProcess?.id === process.id ? null : process)}
                             >
-                                <CardContent className="py-4">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-3">
-                                                <h3 className="font-semibold text-lg">{process.title}</h3>
+                                <CardContent className="py-3">
+                                    <div className="d-flex align-items-center justify-content-between">
+                                        <div className="flex-fill">
+                                            <div className="d-flex align-items-center gap-2">
+                                                <h3 className="fw-semibold text-lg">{process.title}</h3>
                                                 {process.client && (
                                                     <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
                                                         {process.client.name}
@@ -242,7 +243,7 @@ export default function ProcessesPage() {
                                         </div>
 
                                         {/* Stage Progress */}
-                                        <div className="flex items-center gap-2">
+                                        <div className="d-flex align-items-center gap-2">
                                             {STAGES.map((stage, idx) => {
                                                 const StageIcon = stage.icon
                                                 const status = getStageStatus(process, stage.key)
@@ -250,9 +251,9 @@ export default function ProcessesPage() {
                                                 const isPast = getStageIndex(process.currentStage) > idx
 
                                                 return (
-                                                    <div key={stage.key} className="flex items-center">
+                                                    <div key={stage.key} className="d-flex align-items-center">
                                                         <div
-                                                            className={`flex items-center gap-1 px-2 py-1 rounded ${
+                                                            className={`d-flex align-items-center gap-1 px-1 py-1 rounded ${
                                                                 isCurrent
                                                                     ? 'bg-blue-100 text-blue-700'
                                                                     : isPast || status === 'COMPLETED'
@@ -261,11 +262,11 @@ export default function ProcessesPage() {
                                                             }`}
                                                             title={stage.label}
                                                         >
-                                                            <StageIcon className="h-4 w-4" />
-                                                            <span className="text-xs hidden md:inline">{stage.label}</span>
+                                                            <StageIcon size={16} />
+                                                            <span className="text-xs d-none d-md-inline">{stage.label}</span>
                                                         </div>
                                                         {idx < STAGES.length - 1 && (
-                                                            <ChevronRight className="h-4 w-4 text-gray-300 mx-1" />
+                                                            <ChevronRight size={16} className="text-gray-300 mx-1" />
                                                         )}
                                                     </div>
                                                 )
@@ -344,22 +345,22 @@ function ProcessDetail({
     }
 
     return (
-        <div className="mt-4 pt-4 border-t" onClick={e => e.stopPropagation()}>
+        <div className="mt-3 pt-3 border-top" onClick={e => e.stopPropagation()}>
             {/* Stage Tabs */}
-            <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+            <div className="d-flex gap-2 mb-3 overflow-auto pb-1">
                 {STAGES.map(stage => {
                     const StageIcon = stage.icon
                     return (
                         <button
                             key={stage.key}
                             onClick={() => moveToStage(stage.key)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
+                            className={`btn d-flex align-items-center gap-2 whitespace-nowrap ${
                                 formData.currentStage === stage.key
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    ? 'btn-primary'
+                                    : 'btn-ghost-secondary'
                             }`}
                         >
-                            <StageIcon className="h-4 w-4" />
+                            <StageIcon size={16} />
                             {stage.label}
                         </button>
                     )
@@ -367,7 +368,7 @@ function ProcessDetail({
             </div>
 
             {/* Stage Content */}
-            <div className="space-y-4">
+            <div className="space-y-3">
                 {formData.currentStage === 'CONTRACT' && (
                     <ContractStage formData={formData} updateField={updateField} t={t} />
                 )}
@@ -383,7 +384,7 @@ function ProcessDetail({
             </div>
 
             {/* Actions */}
-            <div className="flex justify-between mt-6 pt-4 border-t">
+            <div className="d-flex justify-content-between mt-4 pt-3 border-top">
                 <Button variant="destructive" onClick={onDelete}>
                     {tc('delete')}
                 </Button>
@@ -398,27 +399,27 @@ function ProcessDetail({
 // Stage Components
 function ContractStage({ formData, updateField, t }: any) {
     return (
-        <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-                <label className="text-sm font-medium">{t('contractManager')}</label>
+        <div className="row g-3">
+            <div className="col-12 col-md-6 space-y-2">
+                <label className="text-sm fw-medium">{t('contractManager')}</label>
                 <Input
                     value={formData.contractManager || ''}
                     onChange={e => updateField('contractManager', e.target.value)}
                     placeholder={t('managerPlaceholder')}
                 />
             </div>
-            <div className="space-y-2">
-                <label className="text-sm font-medium">{t('contractDate')}</label>
+            <div className="col-12 col-md-6 space-y-2">
+                <label className="text-sm fw-medium">{t('contractDate')}</label>
                 <Input
                     type="date"
                     value={formData.contractDate?.split('T')[0] || ''}
                     onChange={e => updateField('contractDate', e.target.value)}
                 />
             </div>
-            <div className="space-y-2">
-                <label className="text-sm font-medium">{t('status')}</label>
+            <div className="col-12 col-md-6 space-y-2">
+                <label className="text-sm fw-medium">{t('status')}</label>
                 <select
-                    className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                    className="form-select"
                     value={formData.contractStatus || 'PENDING'}
                     onChange={e => updateField('contractStatus', e.target.value)}
                 >
@@ -427,8 +428,8 @@ function ContractStage({ formData, updateField, t }: any) {
                     <option value="COMPLETED">{t('statusCompleted')}</option>
                 </select>
             </div>
-            <div className="space-y-3 md:col-span-2">
-                <label className="text-sm font-medium">{t('checklist')}</label>
+            <div className="col-12 space-y-2">
+                <label className="text-sm fw-medium">{t('checklist')}</label>
                 <div className="space-y-2">
                     <CheckboxItem
                         checked={formData.legalCheckCompleted}
@@ -447,10 +448,11 @@ function ContractStage({ formData, updateField, t }: any) {
                     />
                 </div>
             </div>
-            <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-medium">{t('notes')}</label>
+            <div className="col-12 space-y-2">
+                <label className="text-sm fw-medium">{t('notes')}</label>
                 <textarea
-                    className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm min-h-[80px]"
+                    className="form-control"
+                    style={{ minHeight: '80px' }}
                     value={formData.contractNotes || ''}
                     onChange={e => updateField('contractNotes', e.target.value)}
                     placeholder={t('notesPlaceholder')}
@@ -462,27 +464,27 @@ function ContractStage({ formData, updateField, t }: any) {
 
 function DeliveryRequestStage({ formData, updateField, t }: any) {
     return (
-        <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-                <label className="text-sm font-medium">{t('deliveryManager')}</label>
+        <div className="row g-3">
+            <div className="col-12 col-md-6 space-y-2">
+                <label className="text-sm fw-medium">{t('deliveryManager')}</label>
                 <Input
                     value={formData.deliveryManager || ''}
                     onChange={e => updateField('deliveryManager', e.target.value)}
                     placeholder={t('managerPlaceholder')}
                 />
             </div>
-            <div className="space-y-2">
-                <label className="text-sm font-medium">{t('deliveryDate')}</label>
+            <div className="col-12 col-md-6 space-y-2">
+                <label className="text-sm fw-medium">{t('deliveryDate')}</label>
                 <Input
                     type="date"
                     value={formData.deliveryDate?.split('T')[0] || ''}
                     onChange={e => updateField('deliveryDate', e.target.value)}
                 />
             </div>
-            <div className="space-y-2">
-                <label className="text-sm font-medium">{t('status')}</label>
+            <div className="col-12 col-md-6 space-y-2">
+                <label className="text-sm fw-medium">{t('status')}</label>
                 <select
-                    className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                    className="form-select"
                     value={formData.deliveryRequestStatus || 'PENDING'}
                     onChange={e => updateField('deliveryRequestStatus', e.target.value)}
                 >
@@ -491,8 +493,8 @@ function DeliveryRequestStage({ formData, updateField, t }: any) {
                     <option value="COMPLETED">{t('statusCompleted')}</option>
                 </select>
             </div>
-            <div className="space-y-3 md:col-span-2">
-                <label className="text-sm font-medium">{t('checklist')}</label>
+            <div className="col-12 space-y-2">
+                <label className="text-sm fw-medium">{t('checklist')}</label>
                 <div className="space-y-2">
                     <CheckboxItem
                         checked={formData.stockConfirmed}
@@ -521,10 +523,11 @@ function DeliveryRequestStage({ formData, updateField, t }: any) {
                     />
                 </div>
             </div>
-            <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-medium">{t('notes')}</label>
+            <div className="col-12 space-y-2">
+                <label className="text-sm fw-medium">{t('notes')}</label>
                 <textarea
-                    className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm min-h-[80px]"
+                    className="form-control"
+                    style={{ minHeight: '80px' }}
                     value={formData.deliveryNotes || ''}
                     onChange={e => updateField('deliveryNotes', e.target.value)}
                     placeholder={t('notesPlaceholder')}
@@ -536,35 +539,35 @@ function DeliveryRequestStage({ formData, updateField, t }: any) {
 
 function DeliveryCheckStage({ formData, updateField, t }: any) {
     return (
-        <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-                <label className="text-sm font-medium">{t('trackingNumber')}</label>
+        <div className="row g-3">
+            <div className="col-12 col-md-6 space-y-2">
+                <label className="text-sm fw-medium">{t('trackingNumber')}</label>
                 <Input
                     value={formData.trackingNumber || ''}
                     onChange={e => updateField('trackingNumber', e.target.value)}
                     placeholder={t('trackingPlaceholder')}
                 />
             </div>
-            <div className="space-y-2">
-                <label className="text-sm font-medium">{t('anydeskNo')}</label>
+            <div className="col-12 col-md-6 space-y-2">
+                <label className="text-sm fw-medium">{t('anydeskNo')}</label>
                 <Input
                     value={formData.anydeskNo || ''}
                     onChange={e => updateField('anydeskNo', e.target.value)}
                     placeholder="123 456 789"
                 />
             </div>
-            <div className="space-y-2">
-                <label className="text-sm font-medium">{t('serialNo')}</label>
+            <div className="col-12 col-md-6 space-y-2">
+                <label className="text-sm fw-medium">{t('serialNo')}</label>
                 <Input
                     value={formData.serialNo || ''}
                     onChange={e => updateField('serialNo', e.target.value)}
                     placeholder="KIOSK-2024-001"
                 />
             </div>
-            <div className="space-y-2">
-                <label className="text-sm font-medium">{t('status')}</label>
+            <div className="col-12 col-md-6 space-y-2">
+                <label className="text-sm fw-medium">{t('status')}</label>
                 <select
-                    className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                    className="form-select"
                     value={formData.deliveryCheckStatus || 'PENDING'}
                     onChange={e => updateField('deliveryCheckStatus', e.target.value)}
                 >
@@ -573,8 +576,8 @@ function DeliveryCheckStage({ formData, updateField, t }: any) {
                     <option value="COMPLETED">{t('statusCompleted')}</option>
                 </select>
             </div>
-            <div className="space-y-3 md:col-span-2">
-                <label className="text-sm font-medium">{t('checklist')}</label>
+            <div className="col-12 space-y-2">
+                <label className="text-sm fw-medium">{t('checklist')}</label>
                 <div className="space-y-2">
                     <CheckboxItem
                         checked={formData.kioskShipped}
@@ -593,10 +596,11 @@ function DeliveryCheckStage({ formData, updateField, t }: any) {
                     />
                 </div>
             </div>
-            <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-medium">{t('notes')}</label>
+            <div className="col-12 space-y-2">
+                <label className="text-sm fw-medium">{t('notes')}</label>
                 <textarea
-                    className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm min-h-[80px]"
+                    className="form-control"
+                    style={{ minHeight: '80px' }}
                     value={formData.deliveryCheckNotes || ''}
                     onChange={e => updateField('deliveryCheckNotes', e.target.value)}
                     placeholder={t('notesPlaceholder')}
@@ -608,19 +612,19 @@ function DeliveryCheckStage({ formData, updateField, t }: any) {
 
 function ErpStatsStage({ formData, updateField, t }: any) {
     return (
-        <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-                <label className="text-sm font-medium">{t('erpManager')}</label>
+        <div className="row g-3">
+            <div className="col-12 col-md-6 space-y-2">
+                <label className="text-sm fw-medium">{t('erpManager')}</label>
                 <Input
                     value={formData.erpManager || ''}
                     onChange={e => updateField('erpManager', e.target.value)}
                     placeholder={t('managerPlaceholder')}
                 />
             </div>
-            <div className="space-y-2">
-                <label className="text-sm font-medium">{t('status')}</label>
+            <div className="col-12 col-md-6 space-y-2">
+                <label className="text-sm fw-medium">{t('status')}</label>
                 <select
-                    className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                    className="form-select"
                     value={formData.erpStatus || 'PENDING'}
                     onChange={e => updateField('erpStatus', e.target.value)}
                 >
@@ -629,8 +633,8 @@ function ErpStatsStage({ formData, updateField, t }: any) {
                     <option value="COMPLETED">{t('statusCompleted')}</option>
                 </select>
             </div>
-            <div className="space-y-3 md:col-span-2">
-                <label className="text-sm font-medium">{t('checklist')}</label>
+            <div className="col-12 space-y-2">
+                <label className="text-sm fw-medium">{t('checklist')}</label>
                 <div className="space-y-2">
                     <CheckboxItem
                         checked={formData.operationInfoCollected}
@@ -654,10 +658,11 @@ function ErpStatsStage({ formData, updateField, t }: any) {
                     />
                 </div>
             </div>
-            <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-medium">{t('notes')}</label>
+            <div className="col-12 space-y-2">
+                <label className="text-sm fw-medium">{t('notes')}</label>
                 <textarea
-                    className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm min-h-[80px]"
+                    className="form-control"
+                    style={{ minHeight: '80px' }}
                     value={formData.erpNotes || ''}
                     onChange={e => updateField('erpNotes', e.target.value)}
                     placeholder={t('notesPlaceholder')}
@@ -669,12 +674,12 @@ function ErpStatsStage({ formData, updateField, t }: any) {
 
 function CheckboxItem({ checked, onChange, label }: { checked: boolean, onChange: (v: boolean) => void, label: string }) {
     return (
-        <label className="flex items-center gap-2 cursor-pointer">
+        <label className="d-flex align-items-center gap-2 cursor-pointer">
             <input
                 type="checkbox"
                 checked={checked || false}
                 onChange={e => onChange(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="form-check-input"
             />
             <span className="text-sm">{label}</span>
         </label>

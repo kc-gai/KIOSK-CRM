@@ -127,20 +127,20 @@ export default function BlacklistPanel({ onUpdate }: BlacklistPanelProps) {
   return (
     <div className="card">
       <div className="card-header">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ShieldBan className="w-5 h-5 text-red-500" />
+        <div className="d-flex align-items-center justify-content-between">
+          <div className="d-flex align-items-center gap-2">
+            <ShieldBan size={20} className="text-red-500" />
             <h3 className="card-title">{t.blacklistLabel}</h3>
-            <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
+            <span className="d-inline-flex align-items-center justify-content-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
               {entries.length}
             </span>
           </div>
 
           <button
             onClick={() => setShowAddForm(true)}
-            className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors"
+            className="btn btn-primary btn-sm"
           >
-            <Plus className="w-4 h-4" />
+            <Plus size={16} />
             {t.add}
           </button>
         </div>
@@ -149,9 +149,9 @@ export default function BlacklistPanel({ onUpdate }: BlacklistPanelProps) {
       <div className="card-body p-0">
         {/* Add Form Modal */}
         {showAddForm && (
-          <div className="border-b border-gray-200 bg-gray-50/80 p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-medium text-gray-800">
+          <div className="border-bottom bg-gray-50 p-3">
+            <div className="d-flex align-items-center justify-content-between mb-2">
+              <h4 className="text-sm fw-medium text-gray-800">
                 {t.addToBlacklist}
               </h4>
               <button
@@ -161,48 +161,48 @@ export default function BlacklistPanel({ onUpdate }: BlacklistPanelProps) {
                 }}
                 className="p-1 text-gray-400 hover:text-gray-600 rounded"
               >
-                <X className="w-4 h-4" />
+                <X size={16} />
               </button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">
+            <div className="row g-2">
+              <div className="col-12 col-sm-6">
+                <label className="form-label text-xs text-gray-500">
                   {locale === 'ja' ? '企業ID' : '업체 ID'}
                 </label>
                 <input
                   type="text"
                   value={formData.companyId}
                   onChange={(e) => setFormData((prev) => ({ ...prev, companyId: e.target.value }))}
-                  className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  className="form-control form-control-sm"
                   placeholder="company-001"
                 />
               </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">
+              <div className="col-12 col-sm-6">
+                <label className="form-label text-xs text-gray-500">
                   {locale === 'ja' ? '企業名' : '업체명'}
                 </label>
                 <input
                   type="text"
                   value={formData.companyName}
                   onChange={(e) => setFormData((prev) => ({ ...prev, companyName: e.target.value }))}
-                  className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  className="form-control form-control-sm"
                   placeholder={locale === 'ja' ? '株式会社サンプル' : '샘플 주식회사'}
                 />
               </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">
+              <div className="col-12 col-sm-6">
+                <label className="form-label text-xs text-gray-500">
                   {locale === 'ja' ? 'メールアドレス' : '이메일'}
                 </label>
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
-                  className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  className="form-control form-control-sm"
                   placeholder="info@example.com"
                 />
               </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">
+              <div className="col-12 col-sm-6">
+                <label className="form-label text-xs text-gray-500">
                   {t.reason}
                 </label>
                 <select
@@ -213,7 +213,7 @@ export default function BlacklistPanel({ onUpdate }: BlacklistPanelProps) {
                       reason: e.target.value as BlacklistEntry['reason'],
                     }))
                   }
-                  className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer"
+                  className="form-select form-select-sm"
                 >
                   {reasonOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -223,25 +223,25 @@ export default function BlacklistPanel({ onUpdate }: BlacklistPanelProps) {
                 </select>
               </div>
             </div>
-            <div className="flex justify-end gap-2 mt-3">
+            <div className="d-flex justify-content-end gap-2 mt-2">
               <button
                 onClick={() => {
                   setShowAddForm(false)
                   setFormData({ companyId: '', companyName: '', email: '', reason: 'manual' })
                 }}
-                className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
+                className="btn btn-ghost-secondary btn-sm"
               >
                 {locale === 'ja' ? 'キャンセル' : '취소'}
               </button>
               <button
                 onClick={handleAdd}
                 disabled={!formData.companyId || !formData.email || submitting}
-                className="inline-flex items-center gap-1 px-4 py-1.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn btn-danger btn-sm"
               >
                 {submitting ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <Loader2 size={14} className="animate-spin" />
                 ) : (
-                  <ShieldBan className="w-3.5 h-3.5" />
+                  <ShieldBan size={14} />
                 )}
                 {t.addToBlacklist}
               </button>
@@ -250,23 +250,23 @@ export default function BlacklistPanel({ onUpdate }: BlacklistPanelProps) {
         )}
 
         {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <div className="overflow-auto">
+          <table className="table table-sm table-vcenter">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50/50">
-                <th className="text-left px-4 py-3 font-medium text-gray-600">
+              <tr>
+                <th className="text-start">
                   {locale === 'ja' ? '企業名' : '업체명'}
                 </th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">
+                <th className="text-start">
                   {locale === 'ja' ? 'メールアドレス' : '이메일'}
                 </th>
-                <th className="text-center px-4 py-3 font-medium text-gray-600">
+                <th className="text-center">
                   {t.reason}
                 </th>
-                <th className="text-center px-4 py-3 font-medium text-gray-600">
+                <th className="text-center">
                   {t.blockedDate}
                 </th>
-                <th className="text-center px-4 py-3 font-medium text-gray-600">
+                <th className="text-center">
                   {locale === 'ja' ? '操作' : '작업'}
                 </th>
               </tr>
@@ -274,18 +274,18 @@ export default function BlacklistPanel({ onUpdate }: BlacklistPanelProps) {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                  <td colSpan={5} className="px-3 py-5 text-center">
+                    <div className="d-flex align-items-center justify-content-center gap-2">
+                      <Loader2 size={20} className="text-primary animate-spin" />
                       <span className="text-sm text-gray-500">{t.loading}</span>
                     </div>
                   </td>
                 </tr>
               ) : entries.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center">
-                    <div className="flex flex-col items-center gap-2 text-gray-400">
-                      <UserX className="w-8 h-8" />
+                  <td colSpan={5} className="px-3 py-5 text-center">
+                    <div className="d-flex flex-column align-items-center gap-2 text-gray-400">
+                      <UserX size={32} />
                       <p className="text-sm">
                         {locale === 'ja'
                           ? 'ブラックリストに登録された項目はありません'
@@ -298,21 +298,21 @@ export default function BlacklistPanel({ onUpdate }: BlacklistPanelProps) {
                 entries.map((entry) => (
                   <tr
                     key={`${entry.companyId}-${entry.email}`}
-                    className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
+                    className="hover:bg-gray-50 transition-colors"
                   >
-                    <td className="px-4 py-3 font-medium text-gray-800">
+                    <td className="fw-medium text-gray-800">
                       {entry.companyName}
                     </td>
-                    <td className="px-4 py-3 text-gray-600">
+                    <td className="text-gray-600">
                       {entry.email}
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="text-center">
                       {getReasonBadge(entry.reason)}
                     </td>
-                    <td className="px-4 py-3 text-center text-gray-600">
+                    <td className="text-center text-gray-600">
                       {formatDate(entry.blockedAt)}
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="text-center">
                       <button
                         onClick={() => handleRemove(entry.companyId)}
                         disabled={removing === entry.companyId}
@@ -320,9 +320,9 @@ export default function BlacklistPanel({ onUpdate }: BlacklistPanelProps) {
                         title={t.removeFromBlacklist}
                       >
                         {removing === entry.companyId ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
+                          <Loader2 size={12} className="animate-spin" />
                         ) : (
-                          <Trash2 className="w-3 h-3" />
+                          <Trash2 size={12} />
                         )}
                         {t.removeFromBlacklist}
                       </button>

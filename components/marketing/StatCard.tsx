@@ -35,25 +35,25 @@ export default function StatCard({
 
   return (
     <div className="stat-card">
-      <div className="flex items-start justify-between">
+      <div className="d-flex align-items-start justify-content-between">
         <div>
           <p className="stat-label">{title}</p>
           {loading ? (
-            <div className="mt-1 h-8 w-24 bg-gray-200 rounded animate-pulse" />
+            <div className="mt-1 bg-gray-200 rounded animate-pulse" style={{ height: '2rem', width: '6rem' }} />
           ) : (
             <p className="stat-value mt-1">{value}</p>
           )}
           {loading ? (
-            <div className="mt-2 h-4 w-20 bg-gray-100 rounded animate-pulse" />
+            <div className="mt-2 bg-gray-100 rounded animate-pulse" style={{ height: '1rem', width: '5rem' }} />
           ) : trend !== undefined ? (
             <p className={`stat-trend mt-2 ${isPositive ? 'positive' : ''} ${isNegative ? 'negative' : ''}`}>
               {isPositive ? '↑' : isNegative ? '↓' : ''} {Math.abs(trend)}%
-              {trendLabel && <span className="text-gray-500 ml-1">{trendLabel}</span>}
+              {trendLabel && <span className="text-gray-500 ms-1">{trendLabel}</span>}
             </p>
           ) : null}
         </div>
-        <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
-          <Icon className="w-6 h-6" />
+        <div className={`p-2 rounded-lg ${colorClasses[color]}`}>
+          <Icon size={24} />
         </div>
       </div>
     </div>
